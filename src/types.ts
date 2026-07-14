@@ -1,0 +1,77 @@
+export type Role = 'user' | 'supervisor' | 'itlead' | 'pic' | 'qa' | 'manager' | 'executive' | 'admin'
+
+export type TicketStatus =
+  | 'draft'
+  | 'pending_validation'
+  | 'validated'
+  | 'rejected'
+  | 'revision'
+  | 'triage'
+  | 'assigned'
+  | 'in_progress'
+  | 'internal_testing'
+  | 'uat'
+  | 'pending_approval'
+  | 'approved'
+  | 'deploying'
+  | 'done'
+  | 'closed'
+  | 'over_sla'
+
+export type Priority = 'critical' | 'high' | 'medium' | 'low'
+export type TicketCategory = 'incident' | 'request' | 'change' | 'problem'
+
+export interface User {
+  id: string
+  name: string
+  email: string
+  role: Role
+  division: string
+  avatar: string
+}
+
+export interface Ticket {
+  id: string
+  title: string
+  description: string
+  category: TicketCategory
+  priority: Priority
+  status: TicketStatus
+  application: string
+  division: string
+  requester: string
+  requesterId: string
+  supervisor: string
+  pic: string
+  picId: string
+  createdAt: string
+  updatedAt: string
+  slaDeadline: string
+  slaHours: number
+  slaRemaining: number
+  overSla: boolean
+  tags: string[]
+  attachments: string[]
+}
+
+export interface ActivityLog {
+  id: string
+  ticketId: string
+  actor: string
+  actorRole: Role
+  action: string
+  comment: string
+  timestamp: string
+  type: 'status_change' | 'comment' | 'assignment' | 'attachment' | 'escalation'
+}
+
+export interface Notification {
+  id: string
+  userId: string
+  title: string
+  message: string
+  type: 'info' | 'warning' | 'error' | 'success'
+  read: boolean
+  ticketId?: string
+  createdAt: string
+}
