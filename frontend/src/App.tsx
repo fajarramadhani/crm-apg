@@ -64,7 +64,14 @@ export default function App() {
 
   return (
     <BrowserRouter>
-      <Layout role={role} setRole={setRole}>
+      <Layout
+        role={role}
+        setRole={setRole}
+        onLogout={() => {
+          setLoggedIn(false)
+          setRole('user')
+        }}
+      >
         <Routes>
           {/* Default redirect */}
           <Route path="/" element={<Navigate to={DEFAULT_ROUTES[role]} replace />} />

@@ -59,10 +59,12 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
 export function Layout({
   role,
   setRole,
+  onLogout,
   children,
 }: {
   role: Role
   setRole: (r: Role) => void
+  onLogout: () => void
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768)
@@ -81,6 +83,11 @@ export function Layout({
 
   const handleNavigation = () => {
     if (window.innerWidth < 768) setSidebarOpen(false)
+  }
+
+  const handleLogout = () => {
+    navigate('/', { replace: true })
+    onLogout()
   }
 
   return (
@@ -213,6 +220,29 @@ export function Layout({
                 <p className="text-xs text-gray-400">{ROLE_LABELS[role]}</p>
               </div>
             </div>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              aria-label="Keluar dari sistem"
+              className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-500/30"
+            >
+              <svg
+                className="h-5 w-5 shrink-0"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"
+                />
+              </svg>
+              <span className="hidden lg:inline">Logout</span>
+            </button>
           </div>
         </header>
 
