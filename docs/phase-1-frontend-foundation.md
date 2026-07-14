@@ -86,7 +86,23 @@ Verifikasi memakai development server dan navigasi SPA dalam sesi demo yang sama
 | `/admin/audit-log`             | -          | Belum visual | Tidak tercapai sebelum sesi terlepas.                                                |
 | `*` (Not Found)                | -          | Belum visual | Route fallback lulus type-check/build, belum dirender dalam sesi login.              |
 
-Tidak ada error level `error` pada console dan tidak ada horizontal overflow document pada route yang berhasil diperiksa. Keterbatasan browser dicatat sebagai keterbatasan verifikasi, bukan defect aplikasi; source aplikasi tidak diubah untuk mengakalinya. Phase 1 belum dinyatakan selesai karena shell pascalogin 390 x 844 dan seluruh route belum memperoleh bukti render visual.
+Tidak ada error level `error` pada console dan tidak ada horizontal overflow document pada route yang berhasil diperiksa. Keterbatasan browser dicatat sebagai keterbatasan verifikasi, bukan defect aplikasi; source aplikasi tidak diubah untuk mengakalinya.
+
+### Verifikasi manual 14 Juli 2026
+
+Verifikasi manual pada development server melengkapi pemeriksaan otomatis dan browser sebelumnya dengan hasil berikut:
+
+- Dashboard User berhasil dibuka.
+- Dashboard Supervisor berhasil dibuka.
+- Halaman Riwayat Tiket berhasil dibuka.
+- Halaman Buat Tiket berhasil dibuka.
+- Shell desktop berhasil digunakan.
+- Shell mobile pada viewport 390 × 844 berhasil digunakan.
+- Sidebar mobile dapat dibuka dan ditutup.
+- Tidak ditemukan horizontal overflow utama.
+- Browser console tidak menampilkan error aplikasi utama.
+
+Dengan bukti manual tersebut, route utama dan perilaku responsif yang menjadi lingkup Phase 1 telah diverifikasi. Route lain yang ditandai belum visual pada tabel di atas tetap menjadi catatan batas cakupan verifikasi, bukan bagian dari pekerjaan Phase 2.
 
 ## Sengaja belum dilakukan
 
