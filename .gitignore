@@ -1,6 +1,8 @@
 node_modules/
 .pnpm-store/
 dist/
+.vite/
+vendor/
 .env
 .env.*
 !.env.example

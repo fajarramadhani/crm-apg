@@ -14,8 +14,12 @@
 
 ```json
 {
+  "success": true,
+  "message": "Human-readable message",
   "data": {},
-  "meta": { "request_id": "..." }
+  "meta": {
+    "request_id": "..."
+  }
 }
 ```
 
@@ -23,12 +27,18 @@
 
 ```json
 {
-  "message": "Validation failed.",
-  "code": "VALIDATION_ERROR",
-  "errors": { "title": ["The title field is required."] },
-  "request_id": "..."
+  "success": false,
+  "message": "Safe error message",
+  "error": {
+    "code": "ERROR_CODE"
+  },
+  "meta": {
+    "request_id": "..."
+  }
 }
 ```
+
+Validation errors replace `error` with an `errors` object keyed by field while retaining `success`, `message`, and `meta.request_id`.
 
 Expected status codes: 200/201/204, 401 unauthenticated, 403 forbidden, 404 missing, 409 invalid transition/stale version/idempotency conflict, 422 validation, 429 throttled.
 
