@@ -71,23 +71,31 @@ export default function EscalationMatrix() {
       {/* Critical Escalation */}
       <SectionCard title="🔴 Eskalasi — Prioritas Critical" className="mb-6">
         <div className="space-y-4">
-          {MATRIX.map(level => (
+          {MATRIX.map((level) => (
             <div key={level.level} className={`border rounded-xl p-4 ${level.color}`}>
               <div className="flex items-start gap-4">
-                <div className={`w-9 h-9 rounded-full ${level.iconColor} text-white flex items-center justify-center font-bold text-sm shrink-0`}>
+                <div
+                  className={`w-9 h-9 rounded-full ${level.iconColor} text-white flex items-center justify-center font-bold text-sm shrink-0`}
+                >
                   L{level.level}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="text-sm font-bold text-gray-900">Level {level.level}</p>
-                    <span className="text-xs px-2 py-0.5 bg-white border border-gray-200 rounded-full text-gray-600">Trigger: {level.threshold}</span>
+                    <span className="text-xs px-2 py-0.5 bg-white border border-gray-200 rounded-full text-gray-600">
+                      Trigger: {level.threshold}
+                    </span>
                   </div>
                   <p className="text-sm text-gray-700 mb-2">{level.trigger}</p>
                   <div className="grid grid-cols-2 gap-4 text-xs">
                     <div>
                       <p className="font-semibold text-gray-600 mb-1">Notifikasi Ke:</p>
                       <ul className="space-y-0.5">
-                        {level.notifyTo.map(n => <li key={n} className="text-gray-700">• {n}</li>)}
+                        {level.notifyTo.map((n) => (
+                          <li key={n} className="text-gray-700">
+                            • {n}
+                          </li>
+                        ))}
                       </ul>
                     </div>
                     <div>
@@ -106,15 +114,27 @@ export default function EscalationMatrix() {
       {/* High Escalation */}
       <SectionCard title="🟠 Eskalasi — Prioritas High" className="mb-6">
         <div className="space-y-3">
-          {HIGH_RULES.map(rule => (
-            <div key={rule.level} className="flex items-center gap-4 p-4 border border-orange-200 bg-orange-50/50 rounded-xl">
+          {HIGH_RULES.map((rule) => (
+            <div
+              key={rule.level}
+              className="flex items-center gap-4 p-4 border border-orange-200 bg-orange-50/50 rounded-xl"
+            >
               <div className="w-8 h-8 rounded-full bg-orange-500 text-white flex items-center justify-center font-bold text-sm shrink-0">
                 L{rule.level}
               </div>
               <div className="flex-1 grid grid-cols-3 gap-3 text-sm">
-                <div><p className="text-xs text-gray-500">Threshold</p><p className="font-medium">{rule.threshold}</p></div>
-                <div><p className="text-xs text-gray-500">Notifikasi</p><p className="font-medium">{rule.notifyTo}</p></div>
-                <div><p className="text-xs text-gray-500">Channel</p><p className="font-medium">{rule.channel}</p></div>
+                <div>
+                  <p className="text-xs text-gray-500">Threshold</p>
+                  <p className="font-medium">{rule.threshold}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Notifikasi</p>
+                  <p className="font-medium">{rule.notifyTo}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-gray-500">Channel</p>
+                  <p className="font-medium">{rule.channel}</p>
+                </div>
               </div>
             </div>
           ))}
@@ -127,13 +147,24 @@ export default function EscalationMatrix() {
           {[
             { priority: 'Medium', trigger: '100% SLA (7 hari)', notify: 'IT Lead', icon: '🟡' },
             { priority: 'Low', trigger: '100% SLA (14 hari)', notify: 'IT Lead', icon: '🟢' },
-          ].map(rule => (
+          ].map((rule) => (
             <div key={rule.priority} className="border border-gray-200 rounded-xl p-4 bg-gray-50">
-              <p className="text-sm font-bold text-gray-900 mb-2">{rule.icon} {rule.priority}</p>
+              <p className="text-sm font-bold text-gray-900 mb-2">
+                {rule.icon} {rule.priority}
+              </p>
               <div className="space-y-2 text-xs">
-                <div><span className="text-gray-500">Trigger: </span><span className="font-medium">{rule.trigger}</span></div>
-                <div><span className="text-gray-500">Notifikasi: </span><span className="font-medium">{rule.notify}</span></div>
-                <div><span className="text-gray-500">Channel: </span><span className="font-medium">Email + Sistem</span></div>
+                <div>
+                  <span className="text-gray-500">Trigger: </span>
+                  <span className="font-medium">{rule.trigger}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Notifikasi: </span>
+                  <span className="font-medium">{rule.notify}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500">Channel: </span>
+                  <span className="font-medium">Email + Sistem</span>
+                </div>
               </div>
             </div>
           ))}

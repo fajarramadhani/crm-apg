@@ -5,7 +5,9 @@ import type { TicketStatus, Priority } from '../types'
 // ── Badge ─────────────────────────────────────────────────────────────────────
 export function StatusBadge({ status }: { status: TicketStatus | string }) {
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(status)}`}
+    >
       {STATUS_LABELS[status] || status}
     </span>
   )
@@ -14,7 +16,9 @@ export function StatusBadge({ status }: { status: TicketStatus | string }) {
 export function PriorityBadge({ priority }: { priority: Priority | string }) {
   const icons: Record<string, string> = { critical: '🔴', high: '🟠', medium: '🟡', low: '🟢' }
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${getPriorityColor(priority)}`}>
+    <span
+      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${getPriorityColor(priority)}`}
+    >
       {icons[priority]} {PRIORITY_LABELS[priority] || priority}
     </span>
   )
@@ -27,16 +31,31 @@ export function CategoryBadge({ category }: { category: string }) {
     change: 'bg-purple-50 text-purple-600',
     problem: 'bg-orange-50 text-orange-600',
   }
-  const labels: Record<string, string> = { incident: 'Incident', request: 'Request', change: 'Change', problem: 'Problem' }
+  const labels: Record<string, string> = {
+    incident: 'Incident',
+    request: 'Request',
+    change: 'Change',
+    problem: 'Problem',
+  }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${map[category] || 'bg-gray-100 text-gray-600'}`}>
+    <span
+      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${map[category] || 'bg-gray-100 text-gray-600'}`}
+    >
       {labels[category] || category}
     </span>
   )
 }
 
 // ── SLA Indicator ─────────────────────────────────────────────────────────────
-export function SLAIndicator({ slaRemaining, overSla, slaHours }: { slaRemaining: number; overSla: boolean; slaHours: number }) {
+export function SLAIndicator({
+  slaRemaining,
+  overSla,
+  slaHours,
+}: {
+  slaRemaining: number
+  overSla: boolean
+  slaHours: number
+}) {
   const pct = overSla ? 100 : Math.max(0, Math.min(100, ((slaHours - Math.max(0, slaRemaining)) / slaHours) * 100))
   const color = overSla ? 'bg-red-500' : slaRemaining < 8 ? 'bg-amber-500' : 'bg-emerald-500'
   const textColor = overSla ? 'text-red-600' : slaRemaining < 8 ? 'text-amber-600' : 'text-emerald-600'
@@ -60,7 +79,15 @@ interface BtnProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   loading?: boolean
 }
 
-export function Button({ variant = 'primary', size = 'md', loading, children, className = '', disabled, ...props }: BtnProps) {
+export function Button({
+  variant = 'primary',
+  size = 'md',
+  loading,
+  children,
+  className = '',
+  disabled,
+  ...props
+}: BtnProps) {
   const variants = {
     primary: 'bg-[#1E3A8A] hover:bg-[#1e40af] text-white shadow-sm',
     secondary: 'bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 shadow-sm',
@@ -89,11 +116,17 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hint?: string
 }
 
-export function Input({ label, error, hint, className = '', ...props }: InputProps) {
+export function Input({ label, error, hint, className = '', id, ...props }: InputProps) {
+  const inputId = id ?? React.useId()
   return (
     <div className="w-full">
-      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
+      {label && (
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+      )}
       <input
+        id={inputId}
         {...props}
         className={`w-full px-3 py-2 text-sm border rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A] transition-colors ${error ? 'border-red-400' : 'border-gray-300'} ${className}`}
       />
@@ -109,16 +142,24 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   options: { value: string; label: string }[]
 }
 
-export function Select({ label, error, options, className = '', ...props }: SelectProps) {
+export function Select({ label, error, options, className = '', id, ...props }: SelectProps) {
+  const selectId = id ?? React.useId()
   return (
     <div className="w-full">
-      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
+      {label && (
+        <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+      )}
       <select
+        id={selectId}
         {...props}
         className={`w-full px-3 py-2 text-sm border rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A] transition-colors ${error ? 'border-red-400' : 'border-gray-300'} ${className}`}
       >
-        {options.map(o => (
-          <option key={o.value} value={o.value}>{o.label}</option>
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
         ))}
       </select>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
@@ -132,11 +173,17 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
   hint?: string
 }
 
-export function Textarea({ label, error, hint, className = '', ...props }: TextareaProps) {
+export function Textarea({ label, error, hint, className = '', id, ...props }: TextareaProps) {
+  const textareaId = id ?? React.useId()
   return (
     <div className="w-full">
-      {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
+      {label && (
+        <label htmlFor={textareaId} className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+      )}
       <textarea
+        id={textareaId}
         {...props}
         className={`w-full px-3 py-2 text-sm border rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A] transition-colors resize-vertical ${error ? 'border-red-400' : 'border-gray-300'} ${className}`}
       />
@@ -147,7 +194,15 @@ export function Textarea({ label, error, hint, className = '', ...props }: Texta
 }
 
 // ── Card ──────────────────────────────────────────────────────────────────────
-export function Card({ children, className = '', onClick }: { children: React.ReactNode; className?: string; onClick?: () => void }) {
+export function Card({
+  children,
+  className = '',
+  onClick,
+}: {
+  children: React.ReactNode
+  className?: string
+  onClick?: () => void
+}) {
   return (
     <div
       onClick={onClick}
@@ -160,8 +215,18 @@ export function Card({ children, className = '', onClick }: { children: React.Re
 
 // ── KPI Card ──────────────────────────────────────────────────────────────────
 export function KPICard({
-  title, value, subtitle, color = 'blue', icon
-}: { title: string; value: string | number; subtitle?: string; color?: string; icon?: React.ReactNode }) {
+  title,
+  value,
+  subtitle,
+  color = 'blue',
+  icon,
+}: {
+  title: string
+  value: string | number
+  subtitle?: string
+  color?: string
+  icon?: React.ReactNode
+}) {
   const colors: Record<string, string> = {
     blue: 'from-[#1E3A8A] to-[#2563EB]',
     red: 'from-red-600 to-red-500',
@@ -185,19 +250,45 @@ export function KPICard({
 }
 
 // ── Modal ─────────────────────────────────────────────────────────────────────
-export function Modal({ open, onClose, title, children, size = 'md' }: {
-  open: boolean; onClose: () => void; title: string; children: React.ReactNode; size?: 'sm' | 'md' | 'lg' | 'xl'
+export function Modal({
+  open,
+  onClose,
+  title,
+  children,
+  size = 'md',
+}: {
+  open: boolean
+  onClose: () => void
+  title: string
+  children: React.ReactNode
+  size?: 'sm' | 'md' | 'lg' | 'xl'
 }) {
+  const titleId = React.useId()
   if (!open) return null
   const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
-      <div className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[90vh] overflow-y-auto`}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby={titleId}
+    >
+      <button className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-label="Tutup dialog" />
+      <div
+        className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[calc(100vh-2rem)] overflow-y-auto`}
+      >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-gray-900">{title}</h2>
-          <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+          <h2 id={titleId} className="text-base font-semibold text-gray-900">
+            {title}
+          </h2>
+          <button
+            onClick={onClose}
+            aria-label="Tutup dialog"
+            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
         <div className="p-6">{children}</div>
@@ -207,7 +298,15 @@ export function Modal({ open, onClose, title, children, size = 'md' }: {
 }
 
 // ── Toast ─────────────────────────────────────────────────────────────────────
-export function Toast({ message, type = 'success', onClose }: { message: string; type?: 'success' | 'error' | 'warning' | 'info'; onClose: () => void }) {
+export function Toast({
+  message,
+  type = 'success',
+  onClose,
+}: {
+  message: string
+  type?: 'success' | 'error' | 'warning' | 'info'
+  onClose: () => void
+}) {
   const styles = {
     success: 'bg-emerald-600 text-white',
     error: 'bg-red-600 text-white',
@@ -216,10 +315,14 @@ export function Toast({ message, type = 'success', onClose }: { message: string;
   }
   const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' }
   return (
-    <div className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl ${styles[type]} animate-in slide-in-from-bottom-4`}>
+    <div
+      className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl ${styles[type]} animate-in slide-in-from-bottom-4`}
+    >
       <span className="font-bold">{icons[type]}</span>
       <span className="text-sm font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">✕</button>
+      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">
+        ✕
+      </button>
     </div>
   )
 }
@@ -231,8 +334,13 @@ export function Table({ headers, children }: { headers: string[]; children: Reac
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50">
-            {headers.map(h => (
-              <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+            {headers.map((h) => (
+              <th
+                key={h}
+                className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap"
+              >
+                {h}
+              </th>
             ))}
           </tr>
         </thead>
@@ -242,10 +350,26 @@ export function Table({ headers, children }: { headers: string[]; children: Reac
   )
 }
 
-export function TR({ children, onClick, highlight }: { children: React.ReactNode; onClick?: () => void; highlight?: boolean }) {
+export function TR({
+  children,
+  onClick,
+  highlight,
+}: {
+  children: React.ReactNode
+  onClick?: () => void
+  highlight?: boolean
+}) {
   return (
     <tr
       onClick={onClick}
+      onKeyDown={
+        onClick
+          ? (event) => {
+              if (event.key === 'Enter' || event.key === ' ') onClick()
+            }
+          : undefined
+      }
+      tabIndex={onClick ? 0 : undefined}
       className={`transition-colors ${onClick ? 'cursor-pointer hover:bg-blue-50/50' : ''} ${highlight ? 'bg-red-50/50' : ''}`}
     >
       {children}
@@ -258,10 +382,12 @@ export function TD({ children, className = '' }: { children: React.ReactNode; cl
 }
 
 // ── Avatar ────────────────────────────────────────────────────────────────────
-export function Avatar({ initials, size = 'md', color = 'blue' }: { initials: string; size?: 'sm' | 'md' | 'lg'; color?: string }) {
+export function Avatar({ initials, size = 'md' }: { initials: string; size?: 'sm' | 'md' | 'lg' }) {
   const sizes = { sm: 'w-7 h-7 text-xs', md: 'w-9 h-9 text-sm', lg: 'w-11 h-11 text-base' }
   return (
-    <div className={`${sizes[size]} rounded-full bg-[#1E3A8A] text-white flex items-center justify-center font-semibold shrink-0`}>
+    <div
+      className={`${sizes[size]} rounded-full bg-[#1E3A8A] text-white flex items-center justify-center font-semibold shrink-0`}
+    >
       {initials}
     </div>
   )
@@ -298,11 +424,18 @@ export function ActivityTimeline({ logs }: { logs: import('../types').ActivityLo
             <div className="flex-1 min-w-0 pb-2">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-sm font-semibold text-gray-900">{log.actor}</span>
-                <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleColors[log.actorRole] || 'bg-gray-100 text-gray-600'}`}>
+                <span
+                  className={`text-xs px-1.5 py-0.5 rounded font-medium ${roleColors[log.actorRole] || 'bg-gray-100 text-gray-600'}`}
+                >
                   {log.actorRole.toUpperCase()}
                 </span>
                 <span className="text-xs text-gray-400">
-                  {new Date(log.timestamp).toLocaleString('id-ID', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  {new Date(log.timestamp).toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </span>
               </div>
               <p className="text-sm font-medium text-gray-700 mt-0.5">{log.action}</p>
@@ -320,9 +453,17 @@ export function ActivityTimeline({ logs }: { logs: import('../types').ActivityLo
 }
 
 // ── Page Header ───────────────────────────────────────────────────────────────
-export function PageHeader({ title, subtitle, actions }: { title: string; subtitle?: string; actions?: React.ReactNode }) {
+export function PageHeader({
+  title,
+  subtitle,
+  actions,
+}: {
+  title: string
+  subtitle?: string
+  actions?: React.ReactNode
+}) {
   return (
-    <div className="flex items-start justify-between mb-6">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between mb-6">
       <div>
         <h1 className="text-xl font-bold text-gray-900">{title}</h1>
         {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
@@ -359,7 +500,9 @@ export function OverSLABanner({ ticketId }: { ticketId: string }) {
       <span className="text-red-500 text-xl">🚨</span>
       <div>
         <p className="text-sm font-semibold text-red-700">Tiket Over SLA</p>
-        <p className="text-xs text-red-600">{ticketId} telah melewati batas SLA. Eskalasi otomatis telah dikirim ke IT Lead dan Manager.</p>
+        <p className="text-xs text-red-600">
+          {ticketId} telah melewati batas SLA. Eskalasi otomatis telah dikirim ke IT Lead dan Manager.
+        </p>
       </div>
     </div>
   )
@@ -369,7 +512,7 @@ export function OverSLABanner({ ticketId }: { ticketId: string }) {
 export function Tabs({ tabs, active, onChange }: { tabs: string[]; active: string; onChange: (t: string) => void }) {
   return (
     <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit mb-6">
-      {tabs.map(tab => (
+      {tabs.map((tab) => (
         <button
           key={tab}
           onClick={() => onChange(tab)}
@@ -383,7 +526,17 @@ export function Tabs({ tabs, active, onChange }: { tabs: string[]; active: strin
 }
 
 // ── Section Card ──────────────────────────────────────────────────────────────
-export function SectionCard({ title, children, className = '', actions }: { title?: string; children: React.ReactNode; className?: string; actions?: React.ReactNode }) {
+export function SectionCard({
+  title,
+  children,
+  className = '',
+  actions,
+}: {
+  title?: string
+  children: React.ReactNode
+  className?: string
+  actions?: React.ReactNode
+}) {
   return (
     <div className={`bg-white border border-gray-200 rounded-xl shadow-sm ${className}`}>
       {title && (

@@ -112,15 +112,15 @@ Untuk setiap phase yang mengubah frontend: install, format check, type-check, au
 
 ## Main technical risks and mitigations
 
-| Risiko | Mitigasi |
-|---|---|
-| Prototype status/SLA berbeda dari business workflow | Finalize canonical enums/state map before ticket migrations |
-| UI regressions saat integrasi | Screenshot/reference routes, incremental feature adapters, responsive smoke tests |
-| RBAC data leak, terutama Executive | Query scopes + API Resources + matrix feature tests; deny by default |
-| SLA working-time arithmetic salah | Dedicated service, immutable clock snapshot, exhaustive calendar tests |
-| Double transition/concurrent approvals | Row lock, version precondition, idempotency keys, after-commit events |
-| Attachment malware/data exposure | Private storage, validation, scan status, parent policy on download |
-| Notification duplication | Unique event keys/outbox-like after-commit dispatch and retry policy |
-| Scope expansion into full CRM sales/customer features | Treat as separate bounded-context discovery; current prototype is ITSM-centric |
-| Big-bang rewrite | Vertical slices and reviewable phases; preserve existing components/routes until replacement |
-| Environment drift | pinned toolchain, `.env.example`, CI disposable MySQL, documented local setup |
+| Risiko                                                | Mitigasi                                                                                     |
+| ----------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Prototype status/SLA berbeda dari business workflow   | Finalize canonical enums/state map before ticket migrations                                  |
+| UI regressions saat integrasi                         | Screenshot/reference routes, incremental feature adapters, responsive smoke tests            |
+| RBAC data leak, terutama Executive                    | Query scopes + API Resources + matrix feature tests; deny by default                         |
+| SLA working-time arithmetic salah                     | Dedicated service, immutable clock snapshot, exhaustive calendar tests                       |
+| Double transition/concurrent approvals                | Row lock, version precondition, idempotency keys, after-commit events                        |
+| Attachment malware/data exposure                      | Private storage, validation, scan status, parent policy on download                          |
+| Notification duplication                              | Unique event keys/outbox-like after-commit dispatch and retry policy                         |
+| Scope expansion into full CRM sales/customer features | Treat as separate bounded-context discovery; current prototype is ITSM-centric               |
+| Big-bang rewrite                                      | Vertical slices and reviewable phases; preserve existing components/routes until replacement |
+| Environment drift                                     | pinned toolchain, `.env.example`, CI disposable MySQL, documented local setup                |

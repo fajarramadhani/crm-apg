@@ -56,15 +56,19 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
   ],
 }
 
-export function Layout({ role, setRole, children }: {
+export function Layout({
+  role,
+  setRole,
+  children,
+}: {
   role: Role
   setRole: (r: Role) => void
   children: React.ReactNode
 }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768)
   const [roleDropdown, setRoleDropdown] = useState(false)
   const navigate = useNavigate()
-  const currentUser = USERS.find(u => u.role === role) || USERS[0]
+  const currentUser = USERS.find((u) => u.role === role) || USERS[0]
   const navItems = NAV_ITEMS[role] || []
 
   const handleRoleChange = (r: Role) => {
@@ -72,12 +76,26 @@ export function Layout({ role, setRole, children }: {
     setRoleDropdown(false)
     const firstPath = NAV_ITEMS[r]?.[0]?.path || '/user/dashboard'
     navigate(firstPath)
+    if (window.innerWidth < 768) setSidebarOpen(false)
+  }
+
+  const handleNavigation = () => {
+    if (window.innerWidth < 768) setSidebarOpen(false)
   }
 
   return (
     <div className="flex h-screen bg-[#F0F4F8] overflow-hidden">
       {/* Sidebar */}
-      <aside className={`${sidebarOpen ? 'w-60' : 'w-16'} shrink-0 bg-[#0F2554] flex flex-col transition-all duration-300 overflow-hidden`}>
+      {sidebarOpen && (
+        <button
+          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+          aria-label="Tutup menu navigasi"
+        />
+      )}
+      <aside
+        className={`${sidebarOpen ? 'translate-x-0 md:w-60' : '-translate-x-full md:translate-x-0 md:w-16'} fixed inset-y-0 left-0 z-40 w-60 md:static shrink-0 bg-[#0F2554] flex flex-col transition-all duration-300 overflow-hidden`}
+      >
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-4 border-b border-white/10 shrink-0">
           <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
@@ -105,7 +123,7 @@ export function Layout({ role, setRole, children }: {
               </button>
               {roleDropdown && (
                 <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
-                  {(Object.keys(ROLE_LABELS) as Role[]).map(r => (
+                  {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
                     <button
                       key={r}
                       onClick={() => handleRoleChange(r)}
@@ -122,10 +140,11 @@ export function Layout({ role, setRole, children }: {
 
         {/* Navigation */}
         <nav className="flex-1 px-2 py-3 space-y-0.5 overflow-y-auto">
-          {navItems.map(item => (
+          {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={handleNavigation}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${isActive ? 'bg-white/20 text-white' : 'text-blue-200 hover:bg-white/10 hover:text-white'}`
               }
@@ -153,26 +172,36 @@ export function Layout({ role, setRole, children }: {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0 shadow-sm">
-          <div className="flex items-center gap-4">
+        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-3 sm:px-6 shrink-0 shadow-sm min-w-0">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
               className="p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
             >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
-            <div>
-              <p className="text-sm font-semibold text-gray-900">APG Enterprise Internal CRM</p>
-              <p className="text-xs text-gray-400">IT Service Management System</p>
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">APG Enterprise Internal CRM</p>
+              <p className="hidden sm:block text-xs text-gray-400">IT Service Management System</p>
             </div>
           </div>
 
           <div className="flex items-center gap-3">
-            <NavLink to="/notifications" className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500">
+            <NavLink
+              to="/notifications"
+              aria-label="Buka notifikasi"
+              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
+            >
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
               </svg>
               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
             </NavLink>
@@ -189,9 +218,7 @@ export function Layout({ role, setRole, children }: {
 
         {/* Page Content */}
         <main className="flex-1 overflow-y-auto">
-          <div className="p-6 max-w-[1400px] mx-auto">
-            {children}
-          </div>
+          <div className="p-4 sm:p-6 max-w-[1400px] mx-auto">{children}</div>
         </main>
       </div>
     </div>

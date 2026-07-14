@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { NOTIFICATIONS, TICKETS, formatDateTime } from '../../data'
-import { PageHeader, Button, SectionCard } from '../../components/ui'
+import { NOTIFICATIONS, formatDateTime } from '../../data'
+import { PageHeader, Button } from '../../components/ui'
 import type { Role } from '../../types'
 
 const ESCALATIONS = [
@@ -9,7 +9,8 @@ const ESCALATIONS = [
     id: 'esc1',
     ticketId: 'IT-2026-000006',
     title: 'ESCALATION LEVEL 2: Notifikasi Email Tidak Terkirim',
-    message: 'Tiket IT-2026-000006 telah melewati SLA 43 jam. Eskalasi otomatis ke IT Lead dan Manager. Perlu tindakan segera.',
+    message:
+      'Tiket IT-2026-000006 telah melewati SLA 43 jam. Eskalasi otomatis ke IT Lead dan Manager. Perlu tindakan segera.',
     severity: 'critical',
     time: '2026-07-13T06:00:00Z',
   },
@@ -31,15 +32,15 @@ const ESCALATIONS = [
   },
 ]
 
-export default function NotificationCenter({ role }: { role: Role }) {
+export default function NotificationCenter({ role: _role }: { role: Role }) {
   const navigate = useNavigate()
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
   const [activeTab, setActiveTab] = useState<'all' | 'escalation'>('all')
 
-  const markRead = (id: string) => setReadIds(s => new Set([...s, id]))
-  const markAllRead = () => setReadIds(new Set(NOTIFICATIONS.map(n => n.id)))
+  const markRead = (id: string) => setReadIds((s) => new Set([...s, id]))
+  const markAllRead = () => setReadIds(new Set(NOTIFICATIONS.map((n) => n.id)))
 
-  const unread = NOTIFICATIONS.filter(n => !n.read && !readIds.has(n.id))
+  const unread = NOTIFICATIONS.filter((n) => !n.read && !readIds.has(n.id))
 
   const typeStyle: Record<string, string> = {
     info: 'bg-blue-50 border-blue-200 text-blue-700',
@@ -56,14 +57,16 @@ export default function NotificationCenter({ role }: { role: Role }) {
         subtitle={`${unread.length} notifikasi belum dibaca`}
         actions={
           <div className="flex gap-2">
-            <Button variant="ghost" size="sm" onClick={markAllRead}>Tandai Semua Dibaca</Button>
+            <Button variant="ghost" size="sm" onClick={markAllRead}>
+              Tandai Semua Dibaca
+            </Button>
           </div>
         }
       />
 
       {/* Tabs */}
       <div className="flex gap-1 p-1 bg-gray-100 rounded-xl w-fit mb-5">
-        {(['all', 'escalation'] as const).map(tab => (
+        {(['all', 'escalation'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
@@ -76,7 +79,7 @@ export default function NotificationCenter({ role }: { role: Role }) {
 
       {activeTab === 'all' && (
         <div className="space-y-3">
-          {NOTIFICATIONS.map(n => {
+          {NOTIFICATIONS.map((n) => {
             const isRead = n.read || readIds.has(n.id)
             return (
               <div
@@ -94,7 +97,10 @@ export default function NotificationCenter({ role }: { role: Role }) {
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-xs text-gray-400">{formatDateTime(n.createdAt)}</span>
                       {n.ticketId && (
-                        <button onClick={() => navigate(`/user/tickets/${n.ticketId}`)} className="text-xs text-[#1E3A8A] font-medium hover:underline">
+                        <button
+                          onClick={() => navigate(`/user/tickets/${n.ticketId}`)}
+                          className="text-xs text-[#1E3A8A] font-medium hover:underline"
+                        >
                           Lihat Tiket →
                         </button>
                       )}
@@ -116,23 +122,36 @@ export default function NotificationCenter({ role }: { role: Role }) {
         <div className="space-y-4">
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3 mb-2">
             <span className="text-red-500 text-lg">🚨</span>
-            <p className="text-sm text-red-800">Eskalasi otomatis terjadi ketika tiket melewati SLA. Sistem mengirim notifikasi ke IT Lead, Manager, dan jika perlu — Direktur.</p>
+            <p className="text-sm text-red-800">
+              Eskalasi otomatis terjadi ketika tiket melewati SLA. Sistem mengirim notifikasi ke IT Lead, Manager, dan
+              jika perlu — Direktur.
+            </p>
           </div>
-          {ESCALATIONS.map(e => (
-            <div key={e.id} className={`border rounded-xl p-4 ${e.severity === 'critical' ? 'bg-red-50 border-red-300' : 'bg-orange-50 border-orange-200'}`}>
+          {ESCALATIONS.map((e) => (
+            <div
+              key={e.id}
+              className={`border rounded-xl p-4 ${e.severity === 'critical' ? 'bg-red-50 border-red-300' : 'bg-orange-50 border-orange-200'}`}
+            >
               <div className="flex items-start gap-3">
                 <span className="text-xl">🚨</span>
                 <div className="flex-1">
-                  <p className={`text-sm font-bold ${e.severity === 'critical' ? 'text-red-800' : 'text-orange-800'}`}>{e.title}</p>
+                  <p className={`text-sm font-bold ${e.severity === 'critical' ? 'text-red-800' : 'text-orange-800'}`}>
+                    {e.title}
+                  </p>
                   <p className="text-xs text-gray-700 mt-1 leading-relaxed">{e.message}</p>
                   <div className="flex items-center gap-3 mt-2">
                     <span className="text-xs text-gray-400">{formatDateTime(e.time)}</span>
-                    <button onClick={() => navigate(`/user/tickets/${e.ticketId}`)} className="text-xs text-[#1E3A8A] font-medium hover:underline">
+                    <button
+                      onClick={() => navigate(`/user/tickets/${e.ticketId}`)}
+                      className="text-xs text-[#1E3A8A] font-medium hover:underline"
+                    >
                       Lihat Tiket {e.ticketId} →
                     </button>
                   </div>
                 </div>
-                <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${e.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                <span
+                  className={`text-xs font-bold px-2 py-0.5 rounded-full ${e.severity === 'critical' ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}
+                >
                   {e.severity.toUpperCase()}
                 </span>
               </div>

@@ -1,23 +1,66 @@
-import type { User, Ticket, ActivityLog, Notification, Role } from './types'
+import type { User, Ticket, ActivityLog, Notification } from './types'
 
 export const USERS: User[] = [
-  { id: 'u1', name: 'Rina Marlina', email: 'rina.marlina@apg.co.id', role: 'user', division: 'Operasional Polis', avatar: 'RM' },
-  { id: 'u2', name: 'Budi Santoso', email: 'budi.santoso@apg.co.id', role: 'supervisor', division: 'Operasional Polis', avatar: 'BS' },
+  {
+    id: 'u1',
+    name: 'Rina Marlina',
+    email: 'rina.marlina@apg.co.id',
+    role: 'user',
+    division: 'Operasional Polis',
+    avatar: 'RM',
+  },
+  {
+    id: 'u2',
+    name: 'Budi Santoso',
+    email: 'budi.santoso@apg.co.id',
+    role: 'supervisor',
+    division: 'Operasional Polis',
+    avatar: 'BS',
+  },
   { id: 'u3', name: 'Hendra Wijaya', email: 'hendra.wijaya@apg.co.id', role: 'itlead', division: 'IT', avatar: 'HW' },
-  { id: 'u4', name: 'Dian Kusuma', email: 'dian.kusuma@apg.co.id', role: 'pic', division: 'IT Development', avatar: 'DK' },
+  {
+    id: 'u4',
+    name: 'Dian Kusuma',
+    email: 'dian.kusuma@apg.co.id',
+    role: 'pic',
+    division: 'IT Development',
+    avatar: 'DK',
+  },
   { id: 'u5', name: 'Sari Pratiwi', email: 'sari.pratiwi@apg.co.id', role: 'qa', division: 'IT QA', avatar: 'SP' },
   { id: 'u6', name: 'Ahmad Fauzi', email: 'ahmad.fauzi@apg.co.id', role: 'manager', division: 'IT', avatar: 'AF' },
-  { id: 'u7', name: 'Direktur Teknologi', email: 'cto@apg.co.id', role: 'executive', division: 'Direksi', avatar: 'DT' },
+  {
+    id: 'u7',
+    name: 'Direktur Teknologi',
+    email: 'cto@apg.co.id',
+    role: 'executive',
+    division: 'Direksi',
+    avatar: 'DT',
+  },
   { id: 'u8', name: 'Admin Sistem', email: 'admin@apg.co.id', role: 'admin', division: 'IT', avatar: 'AS' },
-  { id: 'u9', name: 'Reza Firmansyah', email: 'reza.firmansyah@apg.co.id', role: 'user', division: 'Keuangan', avatar: 'RF' },
-  { id: 'u10', name: 'Linda Susanti', email: 'linda.susanti@apg.co.id', role: 'pic', division: 'IT Development', avatar: 'LS' },
+  {
+    id: 'u9',
+    name: 'Reza Firmansyah',
+    email: 'reza.firmansyah@apg.co.id',
+    role: 'user',
+    division: 'Keuangan',
+    avatar: 'RF',
+  },
+  {
+    id: 'u10',
+    name: 'Linda Susanti',
+    email: 'linda.susanti@apg.co.id',
+    role: 'pic',
+    division: 'IT Development',
+    avatar: 'LS',
+  },
 ]
 
 export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000001',
     title: 'Gagal Generate PDF Polis Asuransi',
-    description: 'Sistem tidak dapat meng-generate dokumen PDF polis asuransi jiwa untuk nasabah baru. Error muncul saat klik tombol "Cetak Polis" pada modul Manajemen Polis. Pesan error: "PDF generation failed: template not found". Berdampak pada proses penerbitan polis yang tidak dapat dilanjutkan.',
+    description:
+      'Sistem tidak dapat meng-generate dokumen PDF polis asuransi jiwa untuk nasabah baru. Error muncul saat klik tombol "Cetak Polis" pada modul Manajemen Polis. Pesan error: "PDF generation failed: template not found". Berdampak pada proses penerbitan polis yang tidak dapat dilanjutkan.',
     category: 'incident',
     priority: 'critical',
     status: 'uat',
@@ -40,7 +83,8 @@ export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000002',
     title: 'Request Tambah Fitur Export Excel Laporan Klaim',
-    description: 'Perlu ditambahkan fitur export data laporan klaim ke format Excel (.xlsx) pada modul Laporan Klaim. Saat ini hanya tersedia export PDF yang tidak memudahkan analisis data lanjutan.',
+    description:
+      'Perlu ditambahkan fitur export data laporan klaim ke format Excel (.xlsx) pada modul Laporan Klaim. Saat ini hanya tersedia export PDF yang tidak memudahkan analisis data lanjutan.',
     category: 'request',
     priority: 'medium',
     status: 'in_progress',
@@ -63,7 +107,8 @@ export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000003',
     title: 'Dashboard Premi Tidak Menampilkan Data Bulan Berjalan',
-    description: 'Dashboard monitoring premi pada halaman utama tidak menampilkan data bulan Juli 2026. Data terakhir yang muncul adalah bulan Juni 2026.',
+    description:
+      'Dashboard monitoring premi pada halaman utama tidak menampilkan data bulan Juli 2026. Data terakhir yang muncul adalah bulan Juni 2026.',
     category: 'incident',
     priority: 'high',
     status: 'internal_testing',
@@ -86,7 +131,8 @@ export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000004',
     title: 'Performa Login Lambat - Lebih dari 30 Detik',
-    description: 'Proses login ke aplikasi SMP membutuhkan waktu lebih dari 30 detik sejak kemarin sore. User melaporkan timeout setelah menunggu lebih dari 1 menit.',
+    description:
+      'Proses login ke aplikasi SMP membutuhkan waktu lebih dari 30 detik sejak kemarin sore. User melaporkan timeout setelah menunggu lebih dari 1 menit.',
     category: 'incident',
     priority: 'high',
     status: 'assigned',
@@ -109,7 +155,8 @@ export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000005',
     title: 'Penambahan Role Baru: Auditor Internal',
-    description: 'Diperlukan penambahan role baru "Auditor Internal" dengan akses read-only ke seluruh modul laporan. Kebutuhan dari tim Audit Internal untuk keperluan audit Q3 2026.',
+    description:
+      'Diperlukan penambahan role baru "Auditor Internal" dengan akses read-only ke seluruh modul laporan. Kebutuhan dari tim Audit Internal untuk keperluan audit Q3 2026.',
     category: 'change',
     priority: 'low',
     status: 'pending_validation',
@@ -132,7 +179,8 @@ export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000006',
     title: 'Notifikasi Email Perpanjangan Polis Tidak Terkirim',
-    description: 'Sistem notifikasi email untuk reminder perpanjangan polis tidak terkirim sejak tanggal 10 Juli 2026. Lebih dari 500 nasabah tidak menerima notifikasi.',
+    description:
+      'Sistem notifikasi email untuk reminder perpanjangan polis tidak terkirim sejak tanggal 10 Juli 2026. Lebih dari 500 nasabah tidak menerima notifikasi.',
     category: 'incident',
     priority: 'critical',
     status: 'over_sla',
@@ -155,7 +203,8 @@ export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000007',
     title: 'Update Template Dokumen SURAT KETERANGAN KECELAKAAN',
-    description: 'Permohonan update template Surat Keterangan Kecelakaan sesuai format terbaru dari Otoritas Jasa Keuangan (OJK) per Juli 2026.',
+    description:
+      'Permohonan update template Surat Keterangan Kecelakaan sesuai format terbaru dari Otoritas Jasa Keuangan (OJK) per Juli 2026.',
     category: 'change',
     priority: 'medium',
     status: 'pending_approval',
@@ -178,7 +227,8 @@ export const TICKETS: Ticket[] = [
   {
     id: 'IT-2026-000008',
     title: 'Integrasi API Pembayaran Premi via Virtual Account',
-    description: 'Pengembangan fitur baru integrasi API bank untuk pembayaran premi melalui Virtual Account. Mendukung Bank BCA, BRI, dan Mandiri.',
+    description:
+      'Pengembangan fitur baru integrasi API bank untuk pembayaran premi melalui Virtual Account. Mendukung Bank BCA, BRI, dan Mandiri.',
     category: 'request',
     priority: 'high',
     status: 'closed',
@@ -207,7 +257,8 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     actor: 'Rina Marlina',
     actorRole: 'user',
     action: 'Tiket dibuat',
-    comment: 'Melaporkan kegagalan generate PDF polis. Sangat urgent karena ada 50+ nasabah menunggu penerbitan polis hari ini.',
+    comment:
+      'Melaporkan kegagalan generate PDF polis. Sangat urgent karena ada 50+ nasabah menunggu penerbitan polis hari ini.',
     timestamp: '2026-07-08T08:30:00Z',
     type: 'status_change',
   },
@@ -237,7 +288,8 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     actor: 'Dian Kusuma',
     actorRole: 'pic',
     action: 'Tiket mulai dikerjakan',
-    comment: 'Investigasi awal: menemukan bahwa file template PDF hilang dari server setelah deployment terkahir. Sedang proses restore.',
+    comment:
+      'Investigasi awal: menemukan bahwa file template PDF hilang dari server setelah deployment terkahir. Sedang proses restore.',
     timestamp: '2026-07-08T10:30:00Z',
     type: 'comment',
   },
@@ -247,7 +299,8 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     actor: 'Dian Kusuma',
     actorRole: 'pic',
     action: 'Update progress',
-    comment: 'Root cause confirmed: template file tidak ter-include dalam deployment package v2.3.1. Fix sedang dikerjakan.',
+    comment:
+      'Root cause confirmed: template file tidak ter-include dalam deployment package v2.3.1. Fix sedang dikerjakan.',
     timestamp: '2026-07-08T13:00:00Z',
     type: 'comment',
   },
@@ -267,7 +320,8 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     actor: 'Dian Kusuma',
     actorRole: 'pic',
     action: 'Fix selesai - Masuk Internal Testing',
-    comment: 'Fix telah selesai. Template PDF berhasil di-restore dan deploy ke environment testing. Siap untuk internal testing oleh QA.',
+    comment:
+      'Fix telah selesai. Template PDF berhasil di-restore dan deploy ke environment testing. Siap untuk internal testing oleh QA.',
     timestamp: '2026-07-10T09:00:00Z',
     type: 'status_change',
   },
@@ -277,7 +331,8 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     actor: 'Sari Pratiwi',
     actorRole: 'qa',
     action: 'Internal Testing selesai - PASSED',
-    comment: 'Testing berhasil: Generate PDF polis berhasil untuk semua jenis produk. Performance: rata-rata 3.2 detik per dokumen. Siap untuk UAT.',
+    comment:
+      'Testing berhasil: Generate PDF polis berhasil untuk semua jenis produk. Performance: rata-rata 3.2 detik per dokumen. Siap untuk UAT.',
     timestamp: '2026-07-11T14:00:00Z',
     type: 'status_change',
   },
@@ -318,7 +373,8 @@ export const NOTIFICATIONS: Notification[] = [
     id: 'n3',
     userId: 'u3',
     title: 'ESKALASI: Tiket Over SLA',
-    message: 'Tiket IT-2026-000006 "Notifikasi Email Perpanjangan Polis" telah melewati SLA 43 jam. Perlu tindakan segera.',
+    message:
+      'Tiket IT-2026-000006 "Notifikasi Email Perpanjangan Polis" telah melewati SLA 43 jam. Perlu tindakan segera.',
     type: 'error',
     read: false,
     ticketId: 'IT-2026-000006',

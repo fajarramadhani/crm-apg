@@ -34,36 +34,36 @@ Expected status codes: 200/201/204, 401 unauthenticated, 403 forbidden, 404 miss
 
 ## Authentication and current user
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/sanctum/csrf-cookie` | Initialize CSRF cookie (Laravel route outside `/api/v1`) |
-| POST | `/auth/login` | Create SPA session; email/password |
-| POST | `/auth/logout` | Revoke current session |
-| GET | `/me` | Current user, roles, permissions, division, feature flags |
-| GET | `/me/notifications` | Paginated own notifications |
-| PATCH | `/me/notifications/{id}/read` | Mark one as read |
-| POST | `/me/notifications/read-all` | Mark scoped notifications read |
-| GET/PATCH | `/me/notification-preferences` | Read/update own preferences |
+| Method    | Endpoint                       | Purpose                                                   |
+| --------- | ------------------------------ | --------------------------------------------------------- |
+| GET       | `/sanctum/csrf-cookie`         | Initialize CSRF cookie (Laravel route outside `/api/v1`)  |
+| POST      | `/auth/login`                  | Create SPA session; email/password                        |
+| POST      | `/auth/logout`                 | Revoke current session                                    |
+| GET       | `/me`                          | Current user, roles, permissions, division, feature flags |
+| GET       | `/me/notifications`            | Paginated own notifications                               |
+| PATCH     | `/me/notifications/{id}/read`  | Mark one as read                                          |
+| POST      | `/me/notifications/read-all`   | Mark scoped notifications read                            |
+| GET/PATCH | `/me/notification-preferences` | Read/update own preferences                               |
 
 SSO, reset password, MFA, and session management endpoint ditambahkan hanya setelah identity policy diputuskan.
 
 ## Tickets
 
-| Method | Endpoint | Permission/purpose |
-|---|---|---|
-| GET | `/tickets` | Policy-scoped list; filters `search,status[],priority[],category[],application_id,division_id,requester_id,pic_id,over_sla,created_from,created_to` |
-| POST | `/tickets` | Create ticket; requester/application/category/title/description/attachments |
-| GET | `/tickets/{ticket}` | Policy-shaped detail; executive projection/redaction |
-| PATCH | `/tickets/{ticket}` | Edit only fields allowed in draft/revision; requires version |
-| POST | `/tickets/{ticket}/cancel` | Cancel with reason |
-| POST | `/tickets/{ticket}/reopen` | Reopen with reason and policy window |
-| GET | `/tickets/{ticket}/allowed-actions` | Optional explicit refresh; usually embedded in detail |
-| GET | `/tickets/{ticket}/activities` | Visibility-scoped timeline, paginated |
-| POST | `/tickets/{ticket}/comments` | Public/internal comment based on permission |
-| GET/POST/DELETE | `/tickets/{ticket}/watchers[/{user}]` | Subscription management |
-| GET | `/tickets/{ticket}/status-history` | Authorized transition history |
-| GET | `/tickets/{ticket}/links` | Related tickets |
-| POST/DELETE | `/tickets/{ticket}/links[/{link}]` | Manage relations |
+| Method          | Endpoint                              | Permission/purpose                                                                                                                                  |
+| --------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET             | `/tickets`                            | Policy-scoped list; filters `search,status[],priority[],category[],application_id,division_id,requester_id,pic_id,over_sla,created_from,created_to` |
+| POST            | `/tickets`                            | Create ticket; requester/application/category/title/description/attachments                                                                         |
+| GET             | `/tickets/{ticket}`                   | Policy-shaped detail; executive projection/redaction                                                                                                |
+| PATCH           | `/tickets/{ticket}`                   | Edit only fields allowed in draft/revision; requires version                                                                                        |
+| POST            | `/tickets/{ticket}/cancel`            | Cancel with reason                                                                                                                                  |
+| POST            | `/tickets/{ticket}/reopen`            | Reopen with reason and policy window                                                                                                                |
+| GET             | `/tickets/{ticket}/allowed-actions`   | Optional explicit refresh; usually embedded in detail                                                                                               |
+| GET             | `/tickets/{ticket}/activities`        | Visibility-scoped timeline, paginated                                                                                                               |
+| POST            | `/tickets/{ticket}/comments`          | Public/internal comment based on permission                                                                                                         |
+| GET/POST/DELETE | `/tickets/{ticket}/watchers[/{user}]` | Subscription management                                                                                                                             |
+| GET             | `/tickets/{ticket}/status-history`    | Authorized transition history                                                                                                                       |
+| GET             | `/tickets/{ticket}/links`             | Related tickets                                                                                                                                     |
+| POST/DELETE     | `/tickets/{ticket}/links[/{link}]`    | Manage relations                                                                                                                                    |
 
 Create payload minimum:
 
@@ -102,110 +102,110 @@ Ticket resource minimum:
 
 Gunakan action endpoints daripada generic `PATCH status`, sehingga validation, audit, dan policy jelas.
 
-| Method | Endpoint | Payload utama |
-|---|---|---|
-| POST | `/tickets/{ticket}/validation` | `decision: validated|need_revision|rejected`, comment, reason_code |
-| POST | `/tickets/{ticket}/triage` | category, priority, sla_policy_id, impact, urgency, note |
-| POST | `/tickets/{ticket}/assignments` | assignment_type, user_id, note |
-| POST | `/tickets/{ticket}/transfer` | target user/division/application, reason |
-| POST | `/tickets/{ticket}/start-analysis` | version |
-| POST | `/tickets/{ticket}/wait` | type `user|external_party`, reason, expected_until |
-| POST | `/tickets/{ticket}/resume` | comment, version |
-| POST | `/tickets/{ticket}/submit-planning` | plan_id, version |
-| POST | `/tickets/{ticket}/submit-development` | summary, release_reference, version |
-| POST | `/tickets/{ticket}/ready-for-internal-test` | test_run_id/version |
-| POST | `/tickets/{ticket}/ready-for-qa` | test_run_id/version |
-| POST | `/tickets/{ticket}/ready-for-uat` | test_run_id, uat_owner_id |
-| POST | `/tickets/{ticket}/request-approval` | approver_ids or resolved rule |
-| POST | `/tickets/{ticket}/mark-ready-to-deploy` | approval reference/version |
-| POST | `/tickets/{ticket}/mark-deployed` | deployment_id/idempotency key |
-| POST | `/tickets/{ticket}/start-monitoring` | deployment_id, planned_end_at |
-| POST | `/tickets/{ticket}/close` | resolution_code, summary, KB reference, version |
+| Method | Endpoint                                    | Payload utama                                            |
+| ------ | ------------------------------------------- | -------------------------------------------------------- |
+| POST   | `/tickets/{ticket}/validation`              | `decision: validated                                     | need_revision                           | rejected`, comment, reason_code |
+| POST   | `/tickets/{ticket}/triage`                  | category, priority, sla_policy_id, impact, urgency, note |
+| POST   | `/tickets/{ticket}/assignments`             | assignment_type, user_id, note                           |
+| POST   | `/tickets/{ticket}/transfer`                | target user/division/application, reason                 |
+| POST   | `/tickets/{ticket}/start-analysis`          | version                                                  |
+| POST   | `/tickets/{ticket}/wait`                    | type `user                                               | external_party`, reason, expected_until |
+| POST   | `/tickets/{ticket}/resume`                  | comment, version                                         |
+| POST   | `/tickets/{ticket}/submit-planning`         | plan_id, version                                         |
+| POST   | `/tickets/{ticket}/submit-development`      | summary, release_reference, version                      |
+| POST   | `/tickets/{ticket}/ready-for-internal-test` | test_run_id/version                                      |
+| POST   | `/tickets/{ticket}/ready-for-qa`            | test_run_id/version                                      |
+| POST   | `/tickets/{ticket}/ready-for-uat`           | test_run_id, uat_owner_id                                |
+| POST   | `/tickets/{ticket}/request-approval`        | approver_ids or resolved rule                            |
+| POST   | `/tickets/{ticket}/mark-ready-to-deploy`    | approval reference/version                               |
+| POST   | `/tickets/{ticket}/mark-deployed`           | deployment_id/idempotency key                            |
+| POST   | `/tickets/{ticket}/start-monitoring`        | deployment_id, planned_end_at                            |
+| POST   | `/tickets/{ticket}/close`                   | resolution_code, summary, KB reference, version          |
 
 Invalid state returns `409 INVALID_TRANSITION` with `current_status` and latest `version`, never silently coerces.
 
 ## RCA, planning, tests, approvals, deployment, monitoring
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET/PUT | `/tickets/{ticket}/rca` | Read/upsert RCA subject to state/policy |
-| GET/PUT | `/tickets/{ticket}/plan` | Read/upsert implementation plan |
-| GET/POST | `/tickets/{ticket}/test-runs` | List/create internal/QA/UAT run |
-| GET/PATCH | `/test-runs/{run}` | Run metadata/status |
-| POST | `/test-runs/{run}/cases` | Add/snapshot case |
-| PATCH | `/test-runs/{run}/cases/{case}` | Result/actual/notes |
-| POST | `/test-runs/{run}/submit` | Finalize run; recommendation |
-| GET/POST | `/tickets/{ticket}/defects` | List/create defect |
-| PATCH | `/defects/{defect}` | Assign/resolve/retest transition |
-| GET | `/approvals` | Approver queue; filter decision/stage |
-| GET | `/tickets/{ticket}/approvals` | Approval history |
-| POST | `/approvals/{approval}/decision` | approved/rejected/revision + mandatory comment where needed |
-| GET/POST | `/tickets/{ticket}/deployments` | List/create deployment plan |
-| PATCH | `/deployments/{deployment}` | Update plan/window/checklist fields |
-| POST | `/deployments/{deployment}/start` | Begin deployment |
-| POST | `/deployments/{deployment}/complete` | success/failed/rolled_back + evidence |
-| GET/POST | `/tickets/{ticket}/monitoring-records` | Monitoring updates |
-| POST | `/monitoring-records/{record}/complete` | pass/issue_found and notes |
-| GET | `/tickets/{ticket}/closure` | Closure record |
+| Method    | Endpoint                                | Purpose                                                     |
+| --------- | --------------------------------------- | ----------------------------------------------------------- |
+| GET/PUT   | `/tickets/{ticket}/rca`                 | Read/upsert RCA subject to state/policy                     |
+| GET/PUT   | `/tickets/{ticket}/plan`                | Read/upsert implementation plan                             |
+| GET/POST  | `/tickets/{ticket}/test-runs`           | List/create internal/QA/UAT run                             |
+| GET/PATCH | `/test-runs/{run}`                      | Run metadata/status                                         |
+| POST      | `/test-runs/{run}/cases`                | Add/snapshot case                                           |
+| PATCH     | `/test-runs/{run}/cases/{case}`         | Result/actual/notes                                         |
+| POST      | `/test-runs/{run}/submit`               | Finalize run; recommendation                                |
+| GET/POST  | `/tickets/{ticket}/defects`             | List/create defect                                          |
+| PATCH     | `/defects/{defect}`                     | Assign/resolve/retest transition                            |
+| GET       | `/approvals`                            | Approver queue; filter decision/stage                       |
+| GET       | `/tickets/{ticket}/approvals`           | Approval history                                            |
+| POST      | `/approvals/{approval}/decision`        | approved/rejected/revision + mandatory comment where needed |
+| GET/POST  | `/tickets/{ticket}/deployments`         | List/create deployment plan                                 |
+| PATCH     | `/deployments/{deployment}`             | Update plan/window/checklist fields                         |
+| POST      | `/deployments/{deployment}/start`       | Begin deployment                                            |
+| POST      | `/deployments/{deployment}/complete`    | success/failed/rolled_back + evidence                       |
+| GET/POST  | `/tickets/{ticket}/monitoring-records`  | Monitoring updates                                          |
+| POST      | `/monitoring-records/{record}/complete` | pass/issue_found and notes                                  |
+| GET       | `/tickets/{ticket}/closure`             | Closure record                                              |
 
 ## Attachments
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| POST | `/attachments` | Multipart upload to private temporary storage; returns attachment ID |
-| GET | `/attachments/{attachment}/download` | Authorized streamed/signed download |
-| DELETE | `/attachments/{attachment}` | Only unattached/draft attachment or authorized removal |
+| Method | Endpoint                             | Purpose                                                              |
+| ------ | ------------------------------------ | -------------------------------------------------------------------- |
+| POST   | `/attachments`                       | Multipart upload to private temporary storage; returns attachment ID |
+| GET    | `/attachments/{attachment}/download` | Authorized streamed/signed download                                  |
+| DELETE | `/attachments/{attachment}`          | Only unattached/draft attachment or authorized removal               |
 
 Upload validates size/MIME/extension, records checksum and scan state. Ticket mutation may only attach IDs owned by current user/session and not already bound elsewhere.
 
 ## SLA, escalation, dashboards, reports
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET | `/sla/monitoring` | Policy-scoped clocks/at-risk/breached queues |
-| GET | `/tickets/{ticket}/sla` | Clock and pause history |
-| GET | `/tickets/{ticket}/escalations` | Triggered events |
-| POST | `/tickets/{ticket}/escalations/manual` | Authorized manual escalation |
-| GET | `/dashboards/requester` | Own KPI/queues |
-| GET | `/dashboards/supervisor` | Division KPI/validation |
-| GET | `/dashboards/it-lead` | Operational KPI/triage/SLA |
-| GET | `/dashboards/pic` | Assigned workload |
-| GET | `/dashboards/qa` | QA queue/metrics |
-| GET | `/dashboards/manager` | Approval/SLA summary |
-| GET | `/dashboards/executive` | Redacted aggregates only |
-| GET | `/reports/tickets` | Authorized aggregate/list report |
-| POST | `/exports` | Async authorized export; returns job ID |
-| GET | `/exports/{export}` | Own/authorized export status/download |
+| Method | Endpoint                               | Purpose                                      |
+| ------ | -------------------------------------- | -------------------------------------------- |
+| GET    | `/sla/monitoring`                      | Policy-scoped clocks/at-risk/breached queues |
+| GET    | `/tickets/{ticket}/sla`                | Clock and pause history                      |
+| GET    | `/tickets/{ticket}/escalations`        | Triggered events                             |
+| POST   | `/tickets/{ticket}/escalations/manual` | Authorized manual escalation                 |
+| GET    | `/dashboards/requester`                | Own KPI/queues                               |
+| GET    | `/dashboards/supervisor`               | Division KPI/validation                      |
+| GET    | `/dashboards/it-lead`                  | Operational KPI/triage/SLA                   |
+| GET    | `/dashboards/pic`                      | Assigned workload                            |
+| GET    | `/dashboards/qa`                       | QA queue/metrics                             |
+| GET    | `/dashboards/manager`                  | Approval/SLA summary                         |
+| GET    | `/dashboards/executive`                | Redacted aggregates only                     |
+| GET    | `/reports/tickets`                     | Authorized aggregate/list report             |
+| POST   | `/exports`                             | Async authorized export; returns job ID      |
+| GET    | `/exports/{export}`                    | Own/authorized export status/download        |
 
 Dashboard endpoint bukan sumber truth terpisah; ia query read model dari domain tables. Cache singkat dapat ditambahkan setelah correctness.
 
 ## Admin/master data
 
-| Resource | Endpoints |
-|---|---|
-| Users | `GET/POST /users`, `GET/PATCH /users/{user}`, `POST /users/{user}/activate`, `POST /users/{user}/deactivate`, `PUT /users/{user}/roles` |
-| Roles/permissions | `GET /roles`, `GET /permissions`, `PUT /roles/{role}/permissions` |
-| Divisions | CRUD-ish `/divisions`; use deactivate rather than delete when referenced |
-| Applications | CRUD-ish `/applications`; membership `/applications/{app}/members` |
-| SLA policies | `/sla-policies`, activate/deactivate; preview calculation endpoint optional |
-| Calendars | `/business-calendars`, nested hours and holidays |
-| Escalation rules | `/escalation-rules`, nested targets, activate/deactivate |
-| Audit | `GET /audit-logs`, `GET /audit-logs/{log}`; never create/update through public API |
-| System dictionaries | `GET /meta/ticket-options` for allowed categories/status labels/priorities, not authorization |
+| Resource            | Endpoints                                                                                                                               |
+| ------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| Users               | `GET/POST /users`, `GET/PATCH /users/{user}`, `POST /users/{user}/activate`, `POST /users/{user}/deactivate`, `PUT /users/{user}/roles` |
+| Roles/permissions   | `GET /roles`, `GET /permissions`, `PUT /roles/{role}/permissions`                                                                       |
+| Divisions           | CRUD-ish `/divisions`; use deactivate rather than delete when referenced                                                                |
+| Applications        | CRUD-ish `/applications`; membership `/applications/{app}/members`                                                                      |
+| SLA policies        | `/sla-policies`, activate/deactivate; preview calculation endpoint optional                                                             |
+| Calendars           | `/business-calendars`, nested hours and holidays                                                                                        |
+| Escalation rules    | `/escalation-rules`, nested targets, activate/deactivate                                                                                |
+| Audit               | `GET /audit-logs`, `GET /audit-logs/{log}`; never create/update through public API                                                      |
+| System dictionaries | `GET /meta/ticket-options` for allowed categories/status labels/priorities, not authorization                                           |
 
 ## Knowledge Base
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| GET/POST | `/knowledge/articles` | Search/list; create draft |
-| GET/PATCH | `/knowledge/articles/{article}` | Visibility-scoped detail/update |
-| POST | `/knowledge/articles/{article}/submit-review` | Draft to review |
-| POST | `/knowledge/articles/{article}/publish` | Publish authorized version |
-| POST | `/knowledge/articles/{article}/archive` | Archive |
-| GET | `/knowledge/articles/{article}/versions` | Version history |
-| POST | `/knowledge/articles/{article}/feedback` | Helpful/comment |
-| GET/POST | `/knowledge/categories` | List/manage categories |
-| POST/DELETE | `/tickets/{ticket}/knowledge-articles[/{article}]` | Link solution/source article |
+| Method      | Endpoint                                           | Purpose                         |
+| ----------- | -------------------------------------------------- | ------------------------------- |
+| GET/POST    | `/knowledge/articles`                              | Search/list; create draft       |
+| GET/PATCH   | `/knowledge/articles/{article}`                    | Visibility-scoped detail/update |
+| POST        | `/knowledge/articles/{article}/submit-review`      | Draft to review                 |
+| POST        | `/knowledge/articles/{article}/publish`            | Publish authorized version      |
+| POST        | `/knowledge/articles/{article}/archive`            | Archive                         |
+| GET         | `/knowledge/articles/{article}/versions`           | Version history                 |
+| POST        | `/knowledge/articles/{article}/feedback`           | Helpful/comment                 |
+| GET/POST    | `/knowledge/categories`                            | List/manage categories          |
+| POST/DELETE | `/tickets/{ticket}/knowledge-articles[/{article}]` | Link solution/source article    |
 
 ## Contract delivery strategy
 

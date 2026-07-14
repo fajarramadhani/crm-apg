@@ -1,13 +1,27 @@
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { TICKETS, ACTIVITY_LOGS, formatDate, formatDateTime } from '../../data'
-import { PageHeader, Button, StatusBadge, PriorityBadge, CategoryBadge, SLAIndicator, ActivityTimeline, Modal, Textarea, Toast, SectionCard, Tabs, OverSLABanner } from '../../components/ui'
+import {
+  PageHeader,
+  Button,
+  StatusBadge,
+  PriorityBadge,
+  CategoryBadge,
+  SLAIndicator,
+  ActivityTimeline,
+  Modal,
+  Textarea,
+  Toast,
+  SectionCard,
+  Tabs,
+  OverSLABanner,
+} from '../../components/ui'
 
 export default function TicketDetail() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const ticket = TICKETS.find(t => t.id === id) || TICKETS[0]
-  const logs = ACTIVITY_LOGS.filter(l => l.ticketId === ticket.id)
+  const ticket = TICKETS.find((t) => t.id === id) || TICKETS[0]
+  const logs = ACTIVITY_LOGS.filter((l) => l.ticketId === ticket.id)
 
   const [tab, setTab] = useState('Ringkasan')
   const [showComment, setShowComment] = useState(false)
@@ -31,9 +45,13 @@ export default function TicketDetail() {
         actions={
           <div className="flex gap-2">
             {ticket.status === 'uat' && (
-              <Button variant="success" onClick={() => navigate('/user/uat')}>🧪 Mulai UAT</Button>
+              <Button variant="success" onClick={() => navigate('/user/uat')}>
+                🧪 Mulai UAT
+              </Button>
             )}
-            <Button variant="ghost" onClick={() => navigate('/user/tickets')}>← Kembali</Button>
+            <Button variant="ghost" onClick={() => navigate('/user/tickets')}>
+              ← Kembali
+            </Button>
           </div>
         }
       />
@@ -46,9 +64,15 @@ export default function TicketDetail() {
         <PriorityBadge priority={ticket.priority} />
         <CategoryBadge category={ticket.category} />
         <div className="mx-2 h-5 w-px bg-gray-200" />
-        <span className="text-xs text-gray-500">PIC: <span className="font-medium text-gray-700">{ticket.pic || '—'}</span></span>
-        <span className="text-xs text-gray-500">Aplikasi: <span className="font-medium text-gray-700">{ticket.application}</span></span>
-        <span className="text-xs text-gray-500">Dibuat: <span className="font-medium text-gray-700">{formatDate(ticket.createdAt)}</span></span>
+        <span className="text-xs text-gray-500">
+          PIC: <span className="font-medium text-gray-700">{ticket.pic || '—'}</span>
+        </span>
+        <span className="text-xs text-gray-500">
+          Aplikasi: <span className="font-medium text-gray-700">{ticket.application}</span>
+        </span>
+        <span className="text-xs text-gray-500">
+          Dibuat: <span className="font-medium text-gray-700">{formatDate(ticket.createdAt)}</span>
+        </span>
         <div className="ml-auto w-48">
           <SLAIndicator slaRemaining={ticket.slaRemaining} overSla={ticket.overSla} slaHours={ticket.slaHours} />
         </div>
@@ -66,8 +90,10 @@ export default function TicketDetail() {
             {ticket.tags.length > 0 && (
               <SectionCard title="Tags">
                 <div className="flex flex-wrap gap-2">
-                  {ticket.tags.map(tag => (
-                    <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">#{tag}</span>
+                  {ticket.tags.map((tag) => (
+                    <span key={tag} className="px-2.5 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
+                      #{tag}
+                    </span>
                   ))}
                 </div>
               </SectionCard>
@@ -87,7 +113,7 @@ export default function TicketDetail() {
                   { label: 'SLA Deadline', value: formatDateTime(ticket.slaDeadline) },
                   { label: 'Dibuat', value: formatDateTime(ticket.createdAt) },
                   { label: 'Diupdate', value: formatDateTime(ticket.updatedAt) },
-                ].map(item => (
+                ].map((item) => (
                   <div key={item.label} className="flex justify-between gap-2">
                     <span className="text-gray-500 shrink-0">{item.label}</span>
                     <span className="font-medium text-gray-900 text-right">{item.value}</span>
@@ -99,11 +125,17 @@ export default function TicketDetail() {
             {/* User Actions */}
             <SectionCard title="Aksi">
               <div className="space-y-2">
-                <button onClick={() => setShowComment(true)} className="w-full text-sm text-left px-3 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium transition-colors">
+                <button
+                  onClick={() => setShowComment(true)}
+                  className="w-full text-sm text-left px-3 py-2.5 rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-700 font-medium transition-colors"
+                >
                   💬 Tambah Komentar
                 </button>
                 {ticket.status === 'uat' && (
-                  <button onClick={() => navigate('/user/uat')} className="w-full text-sm text-left px-3 py-2.5 rounded-lg border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-medium transition-colors">
+                  <button
+                    onClick={() => navigate('/user/uat')}
+                    className="w-full text-sm text-left px-3 py-2.5 rounded-lg border border-cyan-200 bg-cyan-50 hover:bg-cyan-100 text-cyan-700 font-medium transition-colors"
+                  >
                     🧪 Lakukan UAT
                   </button>
                 )}
@@ -127,8 +159,11 @@ export default function TicketDetail() {
         <SectionCard title="Lampiran">
           {ticket.attachments.length > 0 ? (
             <div className="space-y-2">
-              {ticket.attachments.map(att => (
-                <div key={att} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              {ticket.attachments.map((att) => (
+                <div
+                  key={att}
+                  className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer"
+                >
                   <span className="text-xl">📎</span>
                   <span className="text-sm text-gray-700 font-medium">{att}</span>
                   <span className="ml-auto text-xs text-[#1E3A8A] hover:underline">Download</span>
@@ -149,11 +184,15 @@ export default function TicketDetail() {
             rows={4}
             placeholder="Tulis komentar atau pertanyaan..."
             value={comment}
-            onChange={e => setComment(e.target.value)}
+            onChange={(e) => setComment(e.target.value)}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setShowComment(false)}>Batal</Button>
-            <Button variant="primary" onClick={handleAddComment} disabled={!comment}>Kirim</Button>
+            <Button variant="secondary" onClick={() => setShowComment(false)}>
+              Batal
+            </Button>
+            <Button variant="primary" onClick={handleAddComment} disabled={!comment}>
+              Kirim
+            </Button>
           </div>
         </div>
       </Modal>

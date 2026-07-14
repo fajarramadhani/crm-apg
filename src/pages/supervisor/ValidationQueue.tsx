@@ -1,9 +1,20 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { TICKETS, formatDate } from '../../data'
-import { PageHeader, Button, StatusBadge, PriorityBadge, CategoryBadge, SectionCard, Modal, Textarea, Select, Toast } from '../../components/ui'
+import {
+  PageHeader,
+  Button,
+  StatusBadge,
+  PriorityBadge,
+  CategoryBadge,
+  SectionCard,
+  Modal,
+  Textarea,
+  Select,
+  Toast,
+} from '../../components/ui'
 
-const pending = TICKETS.filter(t => t.status === 'pending_validation')
+const pending = TICKETS.filter((t) => t.status === 'pending_validation')
 
 export default function ValidationQueue() {
   const navigate = useNavigate()
@@ -32,7 +43,11 @@ export default function ValidationQueue() {
       <PageHeader
         title="Antrean Validasi"
         subtitle={`${pending.length} tiket menunggu validasi Supervisor`}
-        actions={<Button variant="ghost" onClick={() => navigate('/supervisor/dashboard')}>← Dashboard</Button>}
+        actions={
+          <Button variant="ghost" onClick={() => navigate('/supervisor/dashboard')}>
+            ← Dashboard
+          </Button>
+        }
       />
 
       {pending.length === 0 ? (
@@ -45,7 +60,7 @@ export default function ValidationQueue() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* List */}
           <div className="space-y-3">
-            {pending.map(t => (
+            {pending.map((t) => (
               <div
                 key={t.id}
                 onClick={() => setSelected(t)}
@@ -56,7 +71,9 @@ export default function ValidationQueue() {
                   <PriorityBadge priority={t.priority} />
                 </div>
                 <p className="text-sm font-semibold text-gray-900 mb-1">{t.title}</p>
-                <p className="text-xs text-gray-500 mb-2">{t.requester} · {t.division}</p>
+                <p className="text-xs text-gray-500 mb-2">
+                  {t.requester} · {t.division}
+                </p>
                 <div className="flex gap-2">
                   <CategoryBadge category={t.category} />
                   <span className="text-xs text-gray-400">{formatDate(t.createdAt)}</span>
@@ -85,8 +102,11 @@ export default function ValidationQueue() {
                     { label: 'Aplikasi', value: selected.application },
                     { label: 'Saran Prioritas', value: selected.priority },
                     { label: 'Dibuat', value: formatDate(selected.createdAt) },
-                    { label: 'Lampiran', value: selected.attachments.length > 0 ? selected.attachments.join(', ') : 'Tidak ada' },
-                  ].map(item => (
+                    {
+                      label: 'Lampiran',
+                      value: selected.attachments.length > 0 ? selected.attachments.join(', ') : 'Tidak ada',
+                    },
+                  ].map((item) => (
                     <div key={item.label}>
                       <p className="text-xs text-gray-500">{item.label}</p>
                       <p className="font-medium text-gray-900 capitalize">{item.value}</p>
@@ -98,9 +118,15 @@ export default function ValidationQueue() {
                 <div className="border-t border-gray-100 pt-4">
                   <p className="text-sm font-semibold text-gray-700 mb-3">Tindakan Validasi</p>
                   <div className="flex gap-3">
-                    <Button variant="success" onClick={() => setAction('approve')}>✓ Validasi & Teruskan</Button>
-                    <Button variant="warning" onClick={() => setAction('revision')}>✏️ Minta Revisi</Button>
-                    <Button variant="danger" onClick={() => setAction('reject')}>✕ Tolak</Button>
+                    <Button variant="success" onClick={() => setAction('approve')}>
+                      ✓ Validasi & Teruskan
+                    </Button>
+                    <Button variant="warning" onClick={() => setAction('revision')}>
+                      ✏️ Minta Revisi
+                    </Button>
+                    <Button variant="danger" onClick={() => setAction('reject')}>
+                      ✕ Tolak
+                    </Button>
                   </div>
                 </div>
               </SectionCard>
@@ -128,22 +154,26 @@ export default function ValidationQueue() {
                 { value: 'other', label: 'Lainnya' },
               ]}
               value={rejReason}
-              onChange={e => setRejReason(e.target.value)}
+              onChange={(e) => setRejReason(e.target.value)}
             />
           )}
           <Textarea
             label={action === 'approve' ? 'Catatan (opsional)' : 'Keterangan *'}
             rows={4}
             placeholder={
-              action === 'approve' ? 'Tambahkan catatan untuk IT Lead...'
-                : action === 'reject' ? 'Jelaskan alasan penolakan kepada requester...'
+              action === 'approve'
+                ? 'Tambahkan catatan untuk IT Lead...'
+                : action === 'reject'
+                  ? 'Jelaskan alasan penolakan kepada requester...'
                   : 'Jelaskan apa yang perlu direvisi...'
             }
             value={comment}
-            onChange={e => setComment(e.target.value)}
+            onChange={(e) => setComment(e.target.value)}
           />
           <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setAction(null)}>Batal</Button>
+            <Button variant="secondary" onClick={() => setAction(null)}>
+              Batal
+            </Button>
             <Button
               variant={action === 'approve' ? 'success' : action === 'reject' ? 'danger' : 'warning'}
               onClick={handleAction}

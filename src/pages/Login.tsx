@@ -54,11 +54,13 @@ export default function Login({ onLogin }: { onLogin: (role: Role) => void }) {
           </div>
 
           <h1 className="text-4xl font-bold leading-tight mb-4">
-            Kelola Tiket IT<br />dengan Efisien
+            Kelola Tiket IT
+            <br />
+            dengan Efisien
           </h1>
           <p className="text-blue-200 text-lg leading-relaxed max-w-md">
-            Platform terintegrasi untuk manajemen permintaan dan insiden IT di APG.
-            Dari request hingga deployment — terlacak, terukur, dan terkontrol.
+            Platform terintegrasi untuk manajemen permintaan dan insiden IT di APG. Dari request hingga deployment —
+            terlacak, terukur, dan terkontrol.
           </p>
         </div>
 
@@ -68,7 +70,7 @@ export default function Login({ onLogin }: { onLogin: (role: Role) => void }) {
             { value: '142', label: 'Total Tiket Bulan Ini' },
             { value: '82.4%', label: 'SLA Compliance Rate' },
             { value: '31.4j', label: 'Rata-rata Resolusi' },
-          ].map(s => (
+          ].map((s) => (
             <div key={s.label} className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
               <p className="text-2xl font-bold">{s.value}</p>
               <p className="text-blue-300 text-xs mt-1">{s.label}</p>
@@ -92,21 +94,27 @@ export default function Login({ onLogin }: { onLogin: (role: Role) => void }) {
 
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label htmlFor="login-email" className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
               <input
+                id="login-email"
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A]"
                 placeholder="email@apg.co.id"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+              <label htmlFor="login-password" className="block text-sm font-medium text-gray-700 mb-1">
+                Password
+              </label>
               <input
+                id="login-password"
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 className="w-full px-3 py-2.5 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A]"
               />
             </div>
@@ -124,7 +132,7 @@ export default function Login({ onLogin }: { onLogin: (role: Role) => void }) {
               <div className="flex-1 h-px bg-gray-200" />
             </div>
             <div className="grid grid-cols-2 gap-2">
-              {DEMO_ACCOUNTS.map(acc => (
+              {DEMO_ACCOUNTS.map((acc) => (
                 <button
                   key={acc.role}
                   onClick={() => handleQuickLogin(acc.role, acc.email)}

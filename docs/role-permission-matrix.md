@@ -13,58 +13,58 @@ Matrix adalah baseline untuk implementasi Policy dan test. Permission efektif ju
 
 ## Ticket and workflow permissions
 
-| Capability | Requester | Supervisor | IT Lead | PIC | QA | Manager | Executive | Admin |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| View ticket summary | O | D | G | A | A | G | S | G |
-| View full technical detail | O limited | D limited | G | A | A | G | — | G audited |
-| View internal comments/RCA/raw logs | — | — | G | A | A | G | — | G audited |
-| Create ticket | O | O | O | O | O | O | — | O |
-| Edit draft/revision ticket | O | — | — | — | — | — | — | Support only |
-| Cancel before work starts | O | D | G | — | — | G | — | Support only |
-| Comment requester-visible | O | D | G | A | A | G | — | G |
-| Add internal work log | — | — | G | A | A | G | — | — |
-| Upload requester-visible attachment | O | D | G | A | A | G | — | G |
-| Upload internal attachment | — | — | G | A | A | G | — | G audited |
-| Validate ticket | — | D | Override | — | — | — | — | — |
-| Request revision/reject validation | — | D | Override | — | — | — | — | — |
-| Triage/category/priority/SLA policy | — | — | G | Recommend A | Recommend A | Override | — | Configure only |
-| Assign/transfer PIC | — | — | G | — | — | Override | — | — |
-| Accept/start assigned work | — | — | Override | A | — | — | — | — |
-| Submit analysis/RCA | — | — | Review G | A | — | Review G | — | — |
-| Submit planning/development progress | — | — | Review G | A | — | Review G | — | — |
-| Internal testing | — | — | Override | A | A if assigned | — | — | — |
-| QA testing/create defect/retest | — | — | View G | Fix A | A | View G | — | — |
-| Execute UAT | O when assigned | D if assigned | Coordinate | Support | Support | View | — | — |
-| Approve/reject deployment | — | — | Recommend | — | Recommend | A/assigned | — | — |
-| Prepare deployment | — | — | G | A | Verify A | Approve | — | — |
-| Execute/confirm deployment | — | — | G | A if authorized | Verify | View | — | — |
-| Record monitoring | Confirm O | View D | G | A | Verify A | View G | S | — |
-| Close ticket | Confirm O | D optional | G | Recommend A | — | Override | — | — |
-| Reopen ticket | O within policy | D | G | Recommend A | — | G | — | Support only |
-| View SLA operational detail | O | D | G | A | A | G | S aggregate | G |
-| Trigger/manual escalation | — | D request | G | A request | — | G | — | Configure only |
+| Capability                           |       Requester |    Supervisor |    IT Lead |             PIC |            QA |    Manager |   Executive |          Admin |
+| ------------------------------------ | --------------: | ------------: | ---------: | --------------: | ------------: | ---------: | ----------: | -------------: |
+| View ticket summary                  |               O |             D |          G |               A |             A |          G |           S |              G |
+| View full technical detail           |       O limited |     D limited |          G |               A |             A |          G |           — |      G audited |
+| View internal comments/RCA/raw logs  |               — |             — |          G |               A |             A |          G |           — |      G audited |
+| Create ticket                        |               O |             O |          O |               O |             O |          O |           — |              O |
+| Edit draft/revision ticket           |               O |             — |          — |               — |             — |          — |           — |   Support only |
+| Cancel before work starts            |               O |             D |          G |               — |             — |          G |           — |   Support only |
+| Comment requester-visible            |               O |             D |          G |               A |             A |          G |           — |              G |
+| Add internal work log                |               — |             — |          G |               A |             A |          G |           — |              — |
+| Upload requester-visible attachment  |               O |             D |          G |               A |             A |          G |           — |              G |
+| Upload internal attachment           |               — |             — |          G |               A |             A |          G |           — |      G audited |
+| Validate ticket                      |               — |             D |   Override |               — |             — |          — |           — |              — |
+| Request revision/reject validation   |               — |             D |   Override |               — |             — |          — |           — |              — |
+| Triage/category/priority/SLA policy  |               — |             — |          G |     Recommend A |   Recommend A |   Override |           — | Configure only |
+| Assign/transfer PIC                  |               — |             — |          G |               — |             — |   Override |           — |              — |
+| Accept/start assigned work           |               — |             — |   Override |               A |             — |          — |           — |              — |
+| Submit analysis/RCA                  |               — |             — |   Review G |               A |             — |   Review G |           — |              — |
+| Submit planning/development progress |               — |             — |   Review G |               A |             — |   Review G |           — |              — |
+| Internal testing                     |               — |             — |   Override |               A | A if assigned |          — |           — |              — |
+| QA testing/create defect/retest      |               — |             — |     View G |           Fix A |             A |     View G |           — |              — |
+| Execute UAT                          | O when assigned | D if assigned | Coordinate |         Support |       Support |       View |           — |              — |
+| Approve/reject deployment            |               — |             — |  Recommend |               — |     Recommend | A/assigned |           — |              — |
+| Prepare deployment                   |               — |             — |          G |               A |      Verify A |    Approve |           — |              — |
+| Execute/confirm deployment           |               — |             — |          G | A if authorized |        Verify |       View |           — |              — |
+| Record monitoring                    |       Confirm O |        View D |          G |               A |      Verify A |     View G |           S |              — |
+| Close ticket                         |       Confirm O |    D optional |          G |     Recommend A |             — |   Override |           — |              — |
+| Reopen ticket                        | O within policy |             D |          G |     Recommend A |             — |          G |           — |   Support only |
+| View SLA operational detail          |               O |             D |          G |               A |             A |          G | S aggregate |              G |
+| Trigger/manual escalation            |               — |     D request |          G |       A request |             — |          G |           — | Configure only |
 
 `O limited` untuk requester berarti informasi tiket sendiri, tetapi internal security notes, infrastructure secrets, internal-only RCA/worklog, dan data user lain tetap disembunyikan.
 
 ## Administration, reporting, notification, and KB
 
-| Capability | Requester | Supervisor | IT Lead | PIC | QA | Manager | Executive | Admin |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| Personal dashboard/report | O | D | G operational | A | A | G | S | G system |
-| Export ticket data | O limited | D | G | A limited | A limited | G | S | G audited |
-| View executive analytics | — | — | Operational | — | QA metrics | Management | S | G |
-| View notification/read own | O | O | O | O | O | O | O | O |
-| Configure own notification preference | O | O | O | O | O | O | O | O |
-| Manage users/roles | — | — | — | — | — | — | — | G |
-| Manage divisions/applications | — | — | Recommend | — | — | — | — | G |
-| Manage SLA policy/calendar/holiday | — | — | Recommend | — | — | Approve policy | — | G configure |
-| Manage escalation rules/templates | — | — | Recommend | — | — | Approve policy | — | G configure |
-| View audit log | Own auth only | D workflow | G workflow | A workflow | A workflow | G | S compliance | G |
-| Create KB draft | O suggestion | D | G | G | G | G | — | G |
-| Review KB article | — | Domain D | G | — | QA if assigned | G | — | G |
-| Publish/archive KB | — | — | G | — | — | G | — | G |
-| Read published KB | G allowed | G allowed | G | G | G | G | S/public-safe | G |
-| Manage system settings | — | — | — | — | — | — | — | G |
+| Capability                            |     Requester | Supervisor |       IT Lead |        PIC |             QA |        Manager |     Executive |       Admin |
+| ------------------------------------- | ------------: | ---------: | ------------: | ---------: | -------------: | -------------: | ------------: | ----------: |
+| Personal dashboard/report             |             O |          D | G operational |          A |              A |              G |             S |    G system |
+| Export ticket data                    |     O limited |          D |             G |  A limited |      A limited |              G |             S |   G audited |
+| View executive analytics              |             — |          — |   Operational |          — |     QA metrics |     Management |             S |           G |
+| View notification/read own            |             O |          O |             O |          O |              O |              O |             O |           O |
+| Configure own notification preference |             O |          O |             O |          O |              O |              O |             O |           O |
+| Manage users/roles                    |             — |          — |             — |          — |              — |              — |             — |           G |
+| Manage divisions/applications         |             — |          — |     Recommend |          — |              — |              — |             — |           G |
+| Manage SLA policy/calendar/holiday    |             — |          — |     Recommend |          — |              — | Approve policy |             — | G configure |
+| Manage escalation rules/templates     |             — |          — |     Recommend |          — |              — | Approve policy |             — | G configure |
+| View audit log                        | Own auth only | D workflow |    G workflow | A workflow |     A workflow |              G |  S compliance |           G |
+| Create KB draft                       |  O suggestion |          D |             G |          G |              G |              G |             — |           G |
+| Review KB article                     |             — |   Domain D |             G |          — | QA if assigned |              G |             — |           G |
+| Publish/archive KB                    |             — |          — |             G |          — |              — |              G |             — |           G |
+| Read published KB                     |     G allowed |  G allowed |             G |          G |              G |              G | S/public-safe |           G |
+| Manage system settings                |             — |          — |             — |          — |              — |              — |             — |           G |
 
 ## Permission codes
 

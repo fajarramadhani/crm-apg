@@ -32,6 +32,7 @@ import DivisionManagement from './pages/admin/DivisionManagement'
 import SLARules from './pages/admin/SLARules'
 import EscalationMatrix from './pages/admin/EscalationMatrix'
 import AuditLog from './pages/admin/AuditLog'
+import NotFound from './pages/NotFound'
 
 const DEFAULT_ROUTES: Record<Role, string> = {
   user: '/user/dashboard',
@@ -51,7 +52,12 @@ export default function App() {
   if (!loggedIn) {
     return (
       <BrowserRouter>
-        <Login onLogin={(r) => { setRole(r); setLoggedIn(true) }} />
+        <Login
+          onLogin={(r) => {
+            setRole(r)
+            setLoggedIn(true)
+          }}
+        />
       </BrowserRouter>
     )
   }
@@ -109,7 +115,7 @@ export default function App() {
           <Route path="/admin/audit-log" element={<AuditLog />} />
 
           {/* Fallback */}
-          <Route path="*" element={<Navigate to={DEFAULT_ROUTES[role]} replace />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </Layout>
     </BrowserRouter>
