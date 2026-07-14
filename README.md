@@ -1,6 +1,6 @@
 # Tic Hub
 
-Tic Hub adalah aplikasi internal CRM dan IT service management APG. Repository ini berbentuk monorepo: prototype React tetap berjalan dengan data mock, sedangkan Laravel menyediakan fondasi REST API yang akan dikembangkan bertahap.
+Tic Hub adalah aplikasi internal CRM dan IT service management APG. Repository ini berbentuk monorepo: React menyediakan antarmuka internal dan Laravel menyediakan REST API, autentikasi Sanctum, serta authorization berbasis role/permission. Data bisnis tiket masih berupa mock sampai fase integrasi berikutnya.
 
 ## Struktur repository
 
@@ -38,6 +38,7 @@ cd backend
 cp .env.example .env
 composer install
 php artisan key:generate
+php artisan migrate --seed
 ```
 
 Sesuaikan kredensial MySQL hanya di `backend/.env`. File `.env` dan credential tidak boleh dicommit. Buat database development bernama `apg_crm`, atau ubah `DB_DATABASE` sesuai environment lokal.
@@ -58,7 +59,13 @@ cd backend
 php artisan serve
 ```
 
-Health check API tersedia di `GET http://localhost:8000/api/v1/health`.
+Health check API tersedia di `GET http://localhost:8000/api/v1/health`. Frontend dan backend harus memakai hostname yang konsisten (`localhost` pada contoh) agar cookie first-party Sanctum bekerja.
+
+## Authentication lokal
+
+Frontend mengambil CSRF cookie dari `/sanctum/csrf-cookie`, lalu memakai session cookie HttpOnly untuk `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, dan `POST /api/v1/auth/logout`. Tidak ada bearer token yang disimpan di `localStorage`.
+
+Seeder menyediakan delapan akun khusus environment `local`/`testing`: `requester`, `supervisor`, `itlead`, `pic`, `qa`, `manager`, `executive`, dan `admin`, masing-masing pada domain `@tichub.local` dengan password lokal `password`. `DevelopmentUserSeeder` menolak membuat akun tersebut di production. Credential ini hanya untuk development/testing dan tidak ditampilkan pada UI Login.
 
 ## Database
 
@@ -102,6 +109,6 @@ vendor/bin/pint --test
 
 ## Status implementasi
 
-Phase 2 menyediakan struktur monorepo, Laravel API v1, health check database, response JSON standar, request ID, exception handling, CORS, konfigurasi MySQL, serta test fondasi. Frontend belum terintegrasi ke API dan tetap memakai repository/data mock.
+Phase 3 menyediakan Laravel Sanctum SPA authentication, delapan primary role, permission registry, middleware role/permission, login rate limit, seeder lokal, frontend auth bootstrap, protected route, role guard, real login/logout, dan session persistence. Backend tetap menjadi sumber kebenaran authorization.
 
-Authentication, Laravel Sanctum, login/logout backend, RBAC, master data, ticket CRUD, SLA, approval, workflow bisnis, dashboard API, dan fitur operasional lain sengaja belum tersedia. Pekerjaan tersebut dimulai pada fase berikutnya tanpa mengubah desain frontend secara besar-besaran.
+Master data, division model, ticket CRUD/assignment, SLA, approval, workflow bisnis, dashboard API nyata, SSO, reset password, MFA, dan multi-role UI sengaja ditunda ke fase berikutnya.

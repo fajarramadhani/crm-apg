@@ -7,7 +7,7 @@ export default function UserManagement() {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState('')
   const [toast, setToast] = useState('')
-  const [form, setForm] = useState({ name: '', email: '', role: 'user', division: 'IT' })
+  const [form, setForm] = useState({ name: '', email: '', role: 'requester', division: 'IT' })
 
   const update = (f: string, v: string) => setForm((prev) => ({ ...prev, [f]: v }))
 

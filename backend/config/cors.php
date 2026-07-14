@@ -6,7 +6,7 @@ $frontendOrigins = array_values(array_filter(array_map(
 )));
 
 return [
-    'paths' => ['api/*'],
+    'paths' => ['api/*', 'sanctum/csrf-cookie'],
     'allowed_methods' => ['*'],
     'allowed_origins' => $frontendOrigins,
     'allowed_origins_patterns' => [],

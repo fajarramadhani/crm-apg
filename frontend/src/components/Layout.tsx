@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import type { Role } from '../types'
-import { ROLE_LABELS, USERS } from '../data'
+import type { AuthenticatedUser, Role } from '../types'
+import { ROLE_LABELS } from '../data'
 import { Avatar } from './ui'
 
 const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> = {
-  user: [
+  requester: [
     { path: '/user/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/user/create-ticket', label: 'Buat Request / Tiket', icon: '➕' },
     { path: '/user/tickets', label: 'Riwayat Tiket', icon: '📋' },
@@ -17,7 +17,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/supervisor/validation-queue', label: 'Antrean Validasi', icon: '✅' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
-  itlead: [
+  it_lead: [
     { path: '/itlead/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/itlead/triage', label: 'Antrean Triage', icon: '🎯' },
     { path: '/itlead/priority', label: 'Prioritas & SLA', icon: '⚡' },
@@ -58,36 +58,32 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
 
 export function Layout({
   role,
-  setRole,
+  user,
   onLogout,
   children,
 }: {
   role: Role
-  setRole: (r: Role) => void
-  onLogout: () => void
+  user: AuthenticatedUser
+  onLogout: () => Promise<void>
   children: React.ReactNode
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768)
-  const [roleDropdown, setRoleDropdown] = useState(false)
   const navigate = useNavigate()
-  const currentUser = USERS.find((u) => u.role === role) || USERS[0]
   const navItems = NAV_ITEMS[role] || []
-
-  const handleRoleChange = (r: Role) => {
-    setRole(r)
-    setRoleDropdown(false)
-    const firstPath = NAV_ITEMS[r]?.[0]?.path || '/user/dashboard'
-    navigate(firstPath)
-    if (window.innerWidth < 768) setSidebarOpen(false)
-  }
+  const initials = user.name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase()
 
   const handleNavigation = () => {
     if (window.innerWidth < 768) setSidebarOpen(false)
   }
 
-  const handleLogout = () => {
-    navigate('/', { replace: true })
-    onLogout()
+  const handleLogout = async () => {
+    await onLogout()
+    navigate('/login', { replace: true })
   }
 
   return (
@@ -116,32 +112,11 @@ export function Layout({
           )}
         </div>
 
-        {/* Role Switcher */}
-        {sidebarOpen && (
+        {/* The development label is informational only; it never changes authorization. */}
+        {sidebarOpen && import.meta.env.DEV && (
           <div className="px-3 py-3 border-b border-white/10">
-            <p className="text-blue-300 text-xs mb-1.5 px-1 font-medium uppercase tracking-wide">Demo Role</p>
-            <div className="relative">
-              <button
-                onClick={() => setRoleDropdown(!roleDropdown)}
-                className="w-full flex items-center justify-between gap-2 bg-white/10 hover:bg-white/20 text-white rounded-lg px-3 py-2 text-xs font-medium transition-colors"
-              >
-                <span className="truncate">{ROLE_LABELS[role]}</span>
-                <span className={`transition-transform ${roleDropdown ? 'rotate-180' : ''}`}>▼</span>
-              </button>
-              {roleDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-gray-200 z-50 overflow-hidden">
-                  {(Object.keys(ROLE_LABELS) as Role[]).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => handleRoleChange(r)}
-                      className={`w-full text-left px-3 py-2 text-xs hover:bg-blue-50 transition-colors ${r === role ? 'text-[#1E3A8A] font-semibold bg-blue-50' : 'text-gray-700'}`}
-                    >
-                      {ROLE_LABELS[r]}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+            <p className="text-blue-300 text-xs mb-1.5 px-1 font-medium uppercase tracking-wide">Authenticated Role</p>
+            <div className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white">{ROLE_LABELS[role]}</div>
           </div>
         )}
 
@@ -165,11 +140,11 @@ export function Layout({
         {/* User Info */}
         <div className="px-3 py-3 border-t border-white/10 shrink-0">
           <div className={`flex items-center gap-3 ${!sidebarOpen ? 'justify-center' : ''}`}>
-            <Avatar initials={currentUser.avatar} size="sm" />
+            <Avatar initials={initials} size="sm" />
             {sidebarOpen && (
               <div className="min-w-0">
-                <p className="text-white text-xs font-semibold truncate">{currentUser.name}</p>
-                <p className="text-blue-300 text-xs truncate">{currentUser.division}</p>
+                <p className="text-white text-xs font-semibold truncate">{user.name}</p>
+                <p className="text-blue-300 text-xs truncate">{user.email}</p>
               </div>
             )}
           </div>
@@ -214,9 +189,9 @@ export function Layout({
             </NavLink>
 
             <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-1.5 border border-gray-200">
-              <Avatar initials={currentUser.avatar} size="sm" />
+              <Avatar initials={initials} size="sm" />
               <div className="hidden sm:block">
-                <p className="text-xs font-semibold text-gray-800">{currentUser.name}</p>
+                <p className="text-xs font-semibold text-gray-800">{user.name}</p>
                 <p className="text-xs text-gray-400">{ROLE_LABELS[role]}</p>
               </div>
             </div>

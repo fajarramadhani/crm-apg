@@ -1,11 +1,11 @@
-import type { User, Ticket, ActivityLog, Notification } from './types'
+import type { User, Ticket, ActivityLog, Notification, Role } from './types'
 
 export const USERS: User[] = [
   {
     id: 'u1',
     name: 'Rina Marlina',
     email: 'rina.marlina@apg.co.id',
-    role: 'user',
+    role: 'requester',
     division: 'Operasional Polis',
     avatar: 'RM',
   },
@@ -17,7 +17,7 @@ export const USERS: User[] = [
     division: 'Operasional Polis',
     avatar: 'BS',
   },
-  { id: 'u3', name: 'Hendra Wijaya', email: 'hendra.wijaya@apg.co.id', role: 'itlead', division: 'IT', avatar: 'HW' },
+  { id: 'u3', name: 'Hendra Wijaya', email: 'hendra.wijaya@apg.co.id', role: 'it_lead', division: 'IT', avatar: 'HW' },
   {
     id: 'u4',
     name: 'Dian Kusuma',
@@ -41,7 +41,7 @@ export const USERS: User[] = [
     id: 'u9',
     name: 'Reza Firmansyah',
     email: 'reza.firmansyah@apg.co.id',
-    role: 'user',
+    role: 'requester',
     division: 'Keuangan',
     avatar: 'RF',
   },
@@ -255,7 +255,7 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     id: 'al1',
     ticketId: 'IT-2026-000001',
     actor: 'Rina Marlina',
-    actorRole: 'user',
+    actorRole: 'requester',
     action: 'Tiket dibuat',
     comment:
       'Melaporkan kegagalan generate PDF polis. Sangat urgent karena ada 50+ nasabah menunggu penerbitan polis hari ini.',
@@ -276,7 +276,7 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     id: 'al3',
     ticketId: 'IT-2026-000001',
     actor: 'Hendra Wijaya',
-    actorRole: 'itlead',
+    actorRole: 'it_lead',
     action: 'Priority ditetapkan: Critical | SLA: 24 jam',
     comment: 'Dampak signifikan pada operasional. Assign ke Dian Kusuma sebagai PIC.',
     timestamp: '2026-07-08T09:45:00Z',
@@ -340,7 +340,7 @@ export const ACTIVITY_LOGS: ActivityLog[] = [
     id: 'al9',
     ticketId: 'IT-2026-000001',
     actor: 'Rina Marlina',
-    actorRole: 'user',
+    actorRole: 'requester',
     action: 'UAT dimulai',
     comment: 'Mulai melakukan UAT sesuai test case yang diberikan.',
     timestamp: '2026-07-12T09:00:00Z',
@@ -434,10 +434,10 @@ export const SLA_RULES = [
   { priority: 'low', hours: 336, label: 'Low (14 hari)' },
 ]
 
-export const ROLE_LABELS: Record<string, string> = {
-  user: 'User / Requester',
+export const ROLE_LABELS: Record<Role, string> = {
+  requester: 'Requester',
   supervisor: 'Supervisor',
-  itlead: 'IT Lead',
+  it_lead: 'IT Lead',
   pic: 'PIC / IT Member',
   qa: 'Quality Assurance',
   manager: 'IT Manager',

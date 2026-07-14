@@ -1,4 +1,12 @@
-export type Role = 'user' | 'supervisor' | 'itlead' | 'pic' | 'qa' | 'manager' | 'executive' | 'admin'
+export type Role = 'requester' | 'supervisor' | 'it_lead' | 'pic' | 'qa' | 'manager' | 'executive' | 'admin'
+
+export interface AuthenticatedUser {
+  id: number
+  name: string
+  email: string
+  role: { key: Role; name: string }
+  permissions: string[]
+}
 
 export type TicketStatus =
   | 'draft'

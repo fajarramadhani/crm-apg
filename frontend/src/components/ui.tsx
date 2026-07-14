@@ -396,9 +396,9 @@ export function Avatar({ initials, size = 'md' }: { initials: string; size?: 'sm
 // ── Activity Timeline ─────────────────────────────────────────────────────────
 export function ActivityTimeline({ logs }: { logs: import('../types').ActivityLog[] }) {
   const roleColors: Record<string, string> = {
-    user: 'bg-blue-100 text-blue-700',
+    requester: 'bg-blue-100 text-blue-700',
     supervisor: 'bg-purple-100 text-purple-700',
-    itlead: 'bg-indigo-100 text-indigo-700',
+    it_lead: 'bg-indigo-100 text-indigo-700',
     pic: 'bg-teal-100 text-teal-700',
     qa: 'bg-cyan-100 text-cyan-700',
     manager: 'bg-amber-100 text-amber-700',

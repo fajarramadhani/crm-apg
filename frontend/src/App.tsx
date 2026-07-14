@@ -1,10 +1,12 @@
-import { useState } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import type { Role } from './types'
+import type { ReactNode } from 'react'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { AuthProvider, useAuth } from './context/AuthContext'
+import type { Role } from './types'
 
-// Pages
 import Login from './pages/Login'
+import Unauthorized from './pages/Unauthorized'
+import NotFound from './pages/NotFound'
 import UserDashboard from './pages/user/UserDashboard'
 import CreateTicket from './pages/user/CreateTicket'
 import TicketHistory from './pages/user/TicketHistory'
@@ -32,12 +34,11 @@ import DivisionManagement from './pages/admin/DivisionManagement'
 import SLARules from './pages/admin/SLARules'
 import EscalationMatrix from './pages/admin/EscalationMatrix'
 import AuditLog from './pages/admin/AuditLog'
-import NotFound from './pages/NotFound'
 
-const DEFAULT_ROUTES: Record<Role, string> = {
-  user: '/user/dashboard',
+export const DEFAULT_ROUTES: Record<Role, string> = {
+  requester: '/user/dashboard',
   supervisor: '/supervisor/dashboard',
-  itlead: '/itlead/dashboard',
+  it_lead: '/itlead/dashboard',
   pic: '/pic/dashboard',
   qa: '/qa/dashboard',
   manager: '/manager/approval',
@@ -45,86 +46,111 @@ const DEFAULT_ROUTES: Record<Role, string> = {
   admin: '/admin/console',
 }
 
-export default function App() {
-  const [loggedIn, setLoggedIn] = useState(false)
-  const [role, setRole] = useState<Role>('user')
+function LoadingSession() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-[#F0F4F8]" role="status">
+      <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#1E3A8A]/30 border-t-[#1E3A8A]" />
+        Memeriksa sesi...
+      </div>
+    </div>
+  )
+}
 
-  if (!loggedIn) {
-    return (
-      <BrowserRouter>
-        <Login
-          onLogin={(r) => {
-            setRole(r)
-            setLoggedIn(true)
-          }}
-        />
-      </BrowserRouter>
-    )
-  }
+function RequireAuth({ children }: { children: ReactNode }) {
+  const { status } = useAuth()
+  if (status === 'initializing') return <LoadingSession />
+  return status === 'authenticated' ? children : <Navigate to="/login" replace />
+}
+
+function RequireRole({ allowed, children }: { allowed: Role[]; children: ReactNode }) {
+  const { hasRole } = useAuth()
+  return hasRole(...allowed) ? children : <Navigate to="/unauthorized" replace />
+}
+
+function AuthenticatedLayout() {
+  const { user, logout } = useAuth()
+  if (!user) return null
+  return (
+    <Layout role={user.role.key} user={user} onLogout={logout}>
+      <Outlet />
+    </Layout>
+  )
+}
+
+function HomeRedirect() {
+  const { user } = useAuth()
+  return <Navigate to={user ? DEFAULT_ROUTES[user.role.key] : '/login'} replace />
+}
+
+function LoginRoute() {
+  const { status, user } = useAuth()
+  if (status === 'initializing') return <LoadingSession />
+  return user ? <Navigate to={DEFAULT_ROUTES[user.role.key]} replace /> : <Login />
+}
+
+function AppRoutes() {
+  const { user } = useAuth()
+  const allRoles: Role[] = ['requester', 'supervisor', 'it_lead', 'pic', 'qa', 'manager', 'executive', 'admin']
+  const guard = (roles: Role[], page: ReactNode) => <RequireRole allowed={roles}>{page}</RequireRole>
 
   return (
-    <BrowserRouter>
-      <Layout
-        role={role}
-        setRole={setRole}
-        onLogout={() => {
-          setLoggedIn(false)
-          setRole('user')
-        }}
+    <Routes>
+      <Route path="/login" element={<LoginRoute />} />
+      <Route
+        element={
+          <RequireAuth>
+            <AuthenticatedLayout />
+          </RequireAuth>
+        }
       >
-        <Routes>
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to={DEFAULT_ROUTES[role]} replace />} />
+        <Route index element={<HomeRedirect />} />
+        <Route path="/user/dashboard" element={guard(['requester'], <UserDashboard />)} />
+        <Route path="/user/create-ticket" element={guard(['requester'], <CreateTicket />)} />
+        <Route path="/user/tickets" element={guard(['requester'], <TicketHistory />)} />
+        <Route path="/user/tickets/:id" element={guard(['requester'], <TicketDetail />)} />
+        <Route path="/user/uat" element={guard(['requester'], <UAT />)} />
+        <Route path="/supervisor/dashboard" element={guard(['supervisor'], <SupervisorDashboard />)} />
+        <Route path="/supervisor/validation-queue" element={guard(['supervisor'], <ValidationQueue />)} />
+        <Route path="/itlead/dashboard" element={guard(['it_lead'], <ITLeadDashboard />)} />
+        <Route path="/itlead/triage" element={guard(['it_lead'], <TriageQueue />)} />
+        <Route path="/itlead/priority" element={guard(['it_lead'], <PriorityAssignment />)} />
+        <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
+        <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
+        <Route path="/pic/rca" element={guard(['pic'], <RCA />)} />
+        <Route path="/pic/testing" element={guard(['pic'], <InternalTestingPIC />)} />
+        <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
+        <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />
+        <Route path="/manager/approval" element={guard(['manager'], <ManagerApproval />)} />
+        <Route path="/sla-monitoring" element={guard(['it_lead', 'manager', 'executive'], <SLAMonitoring />)} />
+        <Route
+          path="/notifications"
+          element={guard(allRoles, <NotificationCenter role={user?.role.key ?? 'requester'} />)}
+        />
+        <Route path="/executive/dashboard" element={guard(['executive'], <ExecutiveDashboard />)} />
+        <Route path="/executive/statistics" element={guard(['executive'], <Statistics />)} />
+        <Route path="/admin/console" element={guard(['admin'], <AdminConsole />)} />
+        <Route path="/admin/users" element={guard(['admin'], <UserManagement />)} />
+        <Route path="/admin/divisions" element={guard(['admin'], <DivisionManagement />)} />
+        <Route path="/admin/sla-rules" element={guard(['admin'], <SLARules />)} />
+        <Route path="/admin/escalation" element={guard(['admin'], <EscalationMatrix />)} />
+        <Route path="/admin/audit-log" element={guard(['admin'], <AuditLog />)} />
+        <Route
+          path="/unauthorized"
+          element={<Unauthorized dashboardPath={user ? DEFAULT_ROUTES[user.role.key] : '/login'} />}
+        />
+        <Route path="*" element={<NotFound />} />
+      </Route>
+    </Routes>
+  )
+}
 
-          {/* USER ROUTES */}
-          <Route path="/user/dashboard" element={<UserDashboard />} />
-          <Route path="/user/create-ticket" element={<CreateTicket />} />
-          <Route path="/user/tickets" element={<TicketHistory />} />
-          <Route path="/user/tickets/:id" element={<TicketDetail />} />
-          <Route path="/user/uat" element={<UAT />} />
-
-          {/* SUPERVISOR ROUTES */}
-          <Route path="/supervisor/dashboard" element={<SupervisorDashboard />} />
-          <Route path="/supervisor/validation-queue" element={<ValidationQueue />} />
-
-          {/* IT LEAD ROUTES */}
-          <Route path="/itlead/dashboard" element={<ITLeadDashboard />} />
-          <Route path="/itlead/triage" element={<TriageQueue />} />
-          <Route path="/itlead/priority" element={<PriorityAssignment />} />
-
-          {/* PIC ROUTES */}
-          <Route path="/pic/dashboard" element={<PICDashboard />} />
-          <Route path="/pic/workspace" element={<Workspace />} />
-          <Route path="/pic/rca" element={<RCA />} />
-          <Route path="/pic/testing" element={<InternalTestingPIC />} />
-
-          {/* QA ROUTES */}
-          <Route path="/qa/dashboard" element={<QADashboard />} />
-          <Route path="/qa/testing" element={<TestingForm />} />
-
-          {/* MANAGER ROUTES */}
-          <Route path="/manager/approval" element={<ManagerApproval />} />
-
-          {/* SHARED ROUTES (accessible by multiple roles) */}
-          <Route path="/sla-monitoring" element={<SLAMonitoring />} />
-          <Route path="/notifications" element={<NotificationCenter role={role} />} />
-
-          {/* EXECUTIVE ROUTES */}
-          <Route path="/executive/dashboard" element={<ExecutiveDashboard />} />
-          <Route path="/executive/statistics" element={<Statistics />} />
-
-          {/* ADMIN ROUTES */}
-          <Route path="/admin/console" element={<AdminConsole />} />
-          <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/divisions" element={<DivisionManagement />} />
-          <Route path="/admin/sla-rules" element={<SLARules />} />
-          <Route path="/admin/escalation" element={<EscalationMatrix />} />
-          <Route path="/admin/audit-log" element={<AuditLog />} />
-
-          {/* Fallback */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+export default function App() {
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
     </BrowserRouter>
   )
 }

@@ -1,0 +1,78 @@
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { ApiRequestError } from '../api/client'
+import { authService } from '../services/authService'
+import type { AuthenticatedUser, Role } from '../types'
+
+type AuthStatus = 'initializing' | 'authenticated' | 'unauthenticated'
+
+interface AuthContextValue {
+  user: AuthenticatedUser | null
+  status: AuthStatus
+  login(email: string, password: string): Promise<AuthenticatedUser>
+  logout(): Promise<void>
+  hasRole(...roles: Role[]): boolean
+  hasPermission(permission: string): boolean
+}
+
+const AuthContext = createContext<AuthContextValue | null>(null)
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<AuthenticatedUser | null>(null)
+  const [status, setStatus] = useState<AuthStatus>('initializing')
+
+  useEffect(() => {
+    let active = true
+
+    authService
+      .currentUser()
+      .then((currentUser) => {
+        if (!active) return
+        setUser(currentUser)
+        setStatus('authenticated')
+      })
+      .catch((error: unknown) => {
+        if (!active) return
+        if (!(error instanceof ApiRequestError) || error.status !== 401)
+          console.error('Auth initialization failed', error)
+        setUser(null)
+        setStatus('unauthenticated')
+      })
+
+    return () => {
+      active = false
+    }
+  }, [])
+
+  const login = useCallback(async (email: string, password: string) => {
+    const authenticatedUser = await authService.login(email, password)
+    setUser(authenticatedUser)
+    setStatus('authenticated')
+    return authenticatedUser
+  }, [])
+
+  const logout = useCallback(async () => {
+    setUser(null)
+    setStatus('unauthenticated')
+    await authService.logout()
+  }, [])
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      user,
+      status,
+      login,
+      logout,
+      hasRole: (...roles) => Boolean(user && roles.includes(user.role.key)),
+      hasPermission: (permission) => Boolean(user?.permissions.includes(permission)),
+    }),
+    [login, logout, status, user],
+  )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+}
+
+export function useAuth(): AuthContextValue {
+  const context = useContext(AuthContext)
+  if (!context) throw new Error('useAuth must be used inside AuthProvider')
+  return context
+}

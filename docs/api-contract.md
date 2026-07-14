@@ -49,13 +49,27 @@ Expected status codes: 200/201/204, 401 unauthenticated, 403 forbidden, 404 miss
 | GET       | `/sanctum/csrf-cookie`         | Initialize CSRF cookie (Laravel route outside `/api/v1`)  |
 | POST      | `/auth/login`                  | Create SPA session; email/password                        |
 | POST      | `/auth/logout`                 | Revoke current session                                    |
-| GET       | `/me`                          | Current user, roles, permissions, division, feature flags |
+| GET       | `/auth/me`                     | Current user, primary role, and effective permissions     |
 | GET       | `/me/notifications`            | Paginated own notifications                               |
 | PATCH     | `/me/notifications/{id}/read`  | Mark one as read                                          |
 | POST      | `/me/notifications/read-all`   | Mark scoped notifications read                            |
 | GET/PATCH | `/me/notification-preferences` | Read/update own preferences                               |
 
 SSO, reset password, MFA, and session management endpoint ditambahkan hanya setelah identity policy diputuskan.
+
+Phase 3 login memakai email/password lokal dan session cookie HttpOnly. Credential salah, user nonaktif, dan role nonaktif semuanya memakai pesan aman yang sama dengan code `INVALID_CREDENTIALS`. Login berhasil meregenerasi session dan memperbarui `last_login_at`; logout menginvalidasi session serta CSRF token. Login dibatasi lima percobaan per menit untuk kombinasi email/IP.
+
+Response user Phase 3:
+
+```json
+{
+  "id": 1,
+  "name": "Requester Demo",
+  "email": "requester@tichub.local",
+  "role": { "key": "requester", "name": "Requester" },
+  "permissions": ["dashboard.requester.view", "ticket.own.view"]
+}
+```
 
 ## Tickets
 

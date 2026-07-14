@@ -11,6 +11,23 @@
 
 Matrix adalah baseline untuk implementasi Policy dan test. Permission efektif juga bergantung pada current ticket status, division/application assignment, dan `allowed_actions` dari workflow engine. Admin mengelola konfigurasi/identity tetapi tidak otomatis menjadi approver atau pelaksana workflow; separation of duties tetap berlaku.
 
+## Phase 3 authentication permissions
+
+Phase 3 memakai satu `role_id` utama per user. Registry konfigurasi menjadi sumber effective permission sementara, sehingga controller tidak menyebarkan pemeriksaan role. Struktur `User -> Role`, `hasRole()`, `hasPermission()`, dan middleware dapat dikembangkan menjadi relasi multi-role pada fase berikutnya tanpa mengubah kontrak frontend.
+
+| Role         | Dashboard permission          | Ticket scope          | Additional permission      |
+| ------------ | ----------------------------- | --------------------- | -------------------------- |
+| `requester`  | `dashboard.requester.view`    | `ticket.own.view`     | —                          |
+| `supervisor` | `dashboard.supervisor.view`   | `ticket.division.view`| —                          |
+| `it_lead`    | `dashboard.it_lead.view`      | `ticket.all.view`     | `ticket.technical.view`    |
+| `pic`        | `dashboard.pic.view`          | `ticket.assigned.view`| `ticket.technical.view`    |
+| `qa`         | `dashboard.qa.view`           | `ticket.assigned.view`| `ticket.technical.view`    |
+| `manager`    | `dashboard.manager.view`      | `ticket.all.view`     | `ticket.technical.view`    |
+| `executive`  | `dashboard.executive.view`    | —                     | `executive.aggregate.view` |
+| `admin`      | `dashboard.admin.view`        | `ticket.all.view`     | `ticket.technical.view`, `admin.access` |
+
+Executive sengaja tidak menerima `ticket.technical.view`. Endpoint dan route bisnis pada fase selanjutnya tetap wajib memakai policy/resource projection; permission frontend hanya mengatur tampilan.
+
 ## Ticket and workflow permissions
 
 | Capability                           |       Requester |    Supervisor |    IT Lead |             PIC |            QA |    Manager |   Executive |          Admin |
@@ -97,11 +114,11 @@ knowledge.view, knowledge.create, knowledge.review, knowledge.publish, knowledge
 7. Attachment download menjalankan policy pada parent resource dan visibility attachment.
 8. Setiap transition authorization dites untuk delapan role, both allowed and denied, termasuk cross-division/cross-assignment.
 
-## Decisions needing confirmation
+## Decisions deferred after Phase 3
 
-- Apakah satu user dapat memiliki beberapa role aktif?
-- Apakah Supervisor hanya satu divisi atau hierarki beberapa divisi?
+- Phase 3 menetapkan satu primary role; multi-role ditunda dengan kontrak permission tetap dipertahankan.
+- Phase 3 menetapkan Supervisor satu divisi; model division dan enforcement query scope ditunda sampai master data.
 - Siapa final closer: requester, IT Lead, atau auto-close setelah periode monitoring?
 - Apakah Manager/Approver hanya IT Manager atau business owner juga dapat menjadi approver?
 - Apakah PIC boleh menjalankan internal testing sendiri, atau wajib actor terpisah?
-- Apakah Executive boleh drill-down ke ticket summary individual atau aggregate saja?
+- Phase 3 menetapkan Executive aggregate-only tanpa detail teknis; bentuk dashboard aggregate diimplementasikan pada fase bisnis berikutnya.
