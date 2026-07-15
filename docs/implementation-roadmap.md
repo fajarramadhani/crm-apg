@@ -2,7 +2,7 @@
 
 ## Current delivery numbering
 
-Phase 6 is now implemented as **IT Lead Triage, SLA Initialization, and PIC Assignment**: `validated -> triage -> assigned`, working-calendar deadlines, assignment history, and real IT Lead/PIC frontend integration. Phase 7 is limited to analysis/RCA/planning and explicit reassignment/transfer; it must not duplicate the Phase 6 workflow foundation.
+Phase 7 is now implemented as **PIC Analysis, RCA, and Solution Planning**: `assigned -> analysis -> solution_planning -> plan_review -> ready_for_development`, immutable solution-plan versions after review, optimistic locking, an IT Lead review queue, and requester-safe progress projection. Phase 8 should begin development execution and internal testing from `ready_for_development`; it must not duplicate the Phase 7 analysis or plan-review workflow.
 
 The approved execution brief consolidates the earlier ticket read-model and creation/validation split into **Phase 5 — Ticket Creation and Supervisor Validation**. Phase 5 delivers list/detail read models, creation, private attachments, ownership, revision/resubmission, scoped Supervisor validation, history, and event hooks. The earlier headings below remain historical planning context. The next active delivery is **Phase 6 — IT Lead triage, final priority, assignment, analysis, and planning**. SLA calculation, QA/UAT, approval, deployment, notifications, and Knowledge Base remain later.
 
@@ -52,17 +52,17 @@ Konfirmasi business decisions: identity topology, multi-role, approval path, wor
 
 **Acceptance:** full Requester → Supervisor vertical slice E2E; validation and file security tests; retries do not duplicate tickets; queue changes after action; audit/history persisted.
 
-## Phase 7 — Triage, assignment, analysis, and planning
+## Phase 7 — PIC analysis, RCA, and solution planning (implemented)
 
-**Scope:** IT Lead triage/priority/SLA policy selection, PIC assignment/transfer, analysis/RCA, wait/resume states, implementation plan/work log, optimistic concurrency.
+**Scope:** PIC-owned analysis/RCA, explicit draft saves and completion, versioned solution plans, estimated effort/risk, IT Lead review/revision/approval, history/events, optimistic concurrency, and requester-safe progress.
 
-**Acceptance:** transition-map and eight-role denial tests; concurrent action returns 409; assignment/history/notification correct; PIC workspace uses API.
+**Acceptance:** implemented with policy/permission tests, ownership denial, stale-write and duplicate-action `409` responses, retained plan versions, history/event dispatch, real PIC/IT Lead UI, and responsive browser verification.
 
-## Phase 8 — SLA engine and escalation
+## Phase 8 — Development execution and internal testing
 
-**Scope:** business calendar/hours/holidays, default 4h/8h/2d/5d policies, SLA clocks/pause intervals, scheduler warnings/breaches, escalation rules/events, monitoring API/UI, admin policy UI integration.
+**Scope:** development start/progress/completion evidence, work logs, internal test runs and cases, failure/revision handling, and the transition toward QA. Continue using Phase 6 SLA snapshots; broader escalation automation remains a later bounded slice.
 
-**Acceptance:** deterministic unit tests across weekends, holidays, timezone, pause/resume, policy changes, breach idempotency; UI no longer uses static remaining hours; notification delivery queued.
+**Acceptance:** only assigned actors can record work; evidence and test history are retained; failed internal tests create an authorized revision path; duplicate transitions are rejected; frontend and API complete an E2E path to QA-ready state.
 
 ## Phase 9 — Development and testing lifecycle
 

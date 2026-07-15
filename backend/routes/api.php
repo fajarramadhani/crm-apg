@@ -56,11 +56,24 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/assign', [ItLeadTicketController::class, 'assign'])->middleware('permission:ticket.assign');
             Route::get('/pic-options', [ItLeadTicketController::class, 'picOptions'])->middleware('permission:ticket.pic_options.view');
             Route::get('/pic-workloads', [ItLeadTicketController::class, 'picWorkloads'])->middleware('permission:ticket.workload.view');
+            Route::get('/plan-review-queue', [ItLeadTicketController::class, 'planReviewQueue'])->middleware('permission:ticket.plan_review_queue.view');
+            Route::get('/tickets/{ticket}/solution-plan', [ItLeadTicketController::class, 'solutionPlan'])->middleware('permission:ticket.solution_plan.view');
+            Route::post('/tickets/{ticket}/solution-plan/{plan}/approve', [ItLeadTicketController::class, 'approvePlan'])->middleware('permission:ticket.solution_plan.approve');
+            Route::post('/tickets/{ticket}/solution-plan/{plan}/request-revision', [ItLeadTicketController::class, 'requestPlanRevision'])->middleware('permission:ticket.solution_plan.request_revision');
         });
 
         Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {
             Route::get('/assignments', [PicTicketController::class, 'index']);
             Route::get('/tickets/{ticket}', [PicTicketController::class, 'show']);
+            Route::post('/tickets/{ticket}/start-analysis', [PicTicketController::class, 'startAnalysis'])->middleware('permission:ticket.analysis.start');
+            Route::get('/tickets/{ticket}/analysis', [PicTicketController::class, 'analysis'])->middleware('permission:ticket.analysis.view');
+            Route::post('/tickets/{ticket}/analysis', [PicTicketController::class, 'storeAnalysis'])->middleware('permission:ticket.analysis.manage');
+            Route::put('/tickets/{ticket}/analysis/{analysis}', [PicTicketController::class, 'updateAnalysis'])->middleware('permission:ticket.analysis.manage');
+            Route::post('/tickets/{ticket}/analysis/{analysis}/complete', [PicTicketController::class, 'completeAnalysis'])->middleware('permission:ticket.analysis.manage');
+            Route::get('/tickets/{ticket}/solution-plan', [PicTicketController::class, 'solutionPlan'])->middleware('permission:ticket.solution_plan.view');
+            Route::post('/tickets/{ticket}/solution-plan', [PicTicketController::class, 'storeSolutionPlan'])->middleware('permission:ticket.solution_plan.manage');
+            Route::put('/tickets/{ticket}/solution-plan/{plan}', [PicTicketController::class, 'updateSolutionPlan'])->middleware('permission:ticket.solution_plan.manage');
+            Route::post('/tickets/{ticket}/solution-plan/{plan}/submit', [PicTicketController::class, 'submitSolutionPlan'])->middleware('permission:ticket.solution_plan.submit');
         });
 
         Route::prefix('master')->middleware('permission:master_data.view')->name('api.v1.master.')->group(function (): void {

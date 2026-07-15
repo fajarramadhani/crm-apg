@@ -17,9 +17,9 @@ import ValidationQueue from './pages/supervisor/ValidationQueue'
 import ITLeadDashboard from './pages/itlead/ITLeadDashboard'
 import TriageQueue from './pages/itlead/TriageQueue'
 import PriorityAssignment from './pages/itlead/PriorityAssignment'
+import PlanReview from './pages/itlead/PlanReview'
 import PICDashboard from './pages/pic/PICDashboard'
 import Workspace from './pages/pic/Workspace'
-import RCA from './pages/pic/RCA'
 import InternalTestingPIC from './pages/pic/InternalTesting'
 import QADashboard from './pages/qa/QADashboard'
 import TestingForm from './pages/qa/TestingForm'
@@ -115,9 +115,10 @@ function AppRoutes() {
         <Route path="/itlead/dashboard" element={guard(['it_lead'], <ITLeadDashboard />)} />
         <Route path="/itlead/triage" element={guard(['it_lead'], <TriageQueue />)} />
         <Route path="/itlead/priority" element={guard(['it_lead'], <PriorityAssignment />)} />
+        <Route path="/itlead/plan-review" element={guard(['it_lead'], <PlanReview />)} />
         <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
         <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
-        <Route path="/pic/rca" element={guard(['pic'], <RCA />)} />
+        <Route path="/pic/rca" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />
         <Route path="/pic/testing" element={guard(['pic'], <InternalTestingPIC />)} />
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
         <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />

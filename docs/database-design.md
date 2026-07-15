@@ -172,3 +172,13 @@ Policy matching order yang direkomendasikan: application+category+priority, cate
 ## Data retention and deletion
 
 User/division/application dinonaktifkan, bukan dihapus bila sudah direferensikan. Ticket, status history, approval, deployment, SLA event, dan audit log memiliki retention policy yang harus ditentukan oleh compliance. File attachment perlu retention/virus scan/legal hold policy. Personal data export/erasure harus mempertimbangkan kewajiban audit; anonymization lebih aman daripada cascade delete.
+
+## Phase 7 implemented analysis and planning schema
+
+The implemented Phase 7 tables supersede the earlier conceptual `root_cause_analyses` and `ticket_plans` names:
+
+- `ticket_analyses`: ticket/analyst foreign keys, per-ticket `version`, `lock_version`, `is_current`, problem and root-cause fields, technical/business impact, JSON affected components, evidence, assumptions, limitations, and start/completion timestamps. `(ticket_id, version)` is unique.
+- `ticket_solution_plans`: ticket/creator foreign keys, version/lock/current markers, solution summary, ordered JSON implementation steps, components/dependencies, effort minutes, risk, rollback/testing/deployment fields, review state and reviewer metadata. `(ticket_id, version)` is unique and `(status, submitted_at)` supports the review queue.
+- `tickets`: summary timestamps plus `current_analysis_id` and `current_solution_plan_id` point to the active records.
+
+Draft updates require the submitted `expected_lock_version`; stale writes return `409`. A revision request makes the submitted version non-current and the PIC creates a new version, preserving the complete review trail.

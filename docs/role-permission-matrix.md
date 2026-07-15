@@ -163,3 +163,15 @@ knowledge.view, knowledge.create, knowledge.review, knowledge.publish, knowledge
 - Apakah Manager/Approver hanya IT Manager atau business owner juga dapat menjadi approver?
 - Apakah PIC boleh menjalankan internal testing sendiri, atau wajib actor terpisah?
 - Phase 3 menetapkan Executive aggregate-only tanpa detail teknis; bentuk dashboard aggregate diimplementasikan pada fase bisnis berikutnya.
+
+## Phase 7 enforced permissions
+
+| Capability | Requester | Supervisor | IT Lead | Assigned PIC | QA | Manager | Executive | Admin |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| Start/manage/complete analysis | — | — | — | Allow | — | — | — | — |
+| Create/update/submit solution plan | — | — | — | Allow | — | — | — | — |
+| View Plan Review queue and technical detail | — | — | Allow | Own assigned ticket only | — | — | Deny | — |
+| Request plan revision / approve plan | — | — | Allow | — | — | — | Deny | — |
+| View generic Phase 7 progress on own ticket | Allow | Existing scope | Allow | Allow | Existing scope | Existing scope | Aggregate only | Existing scope |
+
+Concrete permission codes are `ticket.analysis.start`, `ticket.analysis.view`, `ticket.analysis.manage`, `ticket.solution_plan.view`, `ticket.solution_plan.manage`, `ticket.solution_plan.submit`, `ticket.plan_review_queue.view`, `ticket.solution_plan.request_revision`, and `ticket.solution_plan.approve`. Ownership is rechecked under row lock during mutations; a permission alone never grants a PIC access to another PIC's assignment.

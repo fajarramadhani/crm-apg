@@ -10,6 +10,10 @@ enum TicketStatus: string
     case Validated = 'validated';
     case Triage = 'triage';
     case Assigned = 'assigned';
+    case Analysis = 'analysis';
+    case SolutionPlanning = 'solution_planning';
+    case PlanReview = 'plan_review';
+    case ReadyForDevelopment = 'ready_for_development';
     case Rejected = 'rejected';
     case Transferred = 'transferred';
     case Cancelled = 'cancelled';

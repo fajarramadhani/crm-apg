@@ -39,4 +39,15 @@ class TicketPolicy
     {
         return $user->hasPermission('ticket.triage_queue.view');
     }
+
+    public function analyze(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.analysis.manage') && $ticket->current_assignee_id === $user->id
+            && $ticket->assignments()->where('assigned_to', $user->id)->where('is_current', true)->exists();
+    }
+
+    public function reviewPlan(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.solution_plan.approve') || $user->hasPermission('ticket.solution_plan.request_revision');
+    }
 }

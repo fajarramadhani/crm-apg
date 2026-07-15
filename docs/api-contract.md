@@ -271,3 +271,23 @@ Dashboard endpoint bukan sumber truth terpisah; ia query read model dari domain 
 ## Contract delivery strategy
 
 Implement endpoint groups per roadmap vertical slice, not sekaligus. Setiap endpoint wajib memiliki Form Request, Policy, Resource, feature test (success/validation/forbidden/not-found/conflict), OpenAPI update, dan contoh frontend integration. OpenAPI menjadi contract source setelah backend skeleton dibuat; TypeScript client/types dapat digenerate atau divalidasi terhadap schema pada fase berikutnya.
+
+## Phase 7 implemented endpoints
+
+All routes are under `/api/v1`, require a Sanctum session, use policy plus permission checks, return the standard request ID, and use `409 Conflict` for stale or duplicate transitions.
+
+| Actor | Method | Endpoint | Purpose |
+| --- | --- | --- | --- |
+| PIC | POST | `/pic/tickets/{ticket}/start-analysis` | Move an owned assigned ticket to analysis |
+| PIC | GET/POST | `/pic/tickets/{ticket}/analysis` | Read or create the current analysis |
+| PIC | PUT | `/pic/tickets/{ticket}/analysis/{analysis}` | Explicit draft save with `expected_lock_version` |
+| PIC | POST | `/pic/tickets/{ticket}/analysis/{analysis}/complete` | Complete RCA and enter solution planning |
+| PIC | GET/POST | `/pic/tickets/{ticket}/solution-plan` | Read versions or create the current plan |
+| PIC | PUT | `/pic/tickets/{ticket}/solution-plan/{plan}` | Update the current draft with optimistic locking |
+| PIC | POST | `/pic/tickets/{ticket}/solution-plan/{plan}/submit` | Submit the plan for IT Lead review |
+| IT Lead | GET | `/it-lead/plan-review-queue` | Paginated/filterable submitted-plan queue |
+| IT Lead | GET | `/it-lead/tickets/{ticket}/solution-plan` | RCA, plan, attachment, and history review projection |
+| IT Lead | POST | `/it-lead/tickets/{ticket}/solution-plan/{plan}/request-revision` | Require a reason and return to solution planning |
+| IT Lead | POST | `/it-lead/tickets/{ticket}/solution-plan/{plan}/approve` | Approve and move to ready for development |
+
+Requester ticket resources expose only generic workflow progress for these phases. RCA, solution text, risk, rollback, testing, technical history notes, and internal event metadata are omitted.

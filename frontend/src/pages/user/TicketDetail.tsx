@@ -121,6 +121,12 @@ export default function TicketDetail() {
     )
   const revision = ticket.comments.filter((comment) => comment.type === 'revision_request').at(-1)
   const rejection = ticket.comments.filter((comment) => comment.type === 'rejection_reason').at(-1)
+  const progressMessage: Partial<Record<TicketRecord['status'], string>> = {
+    analysis: 'Tiket sedang dianalisis oleh tim IT',
+    solution_planning: 'Rencana solusi sedang disusun',
+    plan_review: 'Rencana solusi sedang ditinjau',
+    ready_for_development: 'Rencana disetujui dan siap dikerjakan',
+  }
 
   return (
     <div className="max-w-5xl">
@@ -152,6 +158,17 @@ export default function TicketDetail() {
         >
           <p className="font-semibold text-sm">{revision ? 'Revisi diminta oleh Supervisor' : 'Alasan penolakan'}</p>
           <p className="text-sm mt-1 whitespace-pre-wrap">{(revision || rejection)?.comment}</p>
+        </div>
+      )}
+      {progressMessage[ticket.status] && (
+        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 mb-5" role="status">
+          <p className="text-sm font-semibold text-blue-900">Progress Tim IT</p>
+          <p className="text-sm text-blue-800 mt-1">{progressMessage[ticket.status]}</p>
+          {ticket.plan_approved_at && (
+            <p className="text-xs text-blue-700 mt-2">
+              Disetujui {new Date(ticket.plan_approved_at).toLocaleString('id-ID')}
+            </p>
+          )}
         </div>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">

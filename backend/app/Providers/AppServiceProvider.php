@@ -2,9 +2,14 @@
 
 namespace App\Providers;
 
+use App\Events\TicketAnalysisCompleted;
+use App\Events\TicketAnalysisStarted;
 use App\Events\TicketRejected;
 use App\Events\TicketResubmitted;
 use App\Events\TicketRevisionRequested;
+use App\Events\TicketSolutionPlanApproved;
+use App\Events\TicketSolutionPlanRevisionRequested;
+use App\Events\TicketSolutionPlanSubmitted;
 use App\Events\TicketSubmitted;
 use App\Events\TicketTransferred;
 use App\Events\TicketValidated;
@@ -35,6 +40,9 @@ class AppServiceProvider extends ServiceProvider
             TicketSubmitted::class, TicketRevisionRequested::class,
             TicketResubmitted::class, TicketValidated::class,
             TicketRejected::class, TicketTransferred::class,
+            TicketAnalysisStarted::class, TicketAnalysisCompleted::class,
+            TicketSolutionPlanSubmitted::class, TicketSolutionPlanRevisionRequested::class,
+            TicketSolutionPlanApproved::class,
         ], function (object $event): void {
             Log::info('Ticket domain event', ['event' => $event::class, 'ticket_id' => $event->ticket->id]);
         });

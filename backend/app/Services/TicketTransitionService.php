@@ -17,6 +17,19 @@ use Illuminate\Support\Facades\DB;
 
 final class TicketTransitionService
 {
+    public function phaseTransition(Ticket $locked, User $actor, TicketStatus $from, TicketStatus $to, string $action, ?string $notes = null, ?array $metadata = null, ?callable $mutate = null): void
+    {
+        if ($locked->status !== $from) {
+            throw new InvalidTicketTransition($locked->status->value);
+        }
+        $locked->status = $to;
+        if ($mutate) {
+            $mutate($locked);
+        }
+        $locked->save();
+        $this->history($locked, $actor, $from, $to, $action, $notes, $metadata);
+    }
+
     public function startTriage(Ticket $ticket, User $actor): Ticket
     {
         return $this->transition($ticket, $actor, TicketStatus::Validated, TicketStatus::Triage, 'triage_started', null, null, function (Ticket $locked): void {

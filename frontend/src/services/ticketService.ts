@@ -8,6 +8,10 @@ export type TicketState =
   | 'validated'
   | 'triage'
   | 'assigned'
+  | 'analysis'
+  | 'solution_planning'
+  | 'plan_review'
+  | 'ready_for_development'
   | 'rejected'
   | 'transferred'
   | 'cancelled'
@@ -68,6 +72,22 @@ export interface TicketRecord {
   sla_timezone: string | null
   triage_started_at: string | null
   assigned_at: string | null
+  analysis_started_at: string | null
+  analysis_completed_at: string | null
+  plan_submitted_at: string | null
+  plan_approved_at: string | null
+  analysis_summary: { status: 'not_started' | 'in_progress' | 'completed'; completed_at: string | null }
+  solution_plan_summary: {
+    status: 'not_started' | 'draft' | 'submitted' | 'approved'
+    submitted_at: string | null
+    approved_at: string | null
+  }
+  solution_plan_preview?: {
+    version: number
+    estimated_effort_minutes: number
+    risk_level: string
+    submitted_at: string
+  }
   submitted_at: string | null
   validated_at: string | null
   rejected_at: string | null
@@ -77,6 +97,80 @@ export interface TicketRecord {
   attachments: TicketAttachmentRecord[]
   comments: TicketCommentRecord[]
   history: TicketHistoryRecord[]
+}
+export interface TicketAnalysisRecord {
+  id: number
+  version: number
+  lock_version: number
+  is_current: boolean
+  analyst: { id: number; name: string }
+  problem_summary: string
+  root_cause: string | null
+  technical_impact: string
+  business_impact: string | null
+  affected_components: string[]
+  evidence: string | null
+  assumptions: string | null
+  limitations: string | null
+  analysis_started_at: string
+  completed_at: string | null
+  updated_at: string
+}
+export type AnalysisPayload = Pick<
+  TicketAnalysisRecord,
+  | 'problem_summary'
+  | 'root_cause'
+  | 'technical_impact'
+  | 'business_impact'
+  | 'affected_components'
+  | 'evidence'
+  | 'assumptions'
+  | 'limitations'
+> & { expected_lock_version?: number }
+export interface SolutionPlanRecord {
+  id: number
+  version: number
+  lock_version: number
+  is_current: boolean
+  created_by: { id: number; name: string }
+  solution_summary: string
+  implementation_steps: { order: number; description: string }[]
+  affected_components: string[]
+  dependencies: string[]
+  estimated_effort_minutes: number
+  risk_level: 'low' | 'medium' | 'high' | 'critical'
+  risk_description: string | null
+  rollback_plan: string | null
+  testing_plan: string
+  deployment_consideration: string | null
+  status: 'draft' | 'submitted' | 'revision_requested' | 'approved'
+  submitted_at: string | null
+  reviewed_at: string | null
+  reviewed_by: { id: number; name: string } | null
+  review_notes: string | null
+  updated_at: string
+}
+export type SolutionPlanPayload = Pick<
+  SolutionPlanRecord,
+  | 'solution_summary'
+  | 'implementation_steps'
+  | 'affected_components'
+  | 'dependencies'
+  | 'estimated_effort_minutes'
+  | 'risk_level'
+  | 'risk_description'
+  | 'rollback_plan'
+  | 'testing_plan'
+  | 'deployment_consideration'
+> & { expected_lock_version?: number }
+export interface VersionedRecord<T> {
+  current: T | null
+  versions: T[]
+}
+export interface PlanReviewDetail {
+  ticket: TicketRecord
+  analysis: TicketAnalysisRecord
+  solution_plan: SolutionPlanRecord
 }
 export interface TicketPayload {
   ticket_category_id: number
@@ -160,4 +254,37 @@ export const ticketService = {
   picAssignments: (filters: Record<string, string | number | undefined> = {}) =>
     apiClient.get<TicketPage>(`/pic/assignments?${query(filters)}`),
   picGet: (id: number) => data(apiClient.get<ApiResponse<TicketRecord>>(`/pic/tickets/${id}`)),
+  startAnalysis: (id: number) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/start-analysis`, {})),
+  getAnalysis: (id: number) =>
+    data(apiClient.get<ApiResponse<VersionedRecord<TicketAnalysisRecord>>>(`/pic/tickets/${id}/analysis`)),
+  createAnalysis: (id: number, payload: AnalysisPayload) =>
+    data(apiClient.post<ApiResponse<TicketAnalysisRecord>>(`/pic/tickets/${id}/analysis`, payload)),
+  updateAnalysis: (ticketId: number, analysisId: number, payload: AnalysisPayload) =>
+    data(apiClient.put<ApiResponse<TicketAnalysisRecord>>(`/pic/tickets/${ticketId}/analysis/${analysisId}`, payload)),
+  completeAnalysis: (ticketId: number, analysisId: number) =>
+    data(
+      apiClient.post<ApiResponse<TicketAnalysisRecord>>(`/pic/tickets/${ticketId}/analysis/${analysisId}/complete`, {}),
+    ),
+  getSolutionPlan: (id: number) =>
+    data(apiClient.get<ApiResponse<VersionedRecord<SolutionPlanRecord>>>(`/pic/tickets/${id}/solution-plan`)),
+  createSolutionPlan: (id: number, payload: SolutionPlanPayload) =>
+    data(apiClient.post<ApiResponse<SolutionPlanRecord>>(`/pic/tickets/${id}/solution-plan`, payload)),
+  updateSolutionPlan: (ticketId: number, planId: number, payload: SolutionPlanPayload) =>
+    data(apiClient.put<ApiResponse<SolutionPlanRecord>>(`/pic/tickets/${ticketId}/solution-plan/${planId}`, payload)),
+  submitSolutionPlan: (ticketId: number, planId: number) =>
+    data(
+      apiClient.post<ApiResponse<SolutionPlanRecord>>(`/pic/tickets/${ticketId}/solution-plan/${planId}/submit`, {}),
+    ),
+  planReviewQueue: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/it-lead/plan-review-queue?${query(filters)}`),
+  planReviewDetail: (id: number) =>
+    data(apiClient.get<ApiResponse<PlanReviewDetail>>(`/it-lead/tickets/${id}/solution-plan`)),
+  reviewPlan: (ticketId: number, planId: number, action: 'approve' | 'request-revision', review_notes?: string) =>
+    data(
+      apiClient.post<ApiResponse<SolutionPlanRecord>>(
+        `/it-lead/tickets/${ticketId}/solution-plan/${planId}/${action}`,
+        { review_notes },
+      ),
+    ),
 }

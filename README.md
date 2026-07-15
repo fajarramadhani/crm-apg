@@ -1,6 +1,8 @@
 # Tic Hub
 
-Phase 6 extends the production workflow through IT Lead triage, final priority, calendar-aware SLA initialization, transactional primary PIC assignment, and a read-only PIC workspace. Requester and Supervisor Phase 5 behavior remains intact. See `docs/phase-6-triage-sla-assignment.md`.
+Phase 7 extends the production workflow from assignment through PIC analysis/RCA, versioned solution planning, IT Lead revision or approval, and `ready_for_development`. The PIC workspace and IT Lead Plan Review queue now use the Laravel API, preserve prior plan versions, enforce optimistic locking and ownership, and keep requester history free of internal technical detail. See `docs/phase-7-analysis-solution-planning.md`.
+
+Phase 6 introduced IT Lead triage, final priority, calendar-aware SLA initialization, transactional primary PIC assignment, and the initial PIC workspace. Requester and Supervisor Phase 5 behavior remains intact. See `docs/phase-6-triage-sla-assignment.md`.
 
 Phase 4 adds the production master-data foundation used by future ticket forms and workflow: divisions, branches, applications/modules, ticket categories/priorities, SLA policies, working calendars, holidays, and basic user organizational assignments. The Laravel API exposes active read-only data to authenticated roles and paginated management endpoints to Admin. See `docs/phase-4-master-data-foundation.md` for setup, endpoint, validation, and verification details.
 
@@ -115,4 +117,4 @@ vendor/bin/pint --test
 
 Phase 3 menyediakan Laravel Sanctum SPA authentication, delapan primary role, permission registry, middleware role/permission, login rate limit, seeder lokal, frontend auth bootstrap, protected route, role guard, real login/logout, dan session persistence. Backend tetap menjadi sumber kebenaran authorization.
 
-Master data, division model, ticket CRUD/assignment, SLA, approval, workflow bisnis, dashboard API nyata, SSO, reset password, MFA, dan multi-role UI sengaja ditunda ke fase berikutnya.
+Phase 7 analysis and planning are implemented. Development execution, internal testing, QA/UAT, deployment approval, deployment/monitoring/closure, broader dashboards, SSO, reset password, MFA, and multi-role UI remain later phases.
