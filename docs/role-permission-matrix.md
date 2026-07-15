@@ -1,5 +1,14 @@
 # Role Permission Matrix
 
+## Phase 4 additions
+
+| Permission | Requester | Supervisor | IT Lead | PIC | QA | Manager | Executive | Admin |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `master_data.view` | Yes | Yes | Yes | Yes | Yes | Yes | Yes (read-only) | Yes |
+| `master_data.manage` | No | No | No | No | No | No | No | Yes |
+
+Frontend route guards improve navigation, but the Laravel permission middleware is authoritative. Executive receives only active form-reference master data and cannot call Admin mutations.
+
 ## Legend and scope
 
 - **O**: own/requested-by user

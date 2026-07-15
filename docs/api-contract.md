@@ -1,5 +1,15 @@
 # API Contract Plan
 
+## Phase 4 master data
+
+All routes below require Sanctum authentication, an active account, and a request ID. `master_data.view` protects active dropdown routes; `master_data.manage` protects Admin routes.
+
+Read-only active collections: `GET /api/v1/master/divisions`, `/branches`, `/applications`, `/applications/{application}/modules`, `/ticket-categories`, `/ticket-priorities`, `/sla-policies`, `/working-calendars`, and `/holidays`.
+
+Admin collections use `/api/v1/admin/{resource}` and accept `search`, `is_active`, `page`, and `per_page` (default 15, maximum 100). Admin mutations use POST for creation, PUT on `/{id}` for updates, and DELETE for deactivation. Nested creation routes are `/admin/applications/{application}/modules` and `/admin/working-calendars/{calendar}/holidays`; subsequent updates/deletes use `/admin/application-modules/{module}` and `/admin/holidays/{holiday}`. Holidays are date exceptions and are physically deletable because no ticket references them in Phase 4; other DELETE actions set `is_active=false`.
+
+Collection pagination is returned in `meta.pagination`; every response retains the Phase 2 `success`, `message`, `data`, and `meta.request_id` envelope. Validation failures use HTTP 422 and the standard field-keyed `errors` object.
+
 ## Conventions
 
 - Base path: `/api/v1`

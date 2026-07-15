@@ -1,5 +1,11 @@
 # Database Design
 
+## Phase 4 implemented master data
+
+The Phase 4 implementation uses `divisions`, `branches`, `applications`, `application_modules`, `ticket_categories`, `ticket_priorities`, `working_calendars`, `sla_policies`, and `holidays`. `users.division_id` and `users.branch_id` are nullable foreign keys. `working_days` is a JSON array of unique ISO-8601 weekday numbers (`1` Monday through `7` Sunday). SLA durations are working minutes, not elapsed calendar hours. The default calendar is Monday–Friday, 08:00–17:00, `Asia/Jakarta`; break-time subtraction is intentionally deferred to the SLA engine phase.
+
+The earlier target-design sections below remain a long-term architectural reference. Where their preliminary names differ (for example `business_calendars`), the implemented Phase 4 schema above is canonical for subsequent migrations.
+
 ## Conventions
 
 - MySQL 8+, InnoDB, `utf8mb4`, timestamps in UTC, display timezone `Asia/Jakarta`.

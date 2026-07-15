@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\Branch;
+use App\Models\Division;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -27,6 +29,8 @@ class DevelopmentUserSeeder extends Seeder
             'executive' => ['Executive Demo', 'executive@tichub.local'],
             'admin' => ['Admin Demo', 'admin@tichub.local'],
         ];
+        $division = Division::query()->where('code', 'IT')->first();
+        $branch = Branch::query()->where('code', 'JKT')->first();
 
         foreach ($accounts as $roleKey => [$name, $email]) {
             $role = Role::query()->where('key', $roleKey)->firstOrFail();
@@ -35,6 +39,8 @@ class DevelopmentUserSeeder extends Seeder
                 ['email' => $email],
                 [
                     'role_id' => $role->id,
+                    'division_id' => $division?->id,
+                    'branch_id' => $branch?->id,
                     'name' => $name,
                     'password' => Hash::make('password'),
                     'is_active' => true,

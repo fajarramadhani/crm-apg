@@ -4,6 +4,8 @@ import type { ApiError } from './types'
 export interface ApiClient {
   get<T>(path: string, init?: RequestInit): Promise<T>
   post<T>(path: string, body?: unknown, init?: RequestInit): Promise<T>
+  put<T>(path: string, body?: unknown, init?: RequestInit): Promise<T>
+  delete<T>(path: string, init?: RequestInit): Promise<T>
   csrf(): Promise<void>
 }
 
@@ -82,6 +84,13 @@ export const apiClient: ApiClient = {
       method: 'POST',
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
+  put: <T>(path: string, body?: unknown, init?: RequestInit) =>
+    request<T>(path, {
+      ...init,
+      method: 'PUT',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  delete: <T>(path: string, init?: RequestInit) => request<T>(path, { ...init, method: 'DELETE' }),
   async csrf(): Promise<void> {
     await fetchCsrfCookie()
   },
