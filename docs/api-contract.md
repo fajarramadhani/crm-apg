@@ -1,5 +1,15 @@
 # API Contract Plan
 
+## Phase 5 canonical ticket endpoints
+
+All routes require Sanctum, an active account, standard envelopes, and request IDs. Requester routes are `POST/GET /api/v1/tickets`, `GET/PUT /api/v1/tickets/{ticket}`, `POST /{ticket}/resubmit`, `POST /{ticket}/cancel`, `GET /{ticket}/history`, and nested attachment upload/download/delete. Creation intentionally submits immediately to `pending_validation`; there is no competing draft UX.
+
+Requester filters are `search`, `status`, `category`, `application`, `date_from`, `date_to`, `page`, and `per_page` (maximum 100). Supervisor routes are `GET /api/v1/supervisor/validation-queue`, `GET /supervisor/tickets/{ticket}`, and actions `validate`, `request-revision`, `reject`, `transfer`. Queue filters are `search`, `category`, `application`, `requester`, `submitted_from`, `submitted_to`, and pagination.
+
+Transfer changes `current_division_id`, writes `action=transferred`, and keeps `status=pending_validation`, so the target queue receives it immediately. Invalid/double transitions return `409 INVALID_TRANSITION`. Revision, rejection, and transfer require `notes`; transfer also requires an active, different `target_division_id`.
+
+Multipart attachment input is `file` and optional category `evidence|screenshot|document|log|other`. Allowed types are PNG/JPEG/PDF/TXT/CSV/DOC/DOCX/XLS/XLSX, maximum 10 MB and 10 files per ticket. ZIP and executables are rejected. Resources never expose `disk`, `path`, or `stored_name`.
+
 ## Phase 4 master data
 
 All routes below require Sanctum authentication, an active account, and a request ID. `master_data.view` protects active dropdown routes; `master_data.manage` protects Admin routes.

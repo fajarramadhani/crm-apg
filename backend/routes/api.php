@@ -5,6 +5,9 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
+use App\Http\Controllers\Api\V1\SupervisorTicketController;
+use App\Http\Controllers\Api\V1\TicketAttachmentController;
+use App\Http\Controllers\Api\V1\TicketController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -22,6 +25,28 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
+        Route::prefix('tickets')->name('api.v1.tickets.')->group(function (): void {
+            Route::get('/', [TicketController::class, 'index'])->middleware('permission:ticket.own.view')->name('index');
+            Route::post('/', [TicketController::class, 'store'])->middleware('permission:ticket.create')->name('store');
+            Route::get('/{ticket}', [TicketController::class, 'show'])->name('show');
+            Route::put('/{ticket}', [TicketController::class, 'update'])->name('update');
+            Route::post('/{ticket}/resubmit', [TicketController::class, 'resubmit'])->name('resubmit');
+            Route::post('/{ticket}/cancel', [TicketController::class, 'cancel'])->name('cancel');
+            Route::get('/{ticket}/history', [TicketController::class, 'history'])->name('history');
+            Route::post('/{ticket}/attachments', [TicketAttachmentController::class, 'store'])->name('attachments.store');
+            Route::get('/{ticket}/attachments/{attachment}/download', [TicketAttachmentController::class, 'download'])->name('attachments.download');
+            Route::delete('/{ticket}/attachments/{attachment}', [TicketAttachmentController::class, 'destroy'])->name('attachments.destroy');
+        });
+
+        Route::prefix('supervisor')->middleware('permission:ticket.validation_queue.view')->name('api.v1.supervisor.')->group(function (): void {
+            Route::get('/validation-queue', [SupervisorTicketController::class, 'queue']);
+            Route::get('/tickets/{ticket}', [SupervisorTicketController::class, 'show']);
+            Route::post('/tickets/{ticket}/validate', [SupervisorTicketController::class, 'validate'])->middleware('permission:ticket.validate');
+            Route::post('/tickets/{ticket}/request-revision', [SupervisorTicketController::class, 'requestRevision'])->middleware('permission:ticket.request_revision');
+            Route::post('/tickets/{ticket}/reject', [SupervisorTicketController::class, 'reject'])->middleware('permission:ticket.reject');
+            Route::post('/tickets/{ticket}/transfer', [SupervisorTicketController::class, 'transfer'])->middleware('permission:ticket.transfer');
+        });
+
         Route::prefix('master')->middleware('permission:master_data.view')->name('api.v1.master.')->group(function (): void {
             Route::get('divisions', [MasterDataController::class, 'divisions'])->name('divisions');
             Route::get('branches', [MasterDataController::class, 'branches'])->name('branches');

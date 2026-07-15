@@ -1,60 +1,135 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { APPLICATIONS, DIVISIONS } from '../../data'
-import { PageHeader, Button, Input, Select, Textarea, Card, Toast } from '../../components/ui'
+import { ApiRequestError } from '../../api/client'
+import { Button, Card, Input, PageHeader, Select, Textarea, Toast } from '../../components/ui'
+import {
+  masterDataService,
+  type Application,
+  type ApplicationModule,
+  type TicketCategory,
+  type TicketPriority,
+} from '../../services/masterDataService'
+import { ticketService, type TicketPayload } from '../../services/ticketService'
+
+const emptyForm = {
+  categoryId: '',
+  applicationId: '',
+  moduleId: '',
+  priorityId: '',
+  title: '',
+  description: '',
+  businessImpact: '',
+  urgency: 'normal',
+  expectedResult: '',
+  actualResult: '',
+  reproductionSteps: '',
+  requestPurpose: '',
+  changeReason: '',
+  expectedImpact: '',
+  recurringIndication: '',
+}
 
 export default function CreateTicket() {
   const navigate = useNavigate()
-  const [showToast, setShowToast] = useState(false)
   const [step, setStep] = useState(1)
-  const [form, setForm] = useState({
-    category: 'incident',
-    title: '',
-    application: '',
-    division: 'Operasional Polis',
-    priority_suggestion: 'medium',
-    description: '',
-    impact: '',
-    steps_to_reproduce: '',
-    expected_result: '',
-    actual_result: '',
-    urgency: 'normal',
-    attachments: [] as string[],
-  })
+  const [form, setForm] = useState(emptyForm)
+  const [categories, setCategories] = useState<TicketCategory[]>([])
+  const [applications, setApplications] = useState<Application[]>([])
+  const [modules, setModules] = useState<ApplicationModule[]>([])
+  const [priorities, setPriorities] = useState<TicketPriority[]>([])
+  const [files, setFiles] = useState<File[]>([])
+  const [loading, setLoading] = useState(true)
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState('')
 
-  const update = (field: string, value: string) => setForm((f) => ({ ...f, [field]: value }))
+  useEffect(() => {
+    Promise.all([
+      masterDataService.getTicketCategories(),
+      masterDataService.getApplications(),
+      masterDataService.getTicketPriorities(),
+    ])
+      .then(([categoryData, applicationData, priorityData]) => {
+        setCategories(categoryData)
+        setApplications(applicationData)
+        setPriorities(priorityData)
+        setForm((current) => ({
+          ...current,
+          categoryId: String(categoryData[0]?.id ?? ''),
+          priorityId: String(priorityData.find((p) => p.key === 'medium')?.id ?? ''),
+        }))
+      })
+      .catch(() => setError('Master data formulir tidak dapat dimuat.'))
+      .finally(() => setLoading(false))
+  }, [])
 
-  const handleSubmit = () => {
-    setShowToast(true)
-    setTimeout(() => {
-      navigate('/user/tickets')
-    }, 1500)
+  useEffect(() => {
+    if (!form.applicationId) {
+      setModules([])
+      return
+    }
+    masterDataService
+      .getApplicationModules(Number(form.applicationId))
+      .then(setModules)
+      .catch(() => setModules([]))
+  }, [form.applicationId])
+
+  const category = useMemo(
+    () => categories.find((item) => item.id === Number(form.categoryId)),
+    [categories, form.categoryId],
+  )
+  const update = (field: keyof typeof form, value: string) => setForm((current) => ({ ...current, [field]: value }))
+  const basicValid = Boolean(
+    form.categoryId && form.title.trim() && (category?.type !== 'incident' || form.applicationId),
+  )
+  const detailValid = Boolean(
+    form.description.trim() &&
+    (category?.type !== 'request' || form.requestPurpose.trim()) &&
+    (category?.type !== 'change' || form.changeReason.trim()) &&
+    (category?.type !== 'problem' || form.recurringIndication.trim()),
+  )
+
+  const submit = async () => {
+    setSubmitting(true)
+    setError('')
+    const payload: TicketPayload = {
+      ticket_category_id: Number(form.categoryId),
+      title: form.title,
+      description: form.description,
+      ...(form.applicationId && { application_id: Number(form.applicationId) }),
+      ...(form.moduleId && { application_module_id: Number(form.moduleId) }),
+      ...(form.priorityId && { requested_priority_id: Number(form.priorityId) }),
+      business_impact: form.businessImpact || undefined,
+      urgency: form.urgency,
+      expected_result: form.expectedResult || undefined,
+      actual_result: form.actualResult || undefined,
+      reproduction_steps: form.reproductionSteps || undefined,
+      request_purpose: form.requestPurpose || undefined,
+      change_reason: form.changeReason || undefined,
+      expected_impact: form.expectedImpact || undefined,
+      recurring_indication: form.recurringIndication || undefined,
+    }
+    try {
+      const ticket = await ticketService.create(payload)
+      for (const file of files)
+        await ticketService.upload(ticket.id, file, file.type.startsWith('image/') ? 'screenshot' : 'evidence')
+      navigate(`/user/tickets/${ticket.id}`, { replace: true })
+    } catch (cause) {
+      const apiError = cause as ApiRequestError
+      setError(apiError.errors ? Object.values(apiError.errors).flat()[0] : apiError.message)
+      setSubmitting(false)
+    }
   }
 
-  const categories = [
-    { value: 'incident', label: '🔴 Incident — Gangguan sistem yang berdampak pada operasional' },
-    { value: 'request', label: '🔵 Request — Permintaan fitur atau layanan baru' },
-    { value: 'change', label: '🟣 Change — Perubahan konfigurasi atau sistem' },
-    { value: 'problem', label: '🟠 Problem — Masalah berulang yang perlu investigasi' },
-  ]
-
-  const prioritySuggestions = [
-    { value: 'critical', label: '🔴 Critical — Sistem tidak dapat digunakan, dampak sangat besar' },
-    { value: 'high', label: '🟠 High — Fungsi utama terganggu, ada workaround' },
-    { value: 'medium', label: '🟡 Medium — Fungsi non-kritis terganggu' },
-    { value: 'low', label: '🟢 Low — Minor issue, tidak mengganggu operasional' },
-  ]
+  if (loading)
+    return (
+      <div className="py-20 text-center text-sm text-gray-500" role="status">
+        Memuat formulir tiket...
+      </div>
+    )
 
   return (
     <div className="max-w-3xl">
-      {showToast && (
-        <Toast
-          message="Tiket berhasil dibuat! Menunggu validasi Supervisor."
-          type="success"
-          onClose={() => setShowToast(false)}
-        />
-      )}
-
+      {error && <Toast message={error} type="error" onClose={() => setError('')} />}
       <PageHeader
         title="Buat Request / Tiket IT"
         subtitle="Sampaikan permintaan atau insiden IT Anda"
@@ -64,213 +139,226 @@ export default function CreateTicket() {
           </Button>
         }
       />
-
-      {/* Step Indicator */}
-      <div className="flex items-center gap-2 mb-6">
-        {[1, 2, 3].map((s) => (
-          <div key={s} className="flex items-center gap-2">
+      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
+        {[1, 2, 3].map((item) => (
+          <div key={item} className="flex items-center gap-2 shrink-0">
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${s === step ? 'bg-[#1E3A8A] text-white' : s < step ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'}`}
+              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${item === step ? 'bg-[#1E3A8A] text-white' : item < step ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'}`}
             >
-              {s < step ? '✓' : s}
+              {item < step ? '✓' : item}
             </div>
-            <span className={`text-sm ${s === step ? 'text-gray-900 font-medium' : 'text-gray-400'}`}>
-              {s === 1 ? 'Informasi Dasar' : s === 2 ? 'Detail Masalah' : 'Konfirmasi'}
+            <span className={`text-sm ${item === step ? 'font-medium text-gray-900' : 'text-gray-400'}`}>
+              {item === 1 ? 'Informasi Dasar' : item === 2 ? 'Detail' : 'Konfirmasi'}
             </span>
-            {s < 3 && <div className="w-8 h-px bg-gray-300" />}
+            {item < 3 && <div className="w-8 h-px bg-gray-300" />}
           </div>
         ))}
       </div>
-
       <Card className="p-6">
         {step === 1 && (
           <div className="space-y-5">
-            <h3 className="text-base font-semibold text-gray-900 pb-3 border-b border-gray-100">
-              Informasi Dasar Tiket
-            </h3>
-
+            <h3 className="text-base font-semibold border-b border-gray-100 pb-3">Informasi Dasar Tiket</h3>
             <Select
               label="Kategori Tiket *"
-              options={categories}
-              value={form.category}
-              onChange={(e) => update('category', e.target.value)}
+              value={form.categoryId}
+              onChange={(event) => update('categoryId', event.target.value)}
+              options={categories.map((item) => ({
+                value: String(item.id),
+                label: `${item.name} — ${item.description || item.type}`,
+              }))}
             />
-
             <Input
               label="Judul Tiket *"
-              placeholder="Deskripsikan masalah secara singkat dan jelas"
               value={form.title}
-              onChange={(e) => update('title', e.target.value)}
-              hint="Contoh: Gagal Generate PDF Polis Asuransi"
+              maxLength={200}
+              onChange={(event) => update('title', event.target.value)}
+              placeholder="Deskripsikan kebutuhan secara singkat"
             />
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select
-                label="Aplikasi Terdampak *"
+                label={category?.type === 'incident' ? 'Aplikasi Terdampak *' : 'Aplikasi Terkait'}
+                value={form.applicationId}
+                onChange={(event) => {
+                  update('applicationId', event.target.value)
+                  update('moduleId', '')
+                }}
                 options={[
-                  { value: '', label: '— Pilih Aplikasi —' },
-                  ...APPLICATIONS.map((a) => ({ value: a, label: a })),
+                  { value: '', label: '— Pilih aplikasi —' },
+                  ...applications.map((item) => ({ value: String(item.id), label: item.name })),
                 ]}
-                value={form.application}
-                onChange={(e) => update('application', e.target.value)}
               />
               <Select
-                label="Divisi Pelapor *"
-                options={DIVISIONS.map((d) => ({ value: d, label: d }))}
-                value={form.division}
-                onChange={(e) => update('division', e.target.value)}
+                label="Modul Aplikasi"
+                value={form.moduleId}
+                onChange={(event) => update('moduleId', event.target.value)}
+                options={[
+                  { value: '', label: '— Pilih modul —' },
+                  ...modules.map((item) => ({ value: String(item.id), label: item.name })),
+                ]}
+                disabled={!form.applicationId}
               />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Select
                 label="Saran Prioritas"
-                options={prioritySuggestions}
-                value={form.priority_suggestion}
-                onChange={(e) => update('priority_suggestion', e.target.value)}
+                value={form.priorityId}
+                onChange={(event) => update('priorityId', event.target.value)}
+                options={[
+                  { value: '', label: '— Tanpa saran —' },
+                  ...priorities.map((item) => ({ value: String(item.id), label: item.name })),
+                ]}
               />
               <Select
                 label="Urgensi"
-                options={[
-                  { value: 'normal', label: 'Normal — Dalam jam kerja' },
-                  { value: 'urgent', label: 'Urgent — Perlu segera hari ini' },
-                  { value: 'critical', label: 'Critical — Tidak bisa menunggu' },
-                ]}
                 value={form.urgency}
-                onChange={(e) => update('urgency', e.target.value)}
+                onChange={(event) => update('urgency', event.target.value)}
+                options={[
+                  { value: 'low', label: 'Low' },
+                  { value: 'normal', label: 'Normal' },
+                  { value: 'urgent', label: 'Urgent' },
+                  { value: 'critical', label: 'Critical' },
+                ]}
               />
             </div>
-
+            <p className="text-xs text-gray-500">Divisi pelapor dan requester diambil aman dari profil login Anda.</p>
             <div className="flex justify-end">
-              <Button variant="primary" onClick={() => setStep(2)} disabled={!form.title || !form.application}>
+              <Button variant="primary" disabled={!basicValid} onClick={() => setStep(2)}>
                 Lanjut →
               </Button>
             </div>
           </div>
         )}
-
         {step === 2 && (
           <div className="space-y-5">
-            <h3 className="text-base font-semibold text-gray-900 pb-3 border-b border-gray-100">Detail Masalah</h3>
-
+            <h3 className="text-base font-semibold border-b border-gray-100 pb-3">Detail {category?.name}</h3>
             <Textarea
-              label="Deskripsi Masalah *"
+              label="Deskripsi *"
               rows={4}
-              placeholder="Jelaskan masalah secara lengkap..."
               value={form.description}
-              onChange={(e) => update('description', e.target.value)}
-              hint="Deskripsikan masalah yang terjadi, sejak kapan, dan dampaknya terhadap pekerjaan."
+              onChange={(event) => update('description', event.target.value)}
             />
-
-            {form.category === 'incident' && (
+            {category?.type === 'incident' && (
               <>
                 <Textarea
                   label="Langkah Reproduksi"
                   rows={3}
-                  placeholder="1. Buka halaman X&#10;2. Klik tombol Y&#10;3. Error muncul"
-                  value={form.steps_to_reproduce}
-                  onChange={(e) => update('steps_to_reproduce', e.target.value)}
+                  value={form.reproductionSteps}
+                  onChange={(event) => update('reproductionSteps', event.target.value)}
                 />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Textarea
                     label="Hasil yang Diharapkan"
                     rows={3}
-                    placeholder="Seharusnya sistem melakukan..."
-                    value={form.expected_result}
-                    onChange={(e) => update('expected_result', e.target.value)}
+                    value={form.expectedResult}
+                    onChange={(event) => update('expectedResult', event.target.value)}
                   />
                   <Textarea
-                    label="Hasil yang Terjadi"
+                    label="Hasil Aktual"
                     rows={3}
-                    placeholder="Yang sebenarnya terjadi adalah..."
-                    value={form.actual_result}
-                    onChange={(e) => update('actual_result', e.target.value)}
+                    value={form.actualResult}
+                    onChange={(event) => update('actualResult', event.target.value)}
                   />
                 </div>
               </>
             )}
-
+            {category?.type === 'request' && (
+              <Textarea
+                label="Tujuan Kebutuhan *"
+                rows={3}
+                value={form.requestPurpose}
+                onChange={(event) => update('requestPurpose', event.target.value)}
+              />
+            )}
+            {category?.type === 'change' && (
+              <>
+                <Textarea
+                  label="Alasan Perubahan *"
+                  rows={3}
+                  value={form.changeReason}
+                  onChange={(event) => update('changeReason', event.target.value)}
+                />
+                <Textarea
+                  label="Dampak yang Diperkirakan"
+                  rows={3}
+                  value={form.expectedImpact}
+                  onChange={(event) => update('expectedImpact', event.target.value)}
+                />
+              </>
+            )}
+            {category?.type === 'problem' && (
+              <Textarea
+                label="Indikasi Masalah Berulang *"
+                rows={3}
+                value={form.recurringIndication}
+                onChange={(event) => update('recurringIndication', event.target.value)}
+              />
+            )}
             <Textarea
               label="Dampak Bisnis"
               rows={2}
-              placeholder="Jelaskan dampak terhadap operasional bisnis..."
-              value={form.impact}
-              onChange={(e) => update('impact', e.target.value)}
+              value={form.businessImpact}
+              onChange={(event) => update('businessImpact', event.target.value)}
             />
-
-            {/* File Upload Placeholder */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Lampiran (opsional)</label>
-              <div className="border-2 border-dashed border-gray-200 rounded-xl p-6 text-center hover:border-[#1E3A8A]/40 transition-colors cursor-pointer">
-                <div className="text-2xl mb-2">📎</div>
-                <p className="text-sm text-gray-500">
-                  Drag & drop file atau <span className="text-[#1E3A8A] font-medium">browse</span>
-                </p>
-                <p className="text-xs text-gray-400 mt-1">PNG, JPG, PDF, LOG hingga 10MB</p>
-              </div>
+              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="attachments">
+                Lampiran (maks. 10 file, masing-masing 10 MB)
+              </label>
+              <input
+                id="attachments"
+                type="file"
+                multiple
+                accept=".png,.jpg,.jpeg,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx"
+                onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 10))}
+                className="block w-full text-sm border border-dashed border-gray-300 rounded-xl p-4"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                {files.length ? `${files.length} file dipilih` : 'PNG, JPG, PDF, TXT, CSV, DOC/DOCX, XLS/XLSX.'}
+              </p>
             </div>
-
             <div className="flex justify-between">
               <Button variant="secondary" onClick={() => setStep(1)}>
                 ← Kembali
               </Button>
-              <Button variant="primary" onClick={() => setStep(3)} disabled={!form.description}>
+              <Button variant="primary" disabled={!detailValid} onClick={() => setStep(3)}>
                 Lanjut →
               </Button>
             </div>
           </div>
         )}
-
         {step === 3 && (
           <div className="space-y-5">
-            <h3 className="text-base font-semibold text-gray-900 pb-3 border-b border-gray-100">Konfirmasi Tiket</h3>
-
-            <div className="bg-gray-50 rounded-xl p-5 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Kategori</p>
-                  <p className="font-medium text-gray-900 capitalize">{form.category}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Saran Prioritas</p>
-                  <p className="font-medium text-gray-900 capitalize">{form.priority_suggestion}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-500 text-xs mb-1">Judul</p>
-                  <p className="font-medium text-gray-900">{form.title}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Aplikasi</p>
-                  <p className="font-medium text-gray-900">{form.application}</p>
-                </div>
-                <div>
-                  <p className="text-gray-500 text-xs mb-1">Divisi</p>
-                  <p className="font-medium text-gray-900">{form.division}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-gray-500 text-xs mb-1">Deskripsi</p>
-                  <p className="font-medium text-gray-900 text-sm leading-relaxed">{form.description}</p>
-                </div>
+            <h3 className="text-base font-semibold border-b border-gray-100 pb-3">Konfirmasi Tiket</h3>
+            <div className="bg-gray-50 rounded-xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+              <div>
+                <p className="text-xs text-gray-500">Kategori</p>
+                <p className="font-medium">{category?.name}</p>
               </div>
-            </div>
-
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex gap-3">
-              <span className="text-amber-500">⚠️</span>
-              <div className="text-sm text-amber-800">
-                <p className="font-semibold">Sebelum mengirim</p>
-                <p className="mt-1">
-                  Tiket akan diteruskan ke Supervisor divisi Anda untuk divalidasi. Prioritas akhir akan ditentukan oleh
-                  IT Lead.
+              <div>
+                <p className="text-xs text-gray-500">Aplikasi</p>
+                <p className="font-medium">
+                  {applications.find((item) => item.id === Number(form.applicationId))?.name || 'Tidak ada'}
                 </p>
               </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs text-gray-500">Judul</p>
+                <p className="font-medium">{form.title}</p>
+              </div>
+              <div className="sm:col-span-2">
+                <p className="text-xs text-gray-500">Deskripsi</p>
+                <p className="whitespace-pre-wrap">{form.description}</p>
+              </div>
+              <div>
+                <p className="text-xs text-gray-500">Lampiran</p>
+                <p className="font-medium">{files.length} file</p>
+              </div>
             </div>
-
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
+              Tiket akan langsung berstatus Pending Validation dan masuk ke antrean Supervisor divisi Anda.
+            </div>
             <div className="flex justify-between">
               <Button variant="secondary" onClick={() => setStep(2)}>
                 ← Kembali
               </Button>
-              <Button variant="primary" onClick={handleSubmit}>
-                📤 Kirim Tiket
+              <Button variant="primary" disabled={submitting} onClick={() => void submit()}>
+                {submitting ? 'Mengirim...' : 'Kirim Tiket'}
               </Button>
             </div>
           </div>

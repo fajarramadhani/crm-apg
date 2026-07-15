@@ -1,5 +1,23 @@
 # Role Permission Matrix
 
+## Phase 5 ticket permissions
+
+| Permission | Requester | Supervisor |
+| --- | --- | --- |
+| `ticket.create` | Yes | No |
+| `ticket.own.view` | Own only | No |
+| `ticket.own.update` | Draft/revision | No |
+| `ticket.own.cancel` | Before validated | No |
+| `ticket.own.attachment.manage` | Own/uploader before validated | No |
+| `ticket.validation_queue.view` | No | Same current division |
+| `ticket.validate` | No | Scoped |
+| `ticket.request_revision` | No | Scoped |
+| `ticket.reject` | No | Scoped |
+| `ticket.transfer` | No | Scoped |
+| `ticket.division.view` | No | Same current division |
+
+Laravel `TicketPolicy` is authoritative for ownership, mutable states, attachment parent access, and Supervisor division scope. Admin is not implicitly granted Supervisor actions.
+
 ## Phase 4 additions
 
 | Permission | Requester | Supervisor | IT Lead | PIC | QA | Manager | Executive | Admin |

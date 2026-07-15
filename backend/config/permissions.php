@@ -4,12 +4,21 @@ return [
     'roles' => [
         'requester' => [
             'dashboard.requester.view',
+            'ticket.create',
             'ticket.own.view',
+            'ticket.own.update',
+            'ticket.own.cancel',
+            'ticket.own.attachment.manage',
             'master_data.view',
         ],
         'supervisor' => [
             'dashboard.supervisor.view',
             'ticket.division.view',
+            'ticket.validation_queue.view',
+            'ticket.validate',
+            'ticket.request_revision',
+            'ticket.reject',
+            'ticket.transfer',
             'master_data.view',
         ],
         'it_lead' => [

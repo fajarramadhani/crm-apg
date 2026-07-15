@@ -1,10 +1,12 @@
 <?php
 
+use App\Exceptions\InvalidTicketTransition;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserHasRole;
 use App\Http\Middleware\EnsureUserIsActive;
 use App\Support\ApiResponse;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Application;
@@ -13,6 +15,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 use Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -53,6 +56,30 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return ApiResponse::error($request, 'Unauthenticated.', 'UNAUTHENTICATED', 401);
+        });
+
+        $exceptions->render(function (AuthorizationException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error($request, 'You are not authorized to access this resource.', 'FORBIDDEN', 403);
+        });
+
+        $exceptions->render(function (AccessDeniedHttpException $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error($request, 'You are not authorized to access this resource.', 'FORBIDDEN', 403);
+        });
+
+        $exceptions->render(function (InvalidTicketTransition $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error($request, $exception->getMessage(), 'INVALID_TRANSITION', 409, ['current_status' => $exception->currentStatus]);
         });
 
         $exceptions->render(function (TooManyRequestsHttpException $exception, Request $request) {

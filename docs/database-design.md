@@ -1,5 +1,11 @@
 # Database Design
 
+## Phase 5 implemented ticket foundation
+
+Phase 5 adds `tickets`, `ticket_number_sequences`, `ticket_status_histories`, `ticket_comments`, and `ticket_attachments`. Ticket status is a PHP backed enum stored in `VARCHAR`; implemented values are `draft`, `pending_validation`, `need_revision`, `validated`, `rejected`, `transferred`, and `cancelled`. Create submits directly to `pending_validation`, while history records both `created` and `submitted`. `over_sla` remains derived future state, not a status.
+
+`ticket_number_sequences.period` is the `YYYYMM` primary key. Generation occurs inside the ticket transaction: insert the monthly row if absent, select it `FOR UPDATE`, increment `last_number`, then format `TIC-YYYYMM-000001`. A unique index on `tickets.ticket_number` is the final invariant. Attachments contain metadata only and point to a configurable private Laravel filesystem disk; internal paths and UUID stored names are not returned by resources. History is append-only in application code.
+
 ## Phase 4 implemented master data
 
 The Phase 4 implementation uses `divisions`, `branches`, `applications`, `application_modules`, `ticket_categories`, `ticket_priorities`, `working_calendars`, `sla_policies`, and `holidays`. `users.division_id` and `users.branch_id` are nullable foreign keys. `working_days` is a JSON array of unique ISO-8601 weekday numbers (`1` Monday through `7` Sunday). SLA durations are working minutes, not elapsed calendar hours. The default calendar is Monday–Friday, 08:00–17:00, `Asia/Jakarta`; break-time subtraction is intentionally deferred to the SLA engine phase.

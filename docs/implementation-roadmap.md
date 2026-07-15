@@ -1,5 +1,9 @@
 # Implementation Roadmap
 
+## Current delivery numbering
+
+The approved execution brief consolidates the earlier ticket read-model and creation/validation split into **Phase 5 — Ticket Creation and Supervisor Validation**. Phase 5 delivers list/detail read models, creation, private attachments, ownership, revision/resubmission, scoped Supervisor validation, history, and event hooks. The earlier headings below remain historical planning context. The next active delivery is **Phase 6 — IT Lead triage, final priority, assignment, analysis, and planning**. SLA calculation, QA/UAT, approval, deployment, notifications, and Knowledge Base remain later.
+
 ## Delivery rules
 
 Setiap fase kecil, memiliki acceptance criteria, migration/test sendiri, dan tidak mengubah visual utama kecuali untuk portability, responsive behavior, accessibility, atau state/error yang diperlukan. Jangan memulai fase berikutnya bila build/test fase aktif belum hijau. Dummy data diganti per vertical slice, bukan dengan rewrite frontend.

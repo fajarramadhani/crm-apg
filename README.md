@@ -1,8 +1,10 @@
 # Tic Hub
 
+Phase 5 implements the first production ticket workflow slice: an authenticated Requester creates a real `pending_validation` ticket, manages private attachments, sees own history, revises/resubmits, and may cancel before validation. A same-division Supervisor has a scoped queue and can validate, request revision, reject, or transfer. Every mutation persists status history and emits a domain event. See `docs/phase-5-ticket-creation-validation.md`.
+
 Phase 4 adds the production master-data foundation used by future ticket forms and workflow: divisions, branches, applications/modules, ticket categories/priorities, SLA policies, working calendars, holidays, and basic user organizational assignments. The Laravel API exposes active read-only data to authenticated roles and paginated management endpoints to Admin. See `docs/phase-4-master-data-foundation.md` for setup, endpoint, validation, and verification details.
 
-Tic Hub adalah aplikasi internal CRM dan IT service management APG. Repository ini berbentuk monorepo: React menyediakan antarmuka internal dan Laravel menyediakan REST API, autentikasi Sanctum, serta authorization berbasis role/permission. Data bisnis tiket masih berupa mock sampai fase integrasi berikutnya.
+Tic Hub adalah aplikasi internal CRM dan IT service management APG. Repository ini berbentuk monorepo: React menyediakan antarmuka internal dan Laravel menyediakan REST API, autentikasi Sanctum, serta authorization berbasis role/permission. Alur Requester ke validasi Supervisor sudah memakai API dan database nyata; modul fase berikutnya masih dapat memakai mock secara bertahap.
 
 ## Struktur repository
 

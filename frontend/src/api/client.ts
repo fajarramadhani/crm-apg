@@ -6,6 +6,7 @@ export interface ApiClient {
   post<T>(path: string, body?: unknown, init?: RequestInit): Promise<T>
   put<T>(path: string, body?: unknown, init?: RequestInit): Promise<T>
   delete<T>(path: string, init?: RequestInit): Promise<T>
+  postForm<T>(path: string, body: FormData, init?: RequestInit): Promise<T>
   csrf(): Promise<void>
 }
 
@@ -45,7 +46,7 @@ async function request<T>(path: string, init: RequestInit = {}, retriedCsrf = fa
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
 
-  if (init.body) headers.set('Content-Type', 'application/json')
+  if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   if (method !== 'GET' && method !== 'HEAD' && xsrfToken) {
     headers.set('X-XSRF-TOKEN', decodeURIComponent(xsrfToken))
   }
@@ -91,6 +92,8 @@ export const apiClient: ApiClient = {
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
   delete: <T>(path: string, init?: RequestInit) => request<T>(path, { ...init, method: 'DELETE' }),
+  postForm: <T>(path: string, body: FormData, init?: RequestInit) =>
+    request<T>(path, { ...init, method: 'POST', body }),
   async csrf(): Promise<void> {
     await fetchCsrfCookie()
   },

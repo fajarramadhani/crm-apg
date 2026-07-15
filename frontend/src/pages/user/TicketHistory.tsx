@@ -1,151 +1,166 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { STATUS_LABELS, PRIORITY_LABELS, formatDate } from '../../data'
-import type { Ticket } from '../../types'
-import { ticketService } from '../../services/ticketService'
 import {
-  PageHeader,
   Button,
-  StatusBadge,
-  PriorityBadge,
-  SLAIndicator,
-  Table,
-  TR,
-  TD,
   FilterBar,
-  Select,
   Input,
+  PageHeader,
+  PriorityBadge,
+  Select,
+  StatusBadge,
+  Table,
+  TD,
+  TR,
 } from '../../components/ui'
+import { ticketService, type TicketRecord } from '../../services/ticketService'
+import type { Priority, TicketStatus } from '../../types'
+
+const statuses = [
+  ['pending_validation', 'Pending Validation'],
+  ['need_revision', 'Need Revision'],
+  ['validated', 'Validated'],
+  ['rejected', 'Rejected'],
+  ['cancelled', 'Cancelled'],
+]
 
 export default function TicketHistory() {
   const navigate = useNavigate()
+  const [tickets, setTickets] = useState<TicketRecord[]>([])
   const [search, setSearch] = useState('')
-  const [statusFilter, setStatusFilter] = useState('')
-  const [priorityFilter, setPriorityFilter] = useState('')
-  const [myTickets, setMyTickets] = useState<Ticket[]>([])
+  const [status, setStatus] = useState('')
+  const [page, setPage] = useState(1)
+  const [pages, setPages] = useState(1)
+  const [total, setTotal] = useState(0)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => {
-    void ticketService.listMyTickets().then(setMyTickets)
-  }, [])
-
-  const filtered = myTickets.filter((t) => {
-    const matchSearch =
-      search === '' ||
-      t.title.toLowerCase().includes(search.toLowerCase()) ||
-      t.id.toLowerCase().includes(search.toLowerCase())
-    const matchStatus = statusFilter === '' || t.status === statusFilter
-    const matchPriority = priorityFilter === '' || t.priority === priorityFilter
-    return matchSearch && matchStatus && matchPriority
-  })
-
-  const overSlaCount = myTickets.filter((t) => t.overSla).length
+    const timeout = window.setTimeout(() => {
+      setLoading(true)
+      setError('')
+      ticketService
+        .listMyTickets({ search, status, page, per_page: 15 })
+        .then((response) => {
+          setTickets(response.data)
+          setTotal(response.meta.pagination.total)
+          setPages(response.meta.pagination.last_page)
+        })
+        .catch(() => setError('Riwayat tiket tidak dapat dimuat.'))
+        .finally(() => setLoading(false))
+    }, 250)
+    return () => window.clearTimeout(timeout)
+  }, [search, status, page])
 
   return (
     <div>
       <PageHeader
         title="Riwayat Tiket Saya"
-        subtitle={`${myTickets.length} tiket ditemukan`}
+        subtitle={`${total} tiket ditemukan`}
         actions={
           <Button variant="primary" onClick={() => navigate('/user/create-ticket')}>
-            ➕ Buat Tiket
+            ＋ Buat Tiket
           </Button>
         }
       />
-
-      {overSlaCount > 0 && (
-        <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
-          <span className="text-red-500 text-xl">🚨</span>
-          <p className="text-sm font-semibold text-red-700">
-            {overSlaCount} tiket Anda melewati batas SLA dan memerlukan perhatian
-          </p>
-        </div>
-      )}
-
       <FilterBar>
         <Input
-          placeholder="🔍 Cari tiket..."
+          placeholder="Cari nomor atau judul..."
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-48"
+          onChange={(event) => {
+            setSearch(event.target.value)
+            setPage(1)
+          }}
+          className="w-full sm:w-56"
         />
         <Select
-          options={[
-            { value: '', label: 'Semua Status' },
-            ...Object.entries(STATUS_LABELS).map(([v, l]) => ({ value: v, label: l })),
-          ]}
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-44"
+          value={status}
+          onChange={(event) => {
+            setStatus(event.target.value)
+            setPage(1)
+          }}
+          options={[{ value: '', label: 'Semua Status' }, ...statuses.map(([value, label]) => ({ value, label }))]}
+          className="w-full sm:w-48"
         />
-        <Select
-          options={[
-            { value: '', label: 'Semua Prioritas' },
-            ...Object.entries(PRIORITY_LABELS).map(([v, l]) => ({ value: v, label: l })),
-          ]}
-          value={priorityFilter}
-          onChange={(e) => setPriorityFilter(e.target.value)}
-          className="w-36"
-        />
-        {(search || statusFilter || priorityFilter) && (
+        {(search || status) && (
           <button
+            className="text-xs underline text-gray-500"
             onClick={() => {
               setSearch('')
-              setStatusFilter('')
-              setPriorityFilter('')
+              setStatus('')
+              setPage(1)
             }}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
           >
             Reset
           </button>
         )}
-        <span className="ml-auto text-xs text-gray-400">{filtered.length} tiket</span>
       </FilterBar>
-
+      {error && (
+        <div className="p-4 mb-4 rounded-xl bg-red-50 text-sm text-red-700" role="alert">
+          {error}{' '}
+          <button className="underline ml-2" onClick={() => setPage((value) => value)}>
+            Coba lagi
+          </button>
+        </div>
+      )}
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-        <Table headers={['ID Tiket', 'Judul', 'Kategori', 'Prioritas', 'Status', 'SLA', 'Dibuat', 'Diupdate']}>
-          {filtered.map((ticket) => (
-            <TR key={ticket.id} onClick={() => navigate(`/user/tickets/${ticket.id}`)} highlight={ticket.overSla}>
-              <TD>
-                <span className="font-mono text-xs text-gray-600">{ticket.id}</span>
-                {ticket.overSla && <span className="ml-1 text-red-500">🚨</span>}
-              </TD>
-              <TD>
-                <div className="max-w-[240px]">
-                  <p className="font-medium text-gray-900 truncate text-sm">{ticket.title}</p>
-                  <p className="text-xs text-gray-400 truncate">{ticket.application}</p>
-                </div>
-              </TD>
-              <TD>
-                <span className="text-xs capitalize text-gray-600">{ticket.category}</span>
-              </TD>
-              <TD>
-                <PriorityBadge priority={ticket.priority} />
-              </TD>
-              <TD>
-                <StatusBadge status={ticket.status} />
-              </TD>
-              <TD>
-                <div className="w-28">
-                  <SLAIndicator
-                    slaRemaining={ticket.slaRemaining}
-                    overSla={ticket.overSla}
-                    slaHours={ticket.slaHours}
-                  />
-                </div>
-              </TD>
-              <TD>
-                <span className="text-xs text-gray-500 whitespace-nowrap">{formatDate(ticket.createdAt)}</span>
-              </TD>
-              <TD>
-                <span className="text-xs text-gray-500 whitespace-nowrap">{formatDate(ticket.updatedAt)}</span>
-              </TD>
-            </TR>
-          ))}
-        </Table>
-        {filtered.length === 0 && (
-          <div className="text-center py-12 text-gray-500 text-sm">Tidak ada tiket yang sesuai filter</div>
+        {loading ? (
+          <div className="py-16 text-center text-sm text-gray-500" role="status">
+            Memuat tiket...
+          </div>
+        ) : tickets.length === 0 ? (
+          <div className="py-16 text-center">
+            <p className="font-medium text-gray-700">Belum ada tiket yang cocok</p>
+            <p className="text-sm text-gray-500 mt-1">Buat tiket baru atau ubah filter pencarian.</p>
+          </div>
+        ) : (
+          <Table headers={['Nomor', 'Judul', 'Kategori', 'Prioritas Usulan', 'Status', 'Dibuat']}>
+            {tickets.map((ticket) => (
+              <TR key={ticket.id} onClick={() => navigate(`/user/tickets/${ticket.id}`)}>
+                <TD>
+                  <span className="font-mono text-xs text-gray-600">{ticket.ticket_number}</span>
+                </TD>
+                <TD>
+                  <div className="max-w-[280px]">
+                    <p className="font-medium text-sm truncate">{ticket.title}</p>
+                    <p className="text-xs text-gray-400 truncate">{ticket.application?.name || 'Tanpa aplikasi'}</p>
+                  </div>
+                </TD>
+                <TD>
+                  <span className="text-xs">{ticket.category.name}</span>
+                </TD>
+                <TD>
+                  {ticket.requested_priority ? (
+                    <PriorityBadge priority={ticket.requested_priority.key as Priority} />
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
+                  )}
+                </TD>
+                <TD>
+                  <StatusBadge status={ticket.status as TicketStatus} />
+                </TD>
+                <TD>
+                  <span className="text-xs whitespace-nowrap text-gray-500">
+                    {new Date(ticket.created_at).toLocaleDateString('id-ID')}
+                  </span>
+                </TD>
+              </TR>
+            ))}
+          </Table>
         )}
       </div>
+      {pages > 1 && (
+        <div className="flex justify-between items-center mt-4">
+          <Button variant="secondary" disabled={page <= 1} onClick={() => setPage((value) => value - 1)}>
+            ← Sebelumnya
+          </Button>
+          <span className="text-xs text-gray-500">
+            Halaman {page} dari {pages}
+          </span>
+          <Button variant="secondary" disabled={page >= pages} onClick={() => setPage((value) => value + 1)}>
+            Berikutnya →
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
