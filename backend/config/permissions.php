@@ -25,6 +25,12 @@ return [
             'dashboard.it_lead.view',
             'ticket.all.view',
             'ticket.technical.view',
+            'ticket.triage_queue.view',
+            'ticket.triage.start',
+            'ticket.priority.finalize',
+            'ticket.assign',
+            'ticket.pic_options.view',
+            'ticket.workload.view',
             'master_data.view',
         ],
         'pic' => [

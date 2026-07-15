@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\V1\AdminMasterDataController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\ItLeadTicketController;
 use App\Http\Controllers\Api\V1\MasterDataController;
+use App\Http\Controllers\Api\V1\PicTicketController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
 use App\Http\Controllers\Api\V1\SupervisorTicketController;
 use App\Http\Controllers\Api\V1\TicketAttachmentController;
@@ -45,6 +47,20 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/request-revision', [SupervisorTicketController::class, 'requestRevision'])->middleware('permission:ticket.request_revision');
             Route::post('/tickets/{ticket}/reject', [SupervisorTicketController::class, 'reject'])->middleware('permission:ticket.reject');
             Route::post('/tickets/{ticket}/transfer', [SupervisorTicketController::class, 'transfer'])->middleware('permission:ticket.transfer');
+        });
+
+        Route::prefix('it-lead')->name('api.v1.it-lead.')->group(function (): void {
+            Route::get('/triage-queue', [ItLeadTicketController::class, 'queue'])->middleware('permission:ticket.triage_queue.view');
+            Route::get('/tickets/{ticket}', [ItLeadTicketController::class, 'show'])->middleware('permission:ticket.triage_queue.view');
+            Route::post('/tickets/{ticket}/start-triage', [ItLeadTicketController::class, 'startTriage'])->middleware('permission:ticket.triage.start');
+            Route::post('/tickets/{ticket}/assign', [ItLeadTicketController::class, 'assign'])->middleware('permission:ticket.assign');
+            Route::get('/pic-options', [ItLeadTicketController::class, 'picOptions'])->middleware('permission:ticket.pic_options.view');
+            Route::get('/pic-workloads', [ItLeadTicketController::class, 'picWorkloads'])->middleware('permission:ticket.workload.view');
+        });
+
+        Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {
+            Route::get('/assignments', [PicTicketController::class, 'index']);
+            Route::get('/tickets/{ticket}', [PicTicketController::class, 'show']);
         });
 
         Route::prefix('master')->middleware('permission:master_data.view')->name('api.v1.master.')->group(function (): void {

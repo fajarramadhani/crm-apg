@@ -1,6 +1,6 @@
 # Tic Hub
 
-Phase 5 implements the first production ticket workflow slice: an authenticated Requester creates a real `pending_validation` ticket, manages private attachments, sees own history, revises/resubmits, and may cancel before validation. A same-division Supervisor has a scoped queue and can validate, request revision, reject, or transfer. Every mutation persists status history and emits a domain event. See `docs/phase-5-ticket-creation-validation.md`.
+Phase 6 extends the production workflow through IT Lead triage, final priority, calendar-aware SLA initialization, transactional primary PIC assignment, and a read-only PIC workspace. Requester and Supervisor Phase 5 behavior remains intact. See `docs/phase-6-triage-sla-assignment.md`.
 
 Phase 4 adds the production master-data foundation used by future ticket forms and workflow: divisions, branches, applications/modules, ticket categories/priorities, SLA policies, working calendars, holidays, and basic user organizational assignments. The Laravel API exposes active read-only data to authenticated roles and paginated management endpoints to Admin. See `docs/phase-4-master-data-foundation.md` for setup, endpoint, validation, and verification details.
 

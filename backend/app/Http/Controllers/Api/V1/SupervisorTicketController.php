@@ -64,8 +64,8 @@ class SupervisorTicketController extends Controller
         return $this->result($r, $s->transfer($ticket, $r->user(), $target, $r->string('notes')), 'Ticket transferred');
     }
 
-    private function result($request,Ticket $result,string $message): JsonResponse
+    private function result($request, Ticket $result, string $message): JsonResponse
     {
-        return ApiResponse::success($request,$message,(new TicketResource($result->load(self::RELATIONS)))->resolve($request));
+        return ApiResponse::success($request, $message, (new TicketResource($result->load(self::RELATIONS)))->resolve($request));
     }
 }

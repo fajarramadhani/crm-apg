@@ -1,5 +1,19 @@
 # Role Permission Matrix
 
+## Phase 6 permissions
+
+| Permission | Requester | Supervisor | IT Lead | PIC | Executive |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| `ticket.triage_queue.view` | No | No | Yes | No | No |
+| `ticket.triage.start` | No | No | Yes | No | No |
+| `ticket.priority.finalize` | No | No | Yes | No | No |
+| `ticket.assign` | No | No | Yes | No | No |
+| `ticket.pic_options.view` | No | No | Yes | No | No |
+| `ticket.workload.view` | No | No | Yes | No | No |
+| `ticket.assigned.view` | No | No | No | Own active assignment | No |
+
+Requester ownership continues after assignment but internal assignment notes/metadata are redacted. Executive has no technical triage/PIC access. Until application ownership is modeled, IT Lead scope is explicitly all `validated` and `triage` tickets.
+
 ## Phase 5 ticket permissions
 
 | Permission | Requester | Supervisor |

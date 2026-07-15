@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Gate;
 
 class TicketController extends Controller
 {
-    private const RELATIONS = ['requester', 'division', 'currentDivision', 'branch', 'application', 'applicationModule', 'category', 'requestedPriority', 'attachments'];
+    private const RELATIONS = ['requester', 'division', 'currentDivision', 'branch', 'application', 'applicationModule', 'category', 'requestedPriority', 'finalPriority', 'slaPolicy', 'workingCalendar', 'currentAssignee', 'attachments'];
 
     public function index(TicketListRequest $request): JsonResponse
     {

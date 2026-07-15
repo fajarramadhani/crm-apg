@@ -2,7 +2,15 @@ import { apiClient } from '../api/client'
 import type { ApiResponse } from '../api/types'
 
 export type TicketState =
-  'draft' | 'pending_validation' | 'need_revision' | 'validated' | 'rejected' | 'transferred' | 'cancelled'
+  | 'draft'
+  | 'pending_validation'
+  | 'need_revision'
+  | 'validated'
+  | 'triage'
+  | 'assigned'
+  | 'rejected'
+  | 'transferred'
+  | 'cancelled'
 
 export interface TicketAttachmentRecord {
   id: number
@@ -52,6 +60,14 @@ export interface TicketRecord {
   application_module: { id: number; code: string; name: string } | null
   category: { id: number; code: string; name: string; type: 'incident' | 'request' | 'change' | 'problem' }
   requested_priority: { id: number; key: string; name: string } | null
+  final_priority: { id: number; key: string; name: string } | null
+  sla_policy: { id: number; response_minutes: number | null; resolution_minutes: number } | null
+  assignee: { id: number; name: string } | null
+  response_due_at: string | null
+  resolution_due_at: string | null
+  sla_timezone: string | null
+  triage_started_at: string | null
+  assigned_at: string | null
   submitted_at: string | null
   validated_at: string | null
   rejected_at: string | null
@@ -82,6 +98,16 @@ export interface TicketPayload {
 export interface TicketPage {
   data: TicketRecord[]
   meta: { request_id: string; pagination: { current_page: number; per_page: number; total: number; last_page: number } }
+}
+export interface PicOption {
+  id: number
+  name: string
+  email: string
+  division: { id: number; name: string } | null
+  active_assignment_count: number
+  critical_count: number
+  high_count: number
+  workload_indicator: 'low' | 'medium' | 'high'
 }
 
 const data = async <T>(promise: Promise<ApiResponse<T>>): Promise<T> => (await promise).data
@@ -122,4 +148,16 @@ export const ticketService = {
     action: 'validate' | 'request-revision' | 'reject' | 'transfer',
     payload: { notes?: string; target_division_id?: number },
   ) => data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor/tickets/${id}/${action}`, payload)),
+  triageQueue: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/it-lead/triage-queue?${query(filters)}`),
+  itLeadGet: (id: number) => data(apiClient.get<ApiResponse<TicketRecord>>(`/it-lead/tickets/${id}`)),
+  startTriage: (id: number) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/it-lead/tickets/${id}/start-triage`, {})),
+  assign: (id: number, payload: { final_priority_id: number; pic_user_id: number; notes?: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/it-lead/tickets/${id}/assign`, payload)),
+  picOptions: () => data(apiClient.get<ApiResponse<PicOption[]>>('/it-lead/pic-options')),
+  picWorkloads: () => data(apiClient.get<ApiResponse<PicOption[]>>('/it-lead/pic-workloads')),
+  picAssignments: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/pic/assignments?${query(filters)}`),
+  picGet: (id: number) => data(apiClient.get<ApiResponse<TicketRecord>>(`/pic/tickets/${id}`)),
 }

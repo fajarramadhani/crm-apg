@@ -46,6 +46,6 @@ class TicketAttachmentController extends Controller
         $attachment->delete();
         $ticket->histories()->create(['from_status' => $ticket->status->value, 'to_status' => $ticket->status->value, 'action' => 'attachment_removed', 'actor_id' => $request->user()->id, 'actor_role' => $request->user()->role?->key ?? 'requester', 'metadata' => ['attachment_id' => $id]]);
 
-        return ApiResponse::success($request,'Attachment removed');
+        return ApiResponse::success($request, 'Attachment removed');
     }
 }

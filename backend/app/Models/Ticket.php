@@ -9,14 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['ticket_number', 'requester_id', 'division_id', 'branch_id', 'application_id', 'application_module_id', 'ticket_category_id', 'requested_priority_id', 'title', 'description', 'business_impact', 'urgency', 'incident_occurred_at', 'affected_url', 'expected_result', 'actual_result', 'reproduction_steps', 'request_purpose', 'target_needed_at', 'change_reason', 'expected_impact', 'recurring_indication', 'status', 'current_division_id', 'submitted_at', 'validated_at', 'rejected_at'])]
+#[Fillable(['ticket_number', 'requester_id', 'division_id', 'branch_id', 'application_id', 'application_module_id', 'ticket_category_id', 'requested_priority_id', 'final_priority_id', 'sla_policy_id', 'working_calendar_id', 'current_assignee_id', 'assigned_by', 'title', 'description', 'business_impact', 'urgency', 'incident_occurred_at', 'affected_url', 'expected_result', 'actual_result', 'reproduction_steps', 'request_purpose', 'target_needed_at', 'change_reason', 'expected_impact', 'recurring_indication', 'status', 'current_division_id', 'submitted_at', 'validated_at', 'rejected_at', 'triage_started_at', 'assigned_at', 'response_due_at', 'resolution_due_at', 'sla_timezone'])]
 class Ticket extends Model
 {
     use SoftDeletes;
 
     protected function casts(): array
     {
-        return ['status' => TicketStatus::class, 'incident_occurred_at' => 'datetime', 'target_needed_at' => 'datetime', 'submitted_at' => 'datetime', 'validated_at' => 'datetime', 'rejected_at' => 'datetime', 'closed_at' => 'datetime'];
+        return ['status' => TicketStatus::class, 'incident_occurred_at' => 'datetime', 'target_needed_at' => 'datetime', 'submitted_at' => 'datetime', 'validated_at' => 'datetime', 'rejected_at' => 'datetime', 'triage_started_at' => 'datetime', 'assigned_at' => 'datetime', 'response_due_at' => 'datetime', 'resolution_due_at' => 'datetime', 'closed_at' => 'datetime'];
     }
 
     public function requester(): BelongsTo
@@ -57,6 +57,36 @@ class Ticket extends Model
     public function requestedPriority(): BelongsTo
     {
         return $this->belongsTo(TicketPriority::class, 'requested_priority_id');
+    }
+
+    public function finalPriority(): BelongsTo
+    {
+        return $this->belongsTo(TicketPriority::class, 'final_priority_id');
+    }
+
+    public function slaPolicy(): BelongsTo
+    {
+        return $this->belongsTo(SlaPolicy::class);
+    }
+
+    public function workingCalendar(): BelongsTo
+    {
+        return $this->belongsTo(WorkingCalendar::class);
+    }
+
+    public function currentAssignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'current_assignee_id');
+    }
+
+    public function assignedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(TicketAssignment::class);
     }
 
     public function histories(): HasMany

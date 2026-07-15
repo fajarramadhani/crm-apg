@@ -11,7 +11,8 @@ class TicketPolicy
     public function view(User $user, Ticket $ticket): bool
     {
         return ($user->hasPermission('ticket.own.view') && $ticket->requester_id === $user->id)
-            || ($user->hasPermission('ticket.division.view') && $ticket->current_division_id === $user->division_id);
+            || ($user->hasPermission('ticket.division.view') && $ticket->current_division_id === $user->division_id)
+            || ($user->hasPermission('ticket.assigned.view') && $ticket->current_assignee_id === $user->id);
     }
 
     public function update(User $user, Ticket $ticket): bool
@@ -32,5 +33,10 @@ class TicketPolicy
     public function supervise(User $user, Ticket $ticket): bool
     {
         return $user->hasPermission('ticket.validation_queue.view') && $user->division_id !== null && $ticket->current_division_id === $user->division_id;
+    }
+
+    public function triage(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.triage_queue.view');
     }
 }

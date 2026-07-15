@@ -40,6 +40,11 @@ class User extends Authenticatable
         return $this->hasMany(Ticket::class, 'requester_id');
     }
 
+    public function ticketAssignments(): HasMany
+    {
+        return $this->hasMany(TicketAssignment::class, 'assigned_to');
+    }
+
     public function hasRole(string|array $roles): bool
     {
         return in_array($this->role?->key, (array) $roles, true);

@@ -7,6 +7,7 @@ use App\Events\TicketRejected;
 use App\Events\TicketResubmitted;
 use App\Events\TicketRevisionRequested;
 use App\Events\TicketTransferred;
+use App\Events\TicketTriageStarted;
 use App\Events\TicketValidated;
 use App\Exceptions\InvalidTicketTransition;
 use App\Models\Division;
@@ -16,6 +17,13 @@ use Illuminate\Support\Facades\DB;
 
 final class TicketTransitionService
 {
+    public function startTriage(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::Validated, TicketStatus::Triage, 'triage_started', null, null, function (Ticket $locked): void {
+            $locked->triage_started_at = now();
+        }, fn (Ticket $fresh) => TicketTriageStarted::dispatch($fresh, $actor));
+    }
+
     public function validate(Ticket $ticket, User $actor, ?string $notes): Ticket
     {
         return $this->transition($ticket, $actor, TicketStatus::PendingValidation, TicketStatus::Validated, 'validated', $notes, null, function (Ticket $locked): void {

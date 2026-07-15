@@ -1,5 +1,22 @@
 # API Contract Plan
 
+## Phase 6 canonical endpoints
+
+All routes use `/api/v1`, Sanctum authentication, active-user and permission middleware, the standard envelope, and `meta.request_id`.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/it-lead/triage-queue` | Paginated `validated`/`triage` queue with search/status/master/date filters |
+| GET | `/it-lead/tickets/{ticket}` | Technical triage detail |
+| POST | `/it-lead/tickets/{ticket}/start-triage` | Locked `validated -> triage` transition |
+| POST | `/it-lead/tickets/{ticket}/assign` | Server-authoritative priority, PIC, SLA/calendar, and deadline transaction |
+| GET | `/it-lead/pic-options` | Active PIC identities and aggregate workload |
+| GET | `/it-lead/pic-workloads` | Active/critical/high counts and simple indicator |
+| GET | `/pic/assignments` | Logged-in PIC active assignment list; status/priority filters |
+| GET | `/pic/tickets/{ticket}` | Read-only detail for the current assigned PIC only |
+
+Stale workflow actions return `409 INVALID_TRANSITION`; inactive/invalid master or PIC choices return `422`. Deadlines are never accepted from clients.
+
 ## Phase 5 canonical ticket endpoints
 
 All routes require Sanctum, an active account, standard envelopes, and request IDs. Requester routes are `POST/GET /api/v1/tickets`, `GET/PUT /api/v1/tickets/{ticket}`, `POST /{ticket}/resubmit`, `POST /{ticket}/cancel`, `GET /{ticket}/history`, and nested attachment upload/download/delete. Creation intentionally submits immediately to `pending_validation`; there is no competing draft UX.

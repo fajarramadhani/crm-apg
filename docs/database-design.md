@@ -1,5 +1,11 @@
 # Database Design
 
+## Phase 6 triage, SLA, and assignment
+
+Implemented ticket states now include `triage` and `assigned`, with only `validated -> triage -> assigned` added in this phase. Tickets store the finalized priority, selected SLA policy/calendar, absolute response/resolution deadlines, calculation timezone, triage/assignment timestamps, and denormalized current assignee/assigner keys. `over_sla` remains derived from `resolution_due_at` and current time.
+
+`ticket_assignments` is the assignment history source of truth: `ticket_id`, `assigned_to`, `assigned_by`, `assignment_type` (`primary` or future `support`), `started_at`, nullable `ended_at`, `is_current`, and internal notes. The ticket row is locked during assignment; assignment/history/SLA/status changes share one transaction.
+
 ## Phase 5 implemented ticket foundation
 
 Phase 5 adds `tickets`, `ticket_number_sequences`, `ticket_status_histories`, `ticket_comments`, and `ticket_attachments`. Ticket status is a PHP backed enum stored in `VARCHAR`; implemented values are `draft`, `pending_validation`, `need_revision`, `validated`, `rejected`, `transferred`, and `cancelled`. Create submits directly to `pending_validation`, while history records both `created` and `submitted`. `over_sla` remains derived future state, not a status.

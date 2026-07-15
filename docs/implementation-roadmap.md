@@ -2,6 +2,8 @@
 
 ## Current delivery numbering
 
+Phase 6 is now implemented as **IT Lead Triage, SLA Initialization, and PIC Assignment**: `validated -> triage -> assigned`, working-calendar deadlines, assignment history, and real IT Lead/PIC frontend integration. Phase 7 is limited to analysis/RCA/planning and explicit reassignment/transfer; it must not duplicate the Phase 6 workflow foundation.
+
 The approved execution brief consolidates the earlier ticket read-model and creation/validation split into **Phase 5 — Ticket Creation and Supervisor Validation**. Phase 5 delivers list/detail read models, creation, private attachments, ownership, revision/resubmission, scoped Supervisor validation, history, and event hooks. The earlier headings below remain historical planning context. The next active delivery is **Phase 6 — IT Lead triage, final priority, assignment, analysis, and planning**. SLA calculation, QA/UAT, approval, deployment, notifications, and Knowledge Base remain later.
 
 ## Delivery rules

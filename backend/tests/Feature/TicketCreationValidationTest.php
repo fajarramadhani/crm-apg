@@ -163,9 +163,9 @@ class TicketCreationValidationTest extends TestCase
         return User::factory()->create(['role_id' => Role::where('key', $role)->firstOrFail()->id, 'division_id' => $division->id, 'is_active' => true]);
     }
 
-    private function createTicket(User $user,array $overrides = []): Ticket
+    private function createTicket(User $user, array $overrides = []): Ticket
     {
-        $id = $this->actingAs($user)->postJson('/api/v1/tickets',$this->payload($overrides))->assertCreated()->json('data.id');
+        $id = $this->actingAs($user)->postJson('/api/v1/tickets', $this->payload($overrides))->assertCreated()->json('data.id');
 
         return Ticket::findOrFail($id);
     }

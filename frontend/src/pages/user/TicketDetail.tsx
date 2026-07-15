@@ -159,7 +159,9 @@ export default function TicketDetail() {
           <SectionCard title="Informasi Tiket">
             <div className="flex gap-2 flex-wrap mb-5">
               <StatusBadge status={ticket.status as TicketStatus} />
-              {ticket.requested_priority && <PriorityBadge priority={ticket.requested_priority.key as Priority} />}
+              {(ticket.final_priority || ticket.requested_priority) && (
+                <PriorityBadge priority={(ticket.final_priority?.key || ticket.requested_priority?.key) as Priority} />
+              )}
               <span className="text-xs rounded-full bg-gray-100 px-3 py-1">{ticket.category.name}</span>
             </div>
             {editing ? (
@@ -204,6 +206,11 @@ export default function TicketDetail() {
                   <Info label="Divisi" value={ticket.division.name} />
                   <Info label="Divisi Penanganan" value={ticket.current_division.name} />
                   <Info label="Aplikasi" value={ticket.application?.name || '—'} />
+                  <Info label="PIC" value={ticket.assignee?.name || '—'} />
+                  <Info
+                    label="Deadline Layanan"
+                    value={ticket.resolution_due_at ? new Date(ticket.resolution_due_at).toLocaleString('id-ID') : '—'}
+                  />
                   <Info label="Dibuat" value={new Date(ticket.created_at).toLocaleString('id-ID')} />
                   <Info
                     label="Dikirim"
