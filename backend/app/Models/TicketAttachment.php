@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['ticket_id', 'uploaded_by', 'original_name', 'stored_name', 'disk', 'path', 'mime_type', 'size', 'category'])]
+#[Fillable(['ticket_id', 'uploaded_by', 'original_name', 'stored_name', 'disk', 'path', 'mime_type', 'size', 'category', 'visibility'])]
 class TicketAttachment extends Model
 {
     public function ticket(): BelongsTo

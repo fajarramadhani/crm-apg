@@ -1,5 +1,16 @@
 # Role Permission Matrix
 
+## Phase 8 permissions
+
+| Capability | PIC | IT Lead | Requester/Supervisor | Executive |
+| --- | --- | --- | --- | --- |
+| Start/update development | Own active assignment | No | No | No |
+| Worklog/evidence/test management | Own active assignment | Read-only | No technical detail | No |
+| Development queue/detail | No | Read-only | No | No |
+| General status/progress | Assigned view | Yes | Requester sees own safe summary | Aggregate only |
+
+Added permissions: `ticket.development.start/view/update`, `ticket.worklog.view/manage`, `ticket.development_evidence.manage`, `ticket.internal_test_case.view/manage`, `ticket.internal_test_run.view/manage`, `ticket.internal_test.complete`, and `ticket.development_queue.view`.
+
 ## Phase 6 permissions
 
 | Permission | Requester | Supervisor | IT Lead | PIC | Executive |

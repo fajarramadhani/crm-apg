@@ -1,5 +1,9 @@
 # Implementation Roadmap
 
+## Phase 8 delivered scope
+
+Development execution, actual-effort worklogs, progress snapshots, private evidence, internal test case/run/result persistence, failure/rework/retest, Ready for QA, PIC UI, IT Lead monitoring, requester redaction, events, and feature coverage are implemented. Phase 9 begins at Ready for QA and owns QA assignment/execution and defects; it must preserve internal-test history.
+
 ## Current delivery numbering
 
 Phase 7 is now implemented as **PIC Analysis, RCA, and Solution Planning**: `assigned -> analysis -> solution_planning -> plan_review -> ready_for_development`, immutable solution-plan versions after review, optimistic locking, an IT Lead review queue, and requester-safe progress projection. Phase 8 should begin development execution and internal testing from `ready_for_development`; it must not duplicate the Phase 7 analysis or plan-review workflow.

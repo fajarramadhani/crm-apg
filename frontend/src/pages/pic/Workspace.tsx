@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ApiRequestError } from '../../api/client'
 import {
   Button,
@@ -46,6 +47,7 @@ const emptyPlan: SolutionPlanPayload = {
 }
 
 export default function Workspace() {
+  const navigate = useNavigate()
   const [tickets, setTickets] = useState<TicketRecord[]>([])
   const [selected, setSelected] = useState<TicketRecord | null>(null)
   const [analysis, setAnalysis] = useState<TicketAnalysisRecord | null>(null)
@@ -70,15 +72,28 @@ export default function Workspace() {
   const loadDetail = async (id: number) => {
     const ticket = await ticketService.picGet(id)
     setSelected(ticket)
-    const analysisData = ['analysis', 'solution_planning', 'plan_review', 'ready_for_development'].includes(
-      ticket.status,
-    )
+    const analysisData = [
+      'analysis',
+      'solution_planning',
+      'plan_review',
+      'ready_for_development',
+      'development_in_progress',
+      'internal_testing',
+      'ready_for_qa',
+    ].includes(ticket.status)
       ? await ticketService.getAnalysis(id)
       : null
     const currentAnalysis = analysisData?.current || null
     setAnalysis(currentAnalysis)
     setAnalysisForm(currentAnalysis ? analysisPayload(currentAnalysis) : emptyAnalysis)
-    const planData = ['solution_planning', 'plan_review', 'ready_for_development'].includes(ticket.status)
+    const planData = [
+      'solution_planning',
+      'plan_review',
+      'ready_for_development',
+      'development_in_progress',
+      'internal_testing',
+      'ready_for_qa',
+    ].includes(ticket.status)
       ? await ticketService.getSolutionPlan(id)
       : null
     const currentPlan = planData?.current || null
@@ -140,7 +155,7 @@ export default function Workspace() {
       {success && <Toast message={success} onClose={() => setSuccess('')} />}
       <PageHeader
         title="Workspace Tiket"
-        subtitle="Analisis, RCA, dan perencanaan solusi untuk assignment aktif Anda"
+        subtitle="Analisis, solution plan, dan akses ke eksekusi development assignment aktif Anda"
       />
       {loading ? (
         <p className="py-16 text-center text-sm text-gray-500" role="status">
@@ -194,10 +209,27 @@ export default function Workspace() {
                       </Button>
                     </div>
                   )}
+                  {['ready_for_development', 'development_in_progress', 'internal_testing', 'ready_for_qa'].includes(
+                    selected.status,
+                  ) && (
+                    <div className="mt-5">
+                      <Button onClick={() => navigate('/pic/testing')}>
+                        {selected.status === 'ready_for_development'
+                          ? 'Start Development'
+                          : 'Buka Development Workspace'}
+                      </Button>
+                    </div>
+                  )}
                 </SectionCard>
-                {['analysis', 'solution_planning', 'plan_review', 'ready_for_development'].includes(
-                  selected.status,
-                ) && (
+                {[
+                  'analysis',
+                  'solution_planning',
+                  'plan_review',
+                  'ready_for_development',
+                  'development_in_progress',
+                  'internal_testing',
+                  'ready_for_qa',
+                ].includes(selected.status) && (
                   <AnalysisForm
                     form={analysisForm}
                     setForm={setAnalysisForm}
@@ -209,7 +241,14 @@ export default function Workspace() {
                     version={analysis?.version}
                   />
                 )}
-                {['solution_planning', 'plan_review', 'ready_for_development'].includes(selected.status) && (
+                {[
+                  'solution_planning',
+                  'plan_review',
+                  'ready_for_development',
+                  'development_in_progress',
+                  'internal_testing',
+                  'ready_for_qa',
+                ].includes(selected.status) && (
                   <PlanForm
                     form={planForm}
                     setForm={setPlanForm}

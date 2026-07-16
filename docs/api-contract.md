@@ -1,5 +1,11 @@
 # API Contract Plan
 
+## Phase 8 endpoints
+
+PIC endpoints under `/api/v1/pic/tickets/{ticket}`: `POST start-development`; `GET|POST worklogs`; `GET|POST development-updates`; `POST development-evidence`; `GET|POST internal-test-cases`; `PUT|DELETE internal-test-cases/{case}`; `GET|POST internal-test-runs`; `GET internal-test-runs/{run}`; `POST internal-test-runs/{run}/results`; and `POST internal-test-runs/{run}/complete`.
+
+IT Lead endpoints are `GET /api/v1/it-lead/development-queue` and `GET /api/v1/it-lead/tickets/{ticket}/development`. Queue filters: `search`, `status`, `pic`, `priority`, `application`, and pagination. Stale/duplicate/invalid workflow mutations return 409; validation 422; unauthorized roles 403. JSON responses contain `meta.request_id`.
+
 ## Phase 6 canonical endpoints
 
 All routes use `/api/v1`, Sanctum authentication, active-user and permission middleware, the standard envelope, and `meta.request_id`.

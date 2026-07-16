@@ -126,6 +126,9 @@ export default function TicketDetail() {
     solution_planning: 'Rencana solusi sedang disusun',
     plan_review: 'Rencana solusi sedang ditinjau',
     ready_for_development: 'Rencana disetujui dan siap dikerjakan',
+    development_in_progress: `Solusi sedang dikerjakan. Pengerjaan telah mencapai ${ticket.progress_percentage}%`,
+    internal_testing: 'Tim sedang melakukan pengujian internal',
+    ready_for_qa: 'Pengujian internal selesai dan tiket siap masuk QA',
   }
 
   return (
@@ -167,6 +170,11 @@ export default function TicketDetail() {
           {ticket.plan_approved_at && (
             <p className="text-xs text-blue-700 mt-2">
               Disetujui {new Date(ticket.plan_approved_at).toLocaleString('id-ID')}
+            </p>
+          )}
+          {ticket.latest_progress_at && (
+            <p className="text-xs text-blue-700 mt-1">
+              Progress diperbarui {new Date(ticket.latest_progress_at).toLocaleString('id-ID')}
             </p>
           )}
         </div>

@@ -50,4 +50,10 @@ class TicketPolicy
     {
         return $user->hasPermission('ticket.solution_plan.approve') || $user->hasPermission('ticket.solution_plan.request_revision');
     }
+
+    public function develop(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.development.update') && $ticket->current_assignee_id === $user->id
+            && $ticket->assignments()->where('assigned_to', $user->id)->where('is_current', true)->exists();
+    }
 }

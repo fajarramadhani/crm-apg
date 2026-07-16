@@ -5,6 +5,8 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ItLeadTicketController;
 use App\Http\Controllers\Api\V1\MasterDataController;
+use App\Http\Controllers\Api\V1\PicDevelopmentController;
+use App\Http\Controllers\Api\V1\PicInternalTestingController;
 use App\Http\Controllers\Api\V1\PicTicketController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
 use App\Http\Controllers\Api\V1\SupervisorTicketController;
@@ -60,6 +62,8 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/tickets/{ticket}/solution-plan', [ItLeadTicketController::class, 'solutionPlan'])->middleware('permission:ticket.solution_plan.view');
             Route::post('/tickets/{ticket}/solution-plan/{plan}/approve', [ItLeadTicketController::class, 'approvePlan'])->middleware('permission:ticket.solution_plan.approve');
             Route::post('/tickets/{ticket}/solution-plan/{plan}/request-revision', [ItLeadTicketController::class, 'requestPlanRevision'])->middleware('permission:ticket.solution_plan.request_revision');
+            Route::get('/development-queue', [ItLeadTicketController::class, 'developmentQueue'])->middleware('permission:ticket.development_queue.view');
+            Route::get('/tickets/{ticket}/development', [ItLeadTicketController::class, 'development'])->middleware('permission:ticket.development_queue.view');
         });
 
         Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {
@@ -74,6 +78,21 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/solution-plan', [PicTicketController::class, 'storeSolutionPlan'])->middleware('permission:ticket.solution_plan.manage');
             Route::put('/tickets/{ticket}/solution-plan/{plan}', [PicTicketController::class, 'updateSolutionPlan'])->middleware('permission:ticket.solution_plan.manage');
             Route::post('/tickets/{ticket}/solution-plan/{plan}/submit', [PicTicketController::class, 'submitSolutionPlan'])->middleware('permission:ticket.solution_plan.submit');
+            Route::post('/tickets/{ticket}/start-development', [PicDevelopmentController::class, 'start'])->middleware('permission:ticket.development.start');
+            Route::get('/tickets/{ticket}/worklogs', [PicDevelopmentController::class, 'worklogs'])->middleware('permission:ticket.worklog.view');
+            Route::post('/tickets/{ticket}/worklogs', [PicDevelopmentController::class, 'addWorklog'])->middleware('permission:ticket.worklog.manage');
+            Route::get('/tickets/{ticket}/development-updates', [PicDevelopmentController::class, 'updates'])->middleware('permission:ticket.development.view');
+            Route::post('/tickets/{ticket}/development-updates', [PicDevelopmentController::class, 'addUpdate'])->middleware('permission:ticket.development.update');
+            Route::post('/tickets/{ticket}/development-evidence', [PicDevelopmentController::class, 'evidence'])->middleware('permission:ticket.development_evidence.manage');
+            Route::get('/tickets/{ticket}/internal-test-cases', [PicInternalTestingController::class, 'cases'])->middleware('permission:ticket.internal_test_case.view');
+            Route::post('/tickets/{ticket}/internal-test-cases', [PicInternalTestingController::class, 'storeCase'])->middleware('permission:ticket.internal_test_case.manage');
+            Route::put('/tickets/{ticket}/internal-test-cases/{case}', [PicInternalTestingController::class, 'updateCase'])->middleware('permission:ticket.internal_test_case.manage');
+            Route::delete('/tickets/{ticket}/internal-test-cases/{case}', [PicInternalTestingController::class, 'deactivateCase'])->middleware('permission:ticket.internal_test_case.manage');
+            Route::post('/tickets/{ticket}/internal-test-runs', [PicInternalTestingController::class, 'startRun'])->middleware('permission:ticket.internal_test_run.manage');
+            Route::get('/tickets/{ticket}/internal-test-runs', [PicInternalTestingController::class, 'runs'])->middleware('permission:ticket.internal_test_run.view');
+            Route::get('/tickets/{ticket}/internal-test-runs/{run}', [PicInternalTestingController::class, 'run'])->middleware('permission:ticket.internal_test_run.view');
+            Route::post('/tickets/{ticket}/internal-test-runs/{run}/results', [PicInternalTestingController::class, 'result'])->middleware('permission:ticket.internal_test_run.manage');
+            Route::post('/tickets/{ticket}/internal-test-runs/{run}/complete', [PicInternalTestingController::class, 'complete'])->middleware('permission:ticket.internal_test.complete');
         });
 
         Route::prefix('master')->middleware('permission:master_data.view')->name('api.v1.master.')->group(function (): void {

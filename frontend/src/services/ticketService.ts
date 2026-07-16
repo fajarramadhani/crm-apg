@@ -12,6 +12,9 @@ export type TicketState =
   | 'solution_planning'
   | 'plan_review'
   | 'ready_for_development'
+  | 'development_in_progress'
+  | 'internal_testing'
+  | 'ready_for_qa'
   | 'rejected'
   | 'transferred'
   | 'cancelled'
@@ -22,6 +25,7 @@ export interface TicketAttachmentRecord {
   mime_type: string
   size: number
   category: string
+  visibility?: 'internal' | 'requester'
   created_at: string
 }
 export interface TicketHistoryRecord {
@@ -76,6 +80,21 @@ export interface TicketRecord {
   analysis_completed_at: string | null
   plan_submitted_at: string | null
   plan_approved_at: string | null
+  development_started_at: string | null
+  development_completed_at: string | null
+  internal_testing_started_at: string | null
+  internal_testing_completed_at: string | null
+  ready_for_qa_at: string | null
+  progress_percentage: number
+  latest_progress_at: string | null
+  internal_testing_status: 'in_progress' | 'passed' | null
+  actual_work_minutes?: number
+  latest_development_update?: {
+    progress_percentage: number
+    summary: string
+    blockers: string[]
+    created_at: string
+  } | null
   analysis_summary: { status: 'not_started' | 'in_progress' | 'completed'; completed_at: string | null }
   solution_plan_summary: {
     status: 'not_started' | 'draft' | 'submitted' | 'approved'
@@ -171,6 +190,66 @@ export interface PlanReviewDetail {
   ticket: TicketRecord
   analysis: TicketAnalysisRecord
   solution_plan: SolutionPlanRecord
+}
+export interface TicketWorklogRecord {
+  id: number
+  user: { id: number; name: string }
+  work_date: string
+  minutes_spent: number
+  activity_type: string
+  description: string
+  progress_before: number
+  progress_after: number
+  created_at: string
+}
+export interface TicketDevelopmentUpdateRecord {
+  id: number
+  creator: { id: number; name: string }
+  progress_percentage: number
+  summary: string
+  completed_items: string[]
+  remaining_items: string[]
+  blockers: string[]
+  next_steps: string[]
+  created_at: string
+}
+export interface InternalTestCaseRecord {
+  id: number
+  case_number: string
+  title: string
+  preconditions: string | null
+  steps: string[]
+  expected_result: string
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+export interface InternalTestResultRecord {
+  id: number
+  test_case_id: number
+  status: 'passed' | 'failed' | 'blocked' | 'not_run'
+  actual_result: string | null
+  notes: string | null
+  executed_at: string
+}
+export interface InternalTestRunRecord {
+  id: number
+  run_number: number
+  started_at: string
+  completed_at: string | null
+  status: 'in_progress' | 'passed' | 'failed' | 'cancelled'
+  environment: string
+  build_reference: string | null
+  summary: string | null
+  results: InternalTestResultRecord[]
+}
+export interface DevelopmentDetail {
+  ticket: TicketRecord
+  solution_plan: SolutionPlanRecord | null
+  worklogs: TicketWorklogRecord[]
+  updates: TicketDevelopmentUpdateRecord[]
+  test_cases: InternalTestCaseRecord[]
+  test_runs: InternalTestRunRecord[]
 }
 export interface TicketPayload {
   ticket_category_id: number
@@ -287,4 +366,88 @@ export const ticketService = {
         { review_notes },
       ),
     ),
+  startDevelopment: (id: number) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/start-development`, {})),
+  worklogs: (id: number) => data(apiClient.get<ApiResponse<TicketWorklogRecord[]>>(`/pic/tickets/${id}/worklogs`)),
+  addWorklog: (
+    id: number,
+    payload: {
+      work_date: string
+      minutes_spent: number
+      activity_type: string
+      description: string
+      progress_after: number
+      expected_progress: number
+    },
+  ) => data(apiClient.post<ApiResponse<TicketWorklogRecord>>(`/pic/tickets/${id}/worklogs`, payload)),
+  developmentUpdates: (id: number) =>
+    data(apiClient.get<ApiResponse<TicketDevelopmentUpdateRecord[]>>(`/pic/tickets/${id}/development-updates`)),
+  addDevelopmentUpdate: (
+    id: number,
+    payload: {
+      progress_percentage: number
+      expected_progress: number
+      summary: string
+      completed_items?: string[]
+      remaining_items?: string[]
+      blockers?: string[]
+      next_steps?: string[]
+    },
+  ) =>
+    data(apiClient.post<ApiResponse<TicketDevelopmentUpdateRecord>>(`/pic/tickets/${id}/development-updates`, payload)),
+  uploadDevelopmentEvidence: (id: number, file: File, category = 'development_evidence') => {
+    const body = new FormData()
+    body.append('file', file)
+    body.append('category', category)
+    return data(
+      apiClient.postForm<ApiResponse<TicketAttachmentRecord>>(`/pic/tickets/${id}/development-evidence`, body),
+    )
+  },
+  internalTestCases: (id: number) =>
+    data(apiClient.get<ApiResponse<InternalTestCaseRecord[]>>(`/pic/tickets/${id}/internal-test-cases`)),
+  createInternalTestCase: (
+    id: number,
+    payload: { case_number: string; title: string; preconditions?: string; steps: string[]; expected_result: string },
+  ) => data(apiClient.post<ApiResponse<InternalTestCaseRecord>>(`/pic/tickets/${id}/internal-test-cases`, payload)),
+  updateInternalTestCase: (
+    ticketId: number,
+    caseId: number,
+    payload: { case_number: string; title: string; preconditions?: string; steps: string[]; expected_result: string },
+  ) =>
+    data(
+      apiClient.put<ApiResponse<InternalTestCaseRecord>>(
+        `/pic/tickets/${ticketId}/internal-test-cases/${caseId}`,
+        payload,
+      ),
+    ),
+  deactivateInternalTestCase: (ticketId: number, caseId: number) =>
+    data(
+      apiClient.delete<ApiResponse<InternalTestCaseRecord>>(`/pic/tickets/${ticketId}/internal-test-cases/${caseId}`),
+    ),
+  internalTestRuns: (id: number) =>
+    data(apiClient.get<ApiResponse<InternalTestRunRecord[]>>(`/pic/tickets/${id}/internal-test-runs`)),
+  startInternalTestRun: (id: number, payload: { environment: string; build_reference?: string; summary?: string }) =>
+    data(apiClient.post<ApiResponse<InternalTestRunRecord>>(`/pic/tickets/${id}/internal-test-runs`, payload)),
+  recordInternalTestResult: (
+    ticketId: number,
+    runId: number,
+    payload: { test_case_id: number; status: string; actual_result?: string; notes?: string },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<InternalTestResultRecord>>(
+        `/pic/tickets/${ticketId}/internal-test-runs/${runId}/results`,
+        payload,
+      ),
+    ),
+  completeInternalTestRun: (ticketId: number, runId: number, summary?: string) =>
+    data(
+      apiClient.post<ApiResponse<InternalTestRunRecord>>(
+        `/pic/tickets/${ticketId}/internal-test-runs/${runId}/complete`,
+        { summary },
+      ),
+    ),
+  developmentQueue: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/it-lead/development-queue?${query(filters)}`),
+  developmentDetail: (id: number) =>
+    data(apiClient.get<ApiResponse<DevelopmentDetail>>(`/it-lead/tickets/${id}/development`)),
 }

@@ -1,5 +1,11 @@
 # Database Design
 
+## Phase 8 development execution and internal testing
+
+Tickets now store development/internal-test timestamps, `progress_percentage` (0–100), and `latest_progress_at`. `ticket_worklogs` records actual effort and progress before/after; `ticket_development_updates` is an append-only snapshot stream. Internal testing uses ticket-scoped cases, numbered runs, and one result per case/run. Completed runs remain immutable; used cases cannot be deleted. `ticket_attachments.visibility` is `internal` by default for Phase 8 evidence, while requester-created attachments are explicitly marked `requester`.
+
+Normal progress is monotonic. A failed internal run is the sole server-controlled decrease: progress becomes at most 90, the run remains `failed`, and the ticket returns to `development_in_progress`. Progress 100 never implies a passed test.
+
 ## Phase 6 triage, SLA, and assignment
 
 Implemented ticket states now include `triage` and `assigned`, with only `validated -> triage -> assigned` added in this phase. Tickets store the finalized priority, selected SLA policy/calendar, absolute response/resolution deadlines, calculation timezone, triage/assignment timestamps, and denormalized current assignee/assigner keys. `over_sla` remains derived from `resolution_due_at` and current time.

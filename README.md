@@ -1,5 +1,7 @@
 # Tic Hub
 
+Phase 8 implements `ready_for_development -> development_in_progress -> internal_testing -> ready_for_qa`, including PIC worklogs, progress snapshots, private development evidence, internal test cases/runs/results, failure-to-rework behavior, an IT Lead read-only queue, and requester-safe progress. QA execution remains outside this phase.
+
 Phase 7 extends the production workflow from assignment through PIC analysis/RCA, versioned solution planning, IT Lead revision or approval, and `ready_for_development`. The PIC workspace and IT Lead Plan Review queue now use the Laravel API, preserve prior plan versions, enforce optimistic locking and ownership, and keep requester history free of internal technical detail. See `docs/phase-7-analysis-solution-planning.md`.
 
 Phase 6 introduced IT Lead triage, final priority, calendar-aware SLA initialization, transactional primary PIC assignment, and the initial PIC workspace. Requester and Supervisor Phase 5 behavior remains intact. See `docs/phase-6-triage-sla-assignment.md`.

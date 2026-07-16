@@ -21,7 +21,7 @@ class TicketAttachmentController extends Controller
         $disk = config('tickets.attachment_disk', 'local');
         $stored = Str::uuid()->toString();
         $path = $file->storeAs("tickets/{$ticket->id}", $stored, $disk);
-        $attachment = $ticket->attachments()->create(['uploaded_by' => $request->user()->id, 'original_name' => $file->getClientOriginalName(), 'stored_name' => $stored, 'disk' => $disk, 'path' => $path, 'mime_type' => $file->getMimeType() ?: 'application/octet-stream', 'size' => $file->getSize(), 'category' => $request->input('category', 'other')]);
+        $attachment = $ticket->attachments()->create(['uploaded_by' => $request->user()->id, 'original_name' => $file->getClientOriginalName(), 'stored_name' => $stored, 'disk' => $disk, 'path' => $path, 'mime_type' => $file->getMimeType() ?: 'application/octet-stream', 'size' => $file->getSize(), 'category' => $request->input('category', 'other'), 'visibility' => 'requester']);
         $ticket->histories()->create(['from_status' => $ticket->status->value, 'to_status' => $ticket->status->value, 'action' => 'attachment_uploaded', 'actor_id' => $request->user()->id, 'actor_role' => $request->user()->role?->key ?? 'requester', 'metadata' => ['attachment_id' => $attachment->id, 'mime_type' => $attachment->mime_type, 'size' => $attachment->size]]);
 
         return ApiResponse::success($request, 'Attachment uploaded', (new TicketAttachmentResource($attachment))->resolve($request), 201);
@@ -31,6 +31,7 @@ class TicketAttachmentController extends Controller
     {
         abort_unless($attachment->ticket_id === $ticket->id, 404);
         Gate::authorize('view', $ticket);
+        abort_if($request->user()->hasRole('requester') && ($attachment->visibility ?? 'internal') !== 'requester' && in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation'], true), 403);
         abort_unless(Storage::disk($attachment->disk)->exists($attachment->path), 404);
 
         return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_name, ['Content-Type' => $attachment->mime_type, 'X-Content-Type-Options' => 'nosniff']);

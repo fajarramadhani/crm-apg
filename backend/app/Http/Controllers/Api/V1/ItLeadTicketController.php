@@ -8,8 +8,12 @@ use App\Http\Requests\Api\V1\AssignTicketRequest;
 use App\Http\Requests\Api\V1\RequestPlanRevisionRequest;
 use App\Http\Requests\Api\V1\TicketListRequest;
 use App\Http\Resources\Api\V1\TicketAnalysisResource;
+use App\Http\Resources\Api\V1\TicketDevelopmentUpdateResource;
+use App\Http\Resources\Api\V1\TicketInternalTestCaseResource;
+use App\Http\Resources\Api\V1\TicketInternalTestRunResource;
 use App\Http\Resources\Api\V1\TicketResource;
 use App\Http\Resources\Api\V1\TicketSolutionPlanResource;
+use App\Http\Resources\Api\V1\TicketWorklogResource;
 use App\Models\Ticket;
 use App\Models\TicketSolutionPlan;
 use App\Models\User;
@@ -107,6 +111,28 @@ final class ItLeadTicketController extends Controller
         Gate::authorize('reviewPlan', $ticket);
 
         return ApiResponse::success($request, 'Solution plan revision requested', (new TicketSolutionPlanResource($service->requestRevision($ticket, $plan, $request->user(), $request->string('review_notes')->toString())))->resolve($request));
+    }
+
+    public function developmentQueue(TicketListRequest $request): JsonResponse
+    {
+        $statuses = [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa];
+        $query = Ticket::query()->whereIn('status', $statuses)->with([...self::RELATIONS, 'currentSolutionPlan', 'developmentUpdates' => fn ($q) => $q->limit(1)])->withSum('worklogs as actual_work_minutes', 'minutes_spent');
+        $query->when($request->filled('search'), fn ($q) => $q->where(fn ($q) => $q->where('ticket_number', 'like', '%'.$request->string('search').'%')->orWhere('title', 'like', '%'.$request->string('search').'%')))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->when($request->filled('pic'), fn ($q) => $q->where('current_assignee_id', $request->integer('pic')))
+            ->when($request->filled('priority'), fn ($q) => $q->where('final_priority_id', $request->integer('priority')))
+            ->when($request->filled('application'), fn ($q) => $q->where('application_id', $request->integer('application')));
+        $page = $query->orderByRaw('resolution_due_at IS NULL')->orderBy('resolution_due_at')->paginate($request->integer('per_page', 20));
+
+        return ApiResponse::success($request, 'Development queue retrieved', TicketResource::collection($page->items())->resolve($request), meta: ['pagination' => ['current_page' => $page->currentPage(), 'per_page' => $page->perPage(), 'total' => $page->total(), 'last_page' => $page->lastPage()]]);
+    }
+
+    public function development(TicketListRequest $request, Ticket $ticket): JsonResponse
+    {
+        abort_unless(in_array($ticket->status, [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa], true), 404);
+        $ticket->load([...self::RELATIONS, 'currentSolutionPlan.creator', 'worklogs.user', 'developmentUpdates.creator', 'internalTestCases', 'internalTestRuns.results']);
+
+        return ApiResponse::success($request, 'Development detail retrieved', ['ticket' => (new TicketResource($ticket))->resolve($request), 'solution_plan' => $ticket->currentSolutionPlan ? (new TicketSolutionPlanResource($ticket->currentSolutionPlan))->resolve($request) : null, 'worklogs' => TicketWorklogResource::collection($ticket->worklogs)->resolve($request), 'updates' => TicketDevelopmentUpdateResource::collection($ticket->developmentUpdates)->resolve($request), 'test_cases' => TicketInternalTestCaseResource::collection($ticket->internalTestCases)->resolve($request), 'test_runs' => TicketInternalTestRunResource::collection($ticket->internalTestRuns)->resolve($request)]);
     }
 
     private function pics()
