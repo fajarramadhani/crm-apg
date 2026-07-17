@@ -65,6 +65,26 @@ class User extends Authenticatable
         return $this->hasMany(TicketQaDefect::class, 'assigned_to');
     }
 
+    public function uatAssignments(): HasMany
+    {
+        return $this->hasMany(TicketUatAssignment::class, 'requester_id');
+    }
+
+    public function uatRuns(): HasMany
+    {
+        return $this->hasMany(TicketUatRun::class, 'requester_id');
+    }
+
+    public function reportedUatFindings(): HasMany
+    {
+        return $this->hasMany(TicketUatFinding::class, 'reported_by');
+    }
+
+    public function assignedUatFindings(): HasMany
+    {
+        return $this->hasMany(TicketUatFinding::class, 'assigned_to');
+    }
+
     public function hasRole(string|array $roles): bool
     {
         return in_array($this->role?->key, (array) $roles, true);

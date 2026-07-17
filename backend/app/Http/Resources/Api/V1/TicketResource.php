@@ -13,11 +13,14 @@ class TicketResource extends JsonResource
         $own = $request->user()?->id === $this->requester_id;
         $technical = $request->user()?->hasPermission('ticket.technical.view') ?? false;
         $safeAttachments = $this->relationLoaded('attachments')
-            ? ($technical ? $this->attachments : $this->attachments->filter(fn ($attachment) => $attachment->defect_id === null && (! in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation', 'qa_evidence', 'defect_evidence', 'retest_evidence'], true) || ($attachment->visibility ?? 'internal') === 'requester')))
+            ? ($technical ? $this->attachments : $this->attachments->filter(fn ($attachment) => $attachment->defect_id === null && $attachment->uat_finding_id === null && (! in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation', 'qa_evidence', 'defect_evidence', 'retest_evidence', 'uat_evidence', 'uat_finding_evidence', 'uat_retest_evidence', 'uat_signoff_document'], true) || ($attachment->visibility ?? 'internal') === 'requester')))
             : null;
 
         $defectCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->count() : $this->qaDefects()->count();
         $defectOpenCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->count();
+
+        $uatFindingCount = $this->relationLoaded('uatFindings') ? $this->uatFindings->count() : $this->uatFindings()->count();
+        $uatFindingOpenCount = $this->relationLoaded('uatFindings') ? $this->uatFindings->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->count();
 
         return [
             'id' => $this->id, 'ticket_number' => $this->ticket_number, 'title' => $this->title, 'description' => $this->description,
@@ -46,11 +49,11 @@ class TicketResource extends JsonResource
                 TicketStatus::InternalTesting => 'in_progress', TicketStatus::ReadyForQa => 'passed', default => null
             },
             'analysis_summary' => ['status' => $this->analysis_completed_at ? 'completed' : ($this->analysis_started_at ? 'in_progress' : 'not_started'), 'completed_at' => $this->analysis_completed_at?->toISOString()],
-            'solution_plan_summary' => ['status' => in_array($this->status, [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa, TicketStatus::QaAssignment, TicketStatus::QaInProgress, TicketStatus::QaFailed, TicketStatus::QaRetest, TicketStatus::ReadyForUat], true) ? 'approved' : ($this->status === TicketStatus::PlanReview ? 'submitted' : ($this->current_solution_plan_id ? 'draft' : 'not_started')), 'submitted_at' => $this->plan_submitted_at?->toISOString(), 'approved_at' => $this->plan_approved_at?->toISOString()],
+            'solution_plan_summary' => ['status' => in_array($this->status, [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa, TicketStatus::QaAssignment, TicketStatus::QaInProgress, TicketStatus::QaFailed, TicketStatus::QaRetest, TicketStatus::ReadyForUat, TicketStatus::UatAssignment, TicketStatus::UatInProgress, TicketStatus::UatFailed, TicketStatus::UatRetest, TicketStatus::UatApproved], true) ? 'approved' : ($this->status === TicketStatus::PlanReview ? 'submitted' : ($this->current_solution_plan_id ? 'draft' : 'not_started')), 'submitted_at' => $this->plan_submitted_at?->toISOString(), 'approved_at' => $this->plan_approved_at?->toISOString()],
             'submitted_at' => $this->submitted_at?->toISOString(), 'validated_at' => $this->validated_at?->toISOString(), 'rejected_at' => $this->rejected_at?->toISOString(), 'created_at' => $this->created_at?->toISOString(), 'updated_at' => $this->updated_at?->toISOString(),
             'allowed_actions' => $this->allowedActions($request, $own),
             'attachments' => $safeAttachments === null ? [] : TicketAttachmentResource::collection($safeAttachments)->resolve($request),
-            'comments' => TicketCommentResource::collection($this->whenLoaded('comments', fn () => $technical ? $this->comments : $this->comments->whereNull('defect_id'))),
+            'comments' => TicketCommentResource::collection($this->whenLoaded('comments', fn () => $technical ? $this->comments : $this->comments->whereNull('defect_id')->whereNull('uat_finding_id'))),
             'history' => TicketStatusHistoryResource::collection($this->whenLoaded('histories')),
             'assignment_notes' => $this->when($technical && ! $own && $this->relationLoaded('assignments'), fn () => $this->assignments->where('is_current', true)->first()?->notes),
             'solution_plan_preview' => $this->when($technical && ! $own && $this->relationLoaded('currentSolutionPlan'), fn () => $this->currentSolutionPlan ? ['version' => $this->currentSolutionPlan->version, 'estimated_effort_minutes' => $this->currentSolutionPlan->estimated_effort_minutes, 'risk_level' => $this->currentSolutionPlan->risk_level, 'submitted_at' => $this->currentSolutionPlan->submitted_at?->toISOString()] : null),
@@ -68,6 +71,18 @@ class TicketResource extends JsonResource
             'ready_for_uat_at' => $this->ready_for_uat_at?->toISOString(),
             'defect_count' => (int) $defectCount,
             'defect_open_count' => (int) $defectOpenCount,
+
+            // UAT Phase 10 fields
+            'uat_assignee' => $this->whenLoaded('uatAssignee', fn () => $this->uatAssignee ? ['id' => $this->uatAssignee->id, 'name' => $this->uatAssignee->name] : null),
+            'uat_assigned_by' => $this->when($technical && ! $own && $this->relationLoaded('uatAssignedBy'), fn () => $this->uatAssignedBy ? ['id' => $this->uatAssignedBy->id, 'name' => $this->uatAssignedBy->name] : null),
+            'uat_assigned_at' => $this->when($technical && ! $own, $this->uat_assigned_at?->toISOString()),
+            'uat_started_at' => $this->uat_started_at?->toISOString(),
+            'uat_completed_at' => $this->uat_completed_at?->toISOString(),
+            'uat_cycle_number' => (int) $this->uat_cycle_number,
+            'latest_uat_result' => $this->latest_uat_result,
+            'uat_approved_at' => $this->uat_approved_at?->toISOString(),
+            'uat_finding_count' => (int) $uatFindingCount,
+            'uat_finding_open_count' => (int) $uatFindingOpenCount,
         ];
     }
 
@@ -87,25 +102,43 @@ class TicketResource extends JsonResource
         }
         if ($request->user()?->hasPermission('ticket.development.update') && $this->status === TicketStatus::DevelopmentInProgress && $this->current_assignee_id === $request->user()?->id) {
             $hasDefects = $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->exists();
+            $hasUatFindings = $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->exists();
+
+            $actions = ['add_worklog', 'update_progress', 'upload_evidence', 'manage_test_cases', ...($this->progress_percentage === 100 ? ['start_internal_testing'] : [])];
+
             if ($hasDefects) {
                 $actions = ['start_rework_defect', 'resolve_defect'];
 
                 // Retest conditions checking
                 $lastFailure = $this->histories()->where('to_status', 'qa_failed')->latest()->first();
                 if ($lastFailure) {
-                    $hasReworkWorklog = $this->worklogs()->where('created_at', '>', $lastFailure->created_at)->where('activity_type', 'rework')->exists();
-                    $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>', $lastFailure->created_at)->exists();
+                    $hasReworkWorklog = $this->worklogs()->where('created_at', '>=', $lastFailure->created_at)->where('activity_type', 'rework')->exists();
+                    $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>=', $lastFailure->created_at)->exists();
                     $hasNoActiveInternal = ! $this->internalTestRuns()->where('status', 'in_progress')->exists();
 
                     if ($hasReworkWorklog && $hasPassedInternal && $hasNoActiveInternal && $this->progress_percentage === 100) {
                         $actions[] = 'submit_qa_retest';
                     }
                 }
-
-                return $actions;
             }
 
-            return ['add_worklog', 'update_progress', 'upload_evidence', 'manage_test_cases', ...($this->progress_percentage === 100 ? ['start_internal_testing'] : [])];
+            if ($hasUatFindings) {
+                $actions = ['start_uat_rework', 'resolve_uat_finding'];
+
+                // UAT Retest conditions checking
+                $lastUatFailure = $this->histories()->where('to_status', 'uat_failed')->latest()->first();
+                if ($lastUatFailure) {
+                    $hasReworkWorklog = $this->worklogs()->where('created_at', '>=', $lastUatFailure->created_at)->where('activity_type', 'rework')->exists();
+                    $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>=', $lastUatFailure->created_at)->exists();
+                    $hasNoActiveInternal = ! $this->internalTestRuns()->where('status', 'in_progress')->exists();
+
+                    if ($hasReworkWorklog && $hasPassedInternal && $hasNoActiveInternal && $this->progress_percentage === 100) {
+                        $actions[] = 'submit_uat_retest';
+                    }
+                }
+            }
+
+            return $actions;
         }
         if ($request->user()?->hasPermission('ticket.internal_test_run.manage') && $this->status === TicketStatus::InternalTesting && $this->current_assignee_id === $request->user()?->id) {
             return ['record_test_result', 'complete_internal_testing'];
@@ -122,6 +155,19 @@ class TicketResource extends JsonResource
         }
         if ($request->user()?->hasPermission('ticket.qa_test_run.manage') && $this->status === TicketStatus::QaInProgress && $this->qa_assignee_id === $request->user()?->id) {
             return ['manage_qa', 'start_qa_run', 'record_qa_result', 'complete_qa_run', 'manage_test_cases', 'create_defect'];
+        }
+
+        // UAT actions
+        if ($request->user()?->hasPermission('ticket.uat.assign') && $this->status === TicketStatus::ReadyForUat && $this->uat_assignee_id === null) {
+            return ['assign_uat'];
+        }
+        if ($request->user()?->hasPermission('ticket.uat.start') && $this->uat_assignee_id === $request->user()?->id) {
+            if ($this->status === TicketStatus::UatAssignment || $this->status === TicketStatus::UatRetest) {
+                return ['start_uat'];
+            }
+        }
+        if ($request->user()?->hasPermission('ticket.uat_run.manage') && $this->status === TicketStatus::UatInProgress && $this->uat_assignee_id === $request->user()?->id) {
+            return ['manage_uat', 'start_uat_run', 'record_uat_result', 'complete_uat_run', 'create_uat_finding'];
         }
 
         if (! $own) {

@@ -19,6 +19,7 @@ import TriageQueue from './pages/itlead/TriageQueue'
 import PriorityAssignment from './pages/itlead/PriorityAssignment'
 import PlanReview from './pages/itlead/PlanReview'
 import DevelopmentMonitoring from './pages/itlead/DevelopmentMonitoring'
+import UatAssignmentQueue from './pages/itlead/UatAssignmentQueue'
 import PICDashboard from './pages/pic/PICDashboard'
 import Workspace from './pages/pic/Workspace'
 import InternalTestingPIC from './pages/pic/InternalTesting'
@@ -118,6 +119,7 @@ function AppRoutes() {
         <Route path="/itlead/priority" element={guard(['it_lead'], <PriorityAssignment />)} />
         <Route path="/itlead/plan-review" element={guard(['it_lead'], <PlanReview />)} />
         <Route path="/itlead/development" element={guard(['it_lead'], <DevelopmentMonitoring />)} />
+        <Route path="/itlead/uat-assignment" element={guard(['it_lead'], <UatAssignmentQueue />)} />
         <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
         <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
         <Route path="/pic/rca" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />

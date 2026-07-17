@@ -245,6 +245,27 @@ Invalid state returns `409 INVALID_TRANSITION` with `current_status` and latest 
 
 Upload validates size/MIME/extension, records checksum and scan state. Ticket mutation may only attach IDs owned by current user/session and not already bound elsewhere.
 
+## Phase 10 UAT
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/it-lead/uat-assignment-queue` | IT Lead queue for `ready_for_uat`/`uat_assignment` tickets. |
+| POST | `/it-lead/tickets/{ticket}/assign-uat` | Assign the ticket owner requester; duplicate/stale assignment returns `409`. |
+| GET/POST | `/requester/tickets/{ticket}/uat-scenarios` | Read/create active scenarios; each scenario requires steps and acceptance criteria. |
+| POST | `/requester/tickets/{ticket}/uat/start` | Start initial or retest UAT cycle. |
+| GET/POST | `/requester/tickets/{ticket}/uat-runs` | Read/create one active UAT run per ticket. |
+| POST | `/requester/tickets/{ticket}/uat-runs/{run}/results` | Record accepted/rejected/blocked scenario result. |
+| POST | `/requester/tickets/{ticket}/uat-runs/{run}/complete` | Complete run and transition to approval or rework. |
+| GET/POST | `/requester/tickets/{ticket}/uat-findings` | Read/create finding linked to rejected/blocked result. |
+| POST | `/requester/tickets/{ticket}/uat-findings/{finding}/verify` | Requester verifies a retest finding. |
+| POST | `/pic/tickets/{ticket}/uat-findings/{finding}/start` | Assigned PIC starts UAT finding rework. |
+| POST | `/pic/tickets/{ticket}/uat-findings/{finding}/resolve` | Assigned PIC resolves finding with notes. |
+| POST | `/pic/tickets/{ticket}/submit-uat-retest` | Submit after 100% progress, rework worklog, passed internal test, and no active run. |
+| POST | `/requester/tickets/{ticket}/uat-evidence` | Requester-visible UAT evidence upload. |
+| POST | `/pic/tickets/{ticket}/uat-evidence` | Internal PIC finding/retest evidence upload. |
+
+UAT failure records both `uat_in_progress → uat_failed` and `uat_failed → development_in_progress` histories. `uat_approved` is a requester sign-off state only and does not start release approval or deployment.
+
 ## SLA, escalation, dashboards, reports
 
 | Method | Endpoint                               | Purpose                                      |

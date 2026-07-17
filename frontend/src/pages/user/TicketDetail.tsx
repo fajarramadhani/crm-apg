@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ApiRequestError } from '../../api/client'
+import { useAuth } from '../../context/AuthContext'
 import {
   Button,
   Input,
@@ -17,6 +18,7 @@ import type { Priority, TicketStatus } from '../../types'
 
 export default function TicketDetail() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const id = Number(useParams().id)
   const [ticket, setTicket] = useState<TicketRecord | null>(null)
   const [loading, setLoading] = useState(true)
@@ -129,6 +131,11 @@ export default function TicketDetail() {
     development_in_progress: `Solusi sedang dikerjakan. Pengerjaan telah mencapai ${ticket.progress_percentage}%`,
     internal_testing: 'Tim sedang melakukan pengujian internal',
     ready_for_qa: 'Pengujian internal selesai dan tiket siap masuk QA',
+    uat_assignment: 'Tiket siap diuji oleh pengguna (UAT)',
+    uat_in_progress: 'Pengujian penerimaan pengguna (UAT) sedang berlangsung',
+    uat_failed: 'Ditemukan penyesuaian berdasarkan hasil UAT',
+    uat_retest: 'Perbaikan sedang diuji ulang (UAT Retest)',
+    uat_approved: 'UAT telah disetujui',
   }
 
   return (
@@ -142,6 +149,12 @@ export default function TicketDetail() {
             <Button variant="ghost" onClick={() => navigate('/user/tickets')}>
               ← Riwayat
             </Button>
+            {ticket.uat_assignee?.id === user?.id &&
+              ['uat_assignment', 'uat_in_progress', 'uat_retest', 'uat_approved'].includes(ticket.status) && (
+                <Button variant="success" onClick={() => navigate(`/user/uat?ticket_id=${ticket.id}`)}>
+                  UAT Workspace
+                </Button>
+              )}
             {ticket.allowed_actions.includes('update') && (
               <Button variant="secondary" onClick={() => setEditing((value) => !value)}>
                 {editing ? 'Batal Edit' : 'Edit Tiket'}

@@ -23,6 +23,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/itlead/priority', label: 'Prioritas & SLA', icon: '⚡' },
     { path: '/itlead/plan-review', label: 'Plan Review', icon: '✓' },
     { path: '/itlead/development', label: 'Development', icon: '⚙' },
+    { path: '/itlead/uat-assignment', label: 'Penugasan UAT', icon: '🧪' },
     { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],

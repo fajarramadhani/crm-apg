@@ -5,13 +5,16 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ItLeadQaController;
 use App\Http\Controllers\Api\V1\ItLeadTicketController;
+use App\Http\Controllers\Api\V1\ItLeadUatController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PicDevelopmentController;
 use App\Http\Controllers\Api\V1\PicInternalTestingController;
 use App\Http\Controllers\Api\V1\PicReworkController;
 use App\Http\Controllers\Api\V1\PicTicketController;
+use App\Http\Controllers\Api\V1\PicUatReworkController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
 use App\Http\Controllers\Api\V1\QaController;
+use App\Http\Controllers\Api\V1\RequesterUatController;
 use App\Http\Controllers\Api\V1\SupervisorTicketController;
 use App\Http\Controllers\Api\V1\TicketAttachmentController;
 use App\Http\Controllers\Api\V1\TicketController;
@@ -73,6 +76,11 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/qa-options', [ItLeadQaController::class, 'qaOptions'])->middleware('permission:ticket.qa_options.view');
             Route::get('/qa-workloads', [ItLeadQaController::class, 'qaWorkloads'])->middleware('permission:ticket.qa_workload.view');
             Route::post('/tickets/{ticket}/assign-qa', [ItLeadQaController::class, 'assignQa'])->middleware('permission:ticket.qa.assign');
+
+            // UAT Assignment routes
+            Route::get('/uat-assignment-queue', [ItLeadUatController::class, 'queue'])->middleware('permission:ticket.uat_assignment_queue.view');
+            Route::post('/tickets/{ticket}/assign-uat', [ItLeadUatController::class, 'assignUat'])->middleware('permission:ticket.uat.assign');
+            Route::get('/tickets/{ticket}/uat', [ItLeadUatController::class, 'show'])->middleware('permission:ticket.uat_assignment_queue.view');
         });
 
         Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {
@@ -108,6 +116,13 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/qa-defects/{defect}/start', [PicReworkController::class, 'startDefect'])->middleware('permission:ticket.qa_defect.manage');
             Route::post('/tickets/{ticket}/qa-defects/{defect}/resolve', [PicReworkController::class, 'resolveDefect'])->middleware('permission:ticket.qa_defect.manage');
             Route::post('/tickets/{ticket}/submit-qa-retest', [PicReworkController::class, 'submitRetest'])->middleware('permission:ticket.qa_retest.submit');
+
+            // PIC UAT Rework routes
+            Route::get('/tickets/{ticket}/uat-findings', [PicUatReworkController::class, 'findings'])->middleware('permission:ticket.uat_rework.view');
+            Route::post('/tickets/{ticket}/uat-findings/{finding}/start', [PicUatReworkController::class, 'startFinding'])->middleware('permission:ticket.uat_finding.resolve');
+            Route::post('/tickets/{ticket}/uat-findings/{finding}/resolve', [PicUatReworkController::class, 'resolveFinding'])->middleware('permission:ticket.uat_finding.resolve');
+            Route::post('/tickets/{ticket}/submit-uat-retest', [PicUatReworkController::class, 'submitRetest'])->middleware('permission:ticket.uat_retest.submit');
+            Route::post('/tickets/{ticket}/uat-evidence', [PicUatReworkController::class, 'uploadEvidence'])->middleware('permission:ticket.uat_rework.view');
         });
 
         Route::prefix('qa')->middleware('permission:ticket.assigned.view')->name('api.v1.qa.')->group(function (): void {
@@ -129,6 +144,34 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/defects/{defect}/verify', [QaController::class, 'verifyDefect']);
             Route::post('/tickets/{ticket}/defects/{defect}/reopen', [QaController::class, 'reopenDefect']);
             Route::post('/tickets/{ticket}/evidence', [QaController::class, 'uploadEvidence']);
+        });
+
+        Route::prefix('requester')->middleware('permission:ticket.uat_assignment.view')->name('api.v1.requester.')->group(function (): void {
+            Route::get('/uat-assignments', [RequesterUatController::class, 'assignments']);
+            Route::get('/tickets/{ticket}/uat', [RequesterUatController::class, 'show']);
+            Route::post('/tickets/{ticket}/uat/start', [RequesterUatController::class, 'start'])->middleware('permission:ticket.uat.start');
+
+            // Scenarios
+            Route::get('/tickets/{ticket}/uat-scenarios', [RequesterUatController::class, 'scenarios'])->middleware('permission:ticket.uat_scenario.view');
+            Route::post('/tickets/{ticket}/uat-scenarios', [RequesterUatController::class, 'storeScenario'])->middleware('permission:ticket.uat_scenario.manage');
+            Route::put('/tickets/{ticket}/uat-scenarios/{scenario}', [RequesterUatController::class, 'updateScenario'])->middleware('permission:ticket.uat_scenario.manage');
+            Route::delete('/tickets/{ticket}/uat-scenarios/{scenario}', [RequesterUatController::class, 'destroyScenario'])->middleware('permission:ticket.uat_scenario.manage');
+
+            // Runs
+            Route::get('/tickets/{ticket}/uat-runs', [RequesterUatController::class, 'runs'])->middleware('permission:ticket.uat_run.view');
+            Route::post('/tickets/{ticket}/uat-runs', [RequesterUatController::class, 'storeRun'])->middleware('permission:ticket.uat_run.manage');
+            Route::get('/tickets/{ticket}/uat-runs/{run}', [RequesterUatController::class, 'showRun'])->middleware('permission:ticket.uat_run.view');
+            Route::post('/tickets/{ticket}/uat-runs/{run}/results', [RequesterUatController::class, 'storeResult'])->middleware('permission:ticket.uat_run.manage');
+            Route::post('/tickets/{ticket}/uat-runs/{run}/complete', [RequesterUatController::class, 'completeRun'])->middleware('permission:ticket.uat.complete');
+
+            // Findings
+            Route::get('/tickets/{ticket}/uat-findings', [RequesterUatController::class, 'findings'])->middleware('permission:ticket.uat_finding.view');
+            Route::post('/tickets/{ticket}/uat-findings', [RequesterUatController::class, 'storeFinding'])->middleware('permission:ticket.uat_finding.create');
+            Route::post('/tickets/{ticket}/uat-findings/{finding}/verify', [RequesterUatController::class, 'verifyFinding'])->middleware('permission:ticket.uat_finding.verify');
+            Route::post('/tickets/{ticket}/uat-findings/{finding}/reopen', [RequesterUatController::class, 'reopenFinding'])->middleware('permission:ticket.uat_finding.reopen');
+
+            // Evidence
+            Route::post('/tickets/{ticket}/uat-evidence', [RequesterUatController::class, 'uploadEvidence'])->middleware('permission:ticket.uat_run.manage');
         });
 
         Route::prefix('master')->middleware('permission:master_data.view')->name('api.v1.master.')->group(function (): void {

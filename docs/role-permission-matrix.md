@@ -108,6 +108,11 @@ Executive sengaja tidak menerima `ticket.technical.view`. Endpoint dan route bis
 | Internal testing                     |               — |             — |   Override |               A | A if assigned |          — |           — |              — |
 | QA testing/create defect/retest      |               — |             — |     View G |           Fix A |             A |     View G |           — |              — |
 | Execute UAT                          | O when assigned | D if assigned | Coordinate |         Support |       Support |       View |           — |              — |
+| Assign UAT requester                 |               — |             — |          A |               — |             — |          — |           — |              — |
+| Create UAT finding                   | O when assigned |             — |          G |               — |          View |          — |           — |              — |
+| Resolve assigned UAT finding         |               — |             — |          G | A if assigned |           — |          — |           — |              — |
+| Verify/reopen UAT finding            | O when assigned |             — |          G |               — |           — |          — |           — |              — |
+| Submit UAT retest                    |               — |             — |          G | A if assigned |           — |          — |           — |              — |
 | Approve/reject deployment            |               — |             — |  Recommend |               — |     Recommend | A/assigned |           — |              — |
 | Prepare deployment                   |               — |             — |          G |               A |      Verify A |    Approve |           — |              — |
 | Execute/confirm deployment           |               — |             — |          G | A if authorized |        Verify |       View |           — |              — |

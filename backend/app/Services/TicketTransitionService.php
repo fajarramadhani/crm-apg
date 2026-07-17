@@ -13,6 +13,11 @@ use App\Events\TicketResubmitted;
 use App\Events\TicketRevisionRequested;
 use App\Events\TicketTransferred;
 use App\Events\TicketTriageStarted;
+use App\Events\TicketUatApproved;
+use App\Events\TicketUatAssigned;
+use App\Events\TicketUatFailed;
+use App\Events\TicketUatRetestSubmitted;
+use App\Events\TicketUatStarted;
 use App\Events\TicketValidated;
 use App\Exceptions\InvalidTicketTransition;
 use App\Models\Division;
@@ -211,6 +216,89 @@ final class TicketTransitionService
             $locked->latest_progress_at = now();
         }, function (Ticket $fresh) use ($actor): void {
             TicketQaRetestSubmitted::dispatch($fresh, $actor);
+        });
+    }
+
+    public function assignUat(Ticket $ticket, User $actor, User $requester, ?string $notes): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::ReadyForUat, TicketStatus::UatAssignment, 'uat_assigned', $notes, null, function (Ticket $locked) use ($requester, $actor): void {
+            $locked->uat_assignee_id = $requester->id;
+            $locked->uat_assigned_by = $actor->id;
+            $locked->uat_assigned_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketUatAssigned::dispatch($fresh, $actor);
+        });
+    }
+
+    public function startUat(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::UatAssignment, TicketStatus::UatInProgress, 'uat_started', null, null, function (Ticket $locked): void {
+            $locked->uat_started_at = now();
+            if ((int) $locked->uat_cycle_number === 0) {
+                $locked->uat_cycle_number = 1;
+            }
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketUatStarted::dispatch($fresh, $actor);
+        });
+    }
+
+    public function startUatRetest(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::UatRetest, TicketStatus::UatInProgress, 'uat_retest_started', null, null, function (Ticket $locked): void {
+            $locked->uat_cycle_number = ((int) $locked->uat_cycle_number) + 1;
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketUatStarted::dispatch($fresh, $actor);
+        });
+    }
+
+    public function passUat(Ticket $ticket, User $actor, ?string $summary, ?array $metadata): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::UatInProgress, TicketStatus::UatApproved, 'uat_approved', $summary, null, function (Ticket $locked): void {
+            $locked->uat_completed_at = now();
+            $locked->latest_uat_result = 'accepted';
+            $locked->uat_approved_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketUatApproved::dispatch($fresh, $actor);
+        });
+    }
+
+    public function recordUatFailure(Ticket $ticket, User $actor, ?string $summary, ?array $metadata, ?callable $mutate = null): Ticket
+    {
+        $fresh = DB::transaction(function () use ($ticket, $actor, $summary, $metadata, $mutate): Ticket {
+            $locked = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
+            if ($locked->status !== TicketStatus::UatInProgress) {
+                throw new InvalidTicketTransition($locked->status->value);
+            }
+
+            // First transition: uat_in_progress -> uat_failed
+            $locked->status = TicketStatus::UatFailed;
+            $locked->latest_uat_result = 'rejected';
+            $locked->save();
+            $this->history($locked, $actor, TicketStatus::UatInProgress, TicketStatus::UatFailed, 'uat_failed', $summary, $metadata);
+
+            // Second transition: uat_failed -> development_in_progress
+            $locked->status = TicketStatus::DevelopmentInProgress;
+            if ($mutate) {
+                $mutate($locked);
+            }
+            $locked->save();
+            $this->history($locked, $actor, TicketStatus::UatFailed, TicketStatus::DevelopmentInProgress, 'uat_rework_started', $summary, $metadata);
+
+            return $locked->fresh();
+        });
+
+        TicketUatFailed::dispatch($fresh, $actor);
+
+        return $fresh;
+    }
+
+    public function submitUatRetest(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::DevelopmentInProgress, TicketStatus::UatRetest, 'uat_retest_submitted', null, null, function (Ticket $locked): void {
+            $locked->progress_percentage = 100;
+            $locked->latest_progress_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketUatRetestSubmitted::dispatch($fresh, $actor);
         });
     }
 

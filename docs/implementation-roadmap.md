@@ -1,5 +1,9 @@
 # Implementation Roadmap
 
+## Phase 10 delivered scope
+
+UAT assignment queue, requester-owned UAT scenarios/runs/results, rejected-run rework, immutable UAT finding history, PIC rework gates, retest cycles, evidence authorization, requester sign-off, and responsive UAT workspaces are implemented and verified. See `docs/phase-10-uat-requester-signoff.md`.
+
 ## Phase 9 delivered scope
 
 QA assignment queue and workload charts, testing dashboard, test case/run/result execution, inline defect creation with immutable defect history logs, PIC defect rework, internal validation test gates, QA retesting cycles, and requester/executive technical data redactions are fully implemented and verified.
@@ -10,7 +14,7 @@ Development execution, actual-effort worklogs, progress snapshots, private evide
 
 ## Current delivery numbering
 
-Phase 7 is now implemented as **PIC Analysis, RCA, and Solution Planning**. Phase 8 is implemented as **Development Execution and Internal Testing**. Phase 9 is implemented as **QA Assignment, Execution, Defect Rework, and Retests**. UAT execution, approval, deployment, monitoring, notifications, and Knowledge Base remain in later phases.
+Phase 7 is now implemented as **PIC Analysis, RCA, and Solution Planning**. Phase 8 is implemented as **Development Execution and Internal Testing**. Phase 9 is implemented as **QA Assignment, Execution, Defect Rework, and Retests**. Phase 10 is implemented as **UAT Execution, Requester Revision, and Sign-off**. Release approval, deployment, monitoring, notifications, and Knowledge Base remain later phases.
 
 ## Delivery rules
 
@@ -76,13 +80,13 @@ Konfirmasi business decisions: identity topology, multi-role, approval path, wor
 
 **Acceptance:** failed test creates revision path; retest history preserved; only assigned actors submit; UAT URL contains ticket/run ID; E2E to approval-ready state.
 
-## Phase 10 — Approval, deployment, monitoring, and closure
+## Phase 10 — UAT execution, requester revision, and sign-off (implemented)
 
-**Scope:** approval rules/queue/history, separation of duties, deployment plan/checklist/window/rollback/evidence, deploy result, post-deploy monitoring, closure/resolution/requester confirmation/reopen.
+**Scope:** IT Lead UAT assignment, requester-owned scenarios/runs/results, rejected UAT rework, finding lifecycle/history, PIC rework gates, UAT retests, evidence authorization, and requester sign-off.
 
-**Acceptance:** happy path and revision/reject/rollback/reopen alternatives tested; no credentials in records/log; state transition, audit, notification, and SLA completion are transactional.
+**Acceptance:** accepted and rejected UAT paths, duplicate/stale conflicts, role boundaries, cross-ticket nested resource rejection, evidence redaction, HTTP E2E, and desktop/mobile browser verification are tested. Release approval and deployment are explicitly not started.
 
-## Phase 11 — Notifications and audit operations
+## Phase 11 — Approval, deployment, monitoring, and closure
 
 **Scope:** notification preferences/templates, email delivery, retry/failure visibility, mark-read persistence, complete audit search/export/retention controls. Add real-time only if polling is insufficient.
 

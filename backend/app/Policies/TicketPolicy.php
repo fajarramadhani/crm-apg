@@ -13,7 +13,8 @@ class TicketPolicy
         return ($user->hasPermission('ticket.own.view') && $ticket->requester_id === $user->id)
             || ($user->hasPermission('ticket.division.view') && $ticket->current_division_id === $user->division_id)
             || ($user->hasPermission('ticket.assigned.view') && $ticket->current_assignee_id === $user->id)
-            || ($user->hasPermission('ticket.assigned.view') && $ticket->qa_assignee_id === $user->id);
+            || ($user->hasPermission('ticket.assigned.view') && $ticket->qa_assignee_id === $user->id)
+            || ($user->hasPermission('ticket.uat_assignment.view') && $ticket->uat_assignee_id === $user->id);
     }
 
     public function update(User $user, Ticket $ticket): bool
@@ -66,5 +67,15 @@ class TicketPolicy
     {
         return $user->hasPermission('ticket.development.update') && $ticket->current_assignee_id === $user->id
             && $ticket->assignments()->where('assigned_to', $user->id)->where('is_current', true)->exists();
+    }
+
+    public function assignUat(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.uat.assign');
+    }
+
+    public function executeUat(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.uat_assignment.view') && $ticket->uat_assignee_id === $user->id;
     }
 }

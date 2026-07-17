@@ -20,6 +20,11 @@ export type TicketState =
   | 'qa_failed'
   | 'qa_retest'
   | 'ready_for_uat'
+  | 'uat_assignment'
+  | 'uat_in_progress'
+  | 'uat_failed'
+  | 'uat_retest'
+  | 'uat_approved'
   | 'closed'
   | 'rejected'
   | 'transferred'
@@ -96,6 +101,15 @@ export interface TicketRecord {
   internal_testing_started_at: string | null
   internal_testing_completed_at: string | null
   ready_for_qa_at: string | null
+  uat_assignee?: { id: number; name: string } | null
+  uat_assigned_at?: string | null
+  uat_started_at?: string | null
+  uat_completed_at?: string | null
+  uat_cycle_number?: number | null
+  latest_uat_result?: 'accepted' | 'rejected' | null
+  uat_approved_at?: string | null
+  uat_finding_count?: number
+  uat_finding_open_count?: number
   progress_percentage: number
   latest_progress_at: string | null
   internal_testing_status: 'in_progress' | 'passed' | null
@@ -470,6 +484,13 @@ export const ticketService = {
       apiClient.postForm<ApiResponse<TicketAttachmentRecord>>(`/pic/tickets/${id}/development-evidence`, body),
     )
   },
+  uploadUatEvidence: (id: number, file: File, category = 'uat_evidence', findingId?: number) => {
+    const body = new FormData()
+    body.append('file', file)
+    body.append('category', category)
+    if (findingId) body.append('uat_finding_id', String(findingId))
+    return data(apiClient.postForm<ApiResponse<TicketAttachmentRecord>>(`/requester/tickets/${id}/uat-evidence`, body))
+  },
   internalTestCases: (id: number) =>
     data(apiClient.get<ApiResponse<InternalTestCaseRecord[]>>(`/pic/tickets/${id}/internal-test-cases`)),
   createInternalTestCase: (
@@ -596,4 +617,55 @@ export const ticketService = {
     ),
   submitQaRetest: (id: number) =>
     data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/submit-qa-retest`, {})),
+
+  // IT Lead UAT
+  uatQueue: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/it-lead/uat-assignment-queue?${query(filters)}`),
+  assignUat: (id: number, payload: { requester_user_id: number; notes?: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/it-lead/tickets/${id}/assign-uat`, payload)),
+
+  // Requester UAT Workspace
+  requesterUatAssignments: () => data(apiClient.get<ApiResponse<TicketRecord[]>>('/requester/uat-assignments')),
+  startUat: (id: number) => data(apiClient.post<ApiResponse<TicketRecord>>(`/requester/tickets/${id}/uat/start`, {})),
+  getUatScenarios: (id: number) => data(apiClient.get<ApiResponse<any[]>>(`/requester/tickets/${id}/uat-scenarios`)),
+  createUatScenario: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<any>>(`/requester/tickets/${id}/uat-scenarios`, payload)),
+  updateUatScenario: (ticketId: number, scenarioId: number, payload: any) =>
+    data(apiClient.put<ApiResponse<any>>(`/requester/tickets/${ticketId}/uat-scenarios/${scenarioId}`, payload)),
+  deleteUatScenario: (ticketId: number, scenarioId: number) =>
+    data(apiClient.delete<ApiResponse<any>>(`/requester/tickets/${ticketId}/uat-scenarios/${scenarioId}`)),
+  getUatRuns: (id: number) => data(apiClient.get<ApiResponse<any[]>>(`/requester/tickets/${id}/uat-runs`)),
+  startUatRun: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<any>>(`/requester/tickets/${id}/uat-runs`, payload)),
+  recordUatResult: (ticketId: number, runId: number, payload: any) =>
+    data(apiClient.post<ApiResponse<any>>(`/requester/tickets/${ticketId}/uat-runs/${runId}/results`, payload)),
+  completeUatRun: (ticketId: number, runId: number, summary?: string) =>
+    data(apiClient.post<ApiResponse<any>>(`/requester/tickets/${ticketId}/uat-runs/${runId}/complete`, { summary })),
+  getUatFindings: (id: number) => data(apiClient.get<ApiResponse<any[]>>(`/requester/tickets/${id}/uat-findings`)),
+  createUatFinding: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<any>>(`/requester/tickets/${id}/uat-findings`, payload)),
+  verifyUatFinding: (ticketId: number, findingId: number, notes?: string) =>
+    data(
+      apiClient.post<ApiResponse<any>>(`/requester/tickets/${ticketId}/uat-findings/${findingId}/verify`, { notes }),
+    ),
+  reopenUatFinding: (ticketId: number, findingId: number, notes?: string) =>
+    data(
+      apiClient.post<ApiResponse<any>>(`/requester/tickets/${ticketId}/uat-findings/${findingId}/reopen`, { notes }),
+    ),
+
+  // PIC UAT Rework
+  picUatFindings: (id: number) => data(apiClient.get<ApiResponse<any[]>>(`/pic/tickets/${id}/uat-findings`)),
+  picStartUatFinding: (ticketId: number, findingId: number) =>
+    data(apiClient.post<ApiResponse<any>>(`/pic/tickets/${ticketId}/uat-findings/${findingId}/start`, {})),
+  picResolveUatFinding: (ticketId: number, findingId: number, payload: { resolution_notes: string }) =>
+    data(apiClient.post<ApiResponse<any>>(`/pic/tickets/${ticketId}/uat-findings/${findingId}/resolve`, payload)),
+  picSubmitUatRetest: (id: number, payload: { requires_qa_retest: boolean }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/submit-uat-retest`, payload)),
+  uploadPicUatEvidence: (id: number, file: File, findingId?: number, category = 'uat_retest_evidence') => {
+    const body = new FormData()
+    body.append('file', file)
+    body.append('category', category)
+    if (findingId) body.append('uat_finding_id', String(findingId))
+    return data(apiClient.postForm<ApiResponse<TicketAttachmentRecord>>(`/pic/tickets/${id}/uat-evidence`, body))
+  },
 }

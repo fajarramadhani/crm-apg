@@ -31,7 +31,7 @@ class TicketAttachmentController extends Controller
     {
         abort_unless($attachment->ticket_id === $ticket->id, 404);
         Gate::authorize('view', $ticket);
-        abort_if($request->user()->hasRole('requester') && ($attachment->visibility ?? 'internal') !== 'requester' && in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation'], true), 403);
+        abort_if($request->user()->hasRole('requester') && ($attachment->visibility ?? 'internal') !== 'requester', 403);
         abort_unless(Storage::disk($attachment->disk)->exists($attachment->path), 404);
 
         return Storage::disk($attachment->disk)->download($attachment->path, $attachment->original_name, ['Content-Type' => $attachment->mime_type, 'X-Content-Type-Options' => 'nosniff']);

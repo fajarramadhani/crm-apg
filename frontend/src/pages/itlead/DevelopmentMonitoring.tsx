@@ -62,6 +62,11 @@ export default function DevelopmentMonitoring() {
             { value: 'qa_failed', label: 'QA Failed' },
             { value: 'qa_retest', label: 'QA Retest' },
             { value: 'ready_for_uat', label: 'Ready for UAT' },
+            { value: 'uat_assignment', label: 'UAT Assignment' },
+            { value: 'uat_in_progress', label: 'UAT In Progress' },
+            { value: 'uat_failed', label: 'UAT Failed' },
+            { value: 'uat_retest', label: 'UAT Retest' },
+            { value: 'uat_approved', label: 'UAT Approved' },
           ]}
         />
       </FilterBar>

@@ -120,7 +120,7 @@ Transition minimum yang diizinkan harus dikonfigurasi dalam code dan diuji, buka
 
 Waiting states harus menyimpan `resume_status` pada history/transition metadata atau tabel workflow pause sehingga kembali ke tahap sebelumnya dengan deterministik.
 
-## Analysis, testing, approval, deployment
+## Analysis, testing, UAT, approval, deployment
 
 | Tabel                    | Kolom utama                                                                                                                                                                                     | Relasi/catatan                                   |
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
@@ -132,6 +132,22 @@ Waiting states harus menyimpan `resume_status` pada history/transition metadata 
 | `approvals`              | id, ticket_id, stage, sequence, approver_id, delegated_from_id nullable, decision (`pending`,`approved`,`rejected`,`revision`), comment, decided_at, expires_at, timestamps                     | Mendukung multi-level bila diperlukan            |
 | `deployments`            | id, ticket_id, environment, version, release_reference, planned_at, started_at, completed_at, status, deployed_by, plan, rollback_plan, result_notes, timestamps                                | Tidak menyimpan credential                       |
 | `deployment_check_items` | id, deployment_id, label, is_required, completed_by, completed_at, evidence_attachment_id nullable                                                                                              | Checklist/evidence                               |
+
+### Phase 10 UAT tables
+
+Phase 10 uses ticket-specific UAT records rather than shared mutable test data:
+
+| Tabel | Tujuan |
+| --- | --- |
+| `ticket_uat_assignments` | Assignment history, active requester assignment, assignment notes, and end timestamps. |
+| `ticket_uat_scenarios` | Scenario, steps, expected result, acceptance criteria, priority, and soft-deactivation state. |
+| `ticket_uat_runs` | Cycle/run number, environment, requester, status, and completion summary. |
+| `ticket_uat_results` | One immutable result per scenario in a run. |
+| `ticket_uat_findings` | UAT finding, requester report, active PIC assignment, resolution, and verification fields. |
+| `ticket_uat_finding_histories` | Append-only finding lifecycle history. |
+| `ticket_uat_finding_sequences` | Row-locked per-ticket sequence for concurrency-safe finding numbers. |
+
+UAT evidence is linked through `ticket_attachments.uat_finding_id`; cross-ticket finding references are rejected. Internal PIC evidence remains hidden from requester and executive projections.
 | `monitoring_records`     | id, ticket_id, deployment_id, owner_id, started_at, planned_end_at, ended_at, result, metrics_summary, incident_found, notes, timestamps                                                        | Post-deploy monitoring                           |
 | `closure_records`        | id, ticket_id unique, resolution_code, resolution_summary, closed_by, requester_confirmed_by nullable, requester_confirmed_at nullable, knowledge_article_id nullable, closed_at                | Closing evidence                                 |
 

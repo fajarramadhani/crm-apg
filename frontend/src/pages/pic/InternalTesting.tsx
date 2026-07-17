@@ -28,6 +28,7 @@ const csv = (value: string) =>
 export default function InternalTestingPIC() {
   const [tickets, setTickets] = useState<TicketRecord[]>([]),
     [ticket, setTicket] = useState<TicketRecord | null>(null),
+    [uatFindings, setUatFindings] = useState<any[]>([]),
     [worklogs, setWorklogs] = useState<TicketWorklogRecord[]>([]),
     [updates, setUpdates] = useState<TicketDevelopmentUpdateRecord[]>([]),
     [cases, setCases] = useState<InternalTestCaseRecord[]>([]),
@@ -72,6 +73,11 @@ export default function InternalTestingPIC() {
       ticketService.internalTestRuns(id),
     ])
     setTicket(t)
+    setUatFindings(
+      ['uat_failed', 'uat_retest', 'uat_in_progress', 'uat_approved'].includes(t.status)
+        ? await ticketService.picUatFindings(id)
+        : [],
+    )
     setProgress(t.progress_percentage)
     setActivityType(t.qa_defects && t.qa_defects.length > 0 ? 'rework' : 'development')
     setWorklogs(w)
@@ -352,6 +358,125 @@ export default function InternalTestingPIC() {
                           }
                         >
                           🚀 Kirim ke QA
+                        </Button>
+                      </div>
+                    </div>
+                  </SectionCard>
+                )}
+                {uatFindings.length > 0 && (
+                  <SectionCard
+                    title={`Temuan UAT (${uatFindings.length})`}
+                    className="border-orange-100 bg-orange-50/10"
+                  >
+                    <div className="space-y-4">
+                      {uatFindings.map((finding) => (
+                        <div key={finding.id} className="rounded-xl border border-orange-100 bg-white p-4 shadow-2xs">
+                          <div className="mb-2 flex items-start justify-between gap-3">
+                            <div>
+                              <span className="font-mono text-2xs font-bold text-orange-600">
+                                {finding.finding_number}
+                              </span>
+                              <h4 className="text-sm font-bold text-gray-900">{finding.title}</h4>
+                            </div>
+                            <span className="rounded bg-orange-100 px-2 py-0.5 text-xs font-bold uppercase text-orange-800">
+                              {finding.status}
+                            </span>
+                          </div>
+                          <p className="mb-3 text-xs leading-relaxed text-gray-600">{finding.description}</p>
+                          {(finding.status === 'open' || finding.status === 'reopened') && (
+                            <div className="flex justify-end border-t pt-2">
+                              <Button
+                                size="sm"
+                                disabled={busy}
+                                onClick={() =>
+                                  void act(
+                                    () => ticketService.picStartUatFinding(ticket.id, finding.id),
+                                    'Perbaikan finding UAT dimulai.',
+                                  )
+                                }
+                              >
+                                Mulai Perbaikan UAT
+                              </Button>
+                            </div>
+                          )}
+                          {finding.status === 'in_progress' && (
+                            <div className="space-y-2 border-t pt-3">
+                              <label className="block cursor-pointer rounded-lg border border-dashed border-orange-200 p-2 text-center text-xs text-orange-700">
+                                Unggah evidence perbaikan UAT
+                                <input
+                                  className="sr-only"
+                                  type="file"
+                                  accept=".png,.jpg,.jpeg,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx"
+                                  onChange={(event) => {
+                                    const file = event.target.files?.[0]
+                                    if (file) {
+                                      void act(
+                                        () => ticketService.uploadPicUatEvidence(ticket.id, file, finding.id),
+                                        'Evidence perbaikan UAT berhasil diunggah.',
+                                      )
+                                    }
+                                  }}
+                                />
+                              </label>
+                              <Textarea
+                                rows={2}
+                                placeholder="Tuliskan catatan penyelesaian finding UAT..."
+                                value={defectNotes[finding.id] || ''}
+                                onChange={(event) =>
+                                  setDefectNotes((previous) => ({ ...previous, [finding.id]: event.target.value }))
+                                }
+                              />
+                              <div className="flex justify-end">
+                                <Button
+                                  size="sm"
+                                  variant="success"
+                                  disabled={busy || !(defectNotes[finding.id] || '').trim()}
+                                  onClick={() =>
+                                    void act(
+                                      () =>
+                                        ticketService.picResolveUatFinding(ticket.id, finding.id, {
+                                          resolution_notes: defectNotes[finding.id],
+                                        }),
+                                      'Finding UAT diselesaikan.',
+                                    )
+                                  }
+                                >
+                                  Selesaikan Perbaikan UAT
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+                          {finding.resolution_notes && (
+                            <p className="mt-2 rounded border border-green-100 bg-green-50 p-2 text-2xs font-medium text-green-700">
+                              <b>Catatan Perbaikan:</b> {finding.resolution_notes}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                      <div className="flex flex-col justify-between gap-3 rounded-xl border border-orange-100 bg-orange-50/30 p-4 sm:flex-row sm:items-center">
+                        <div>
+                          <h4 className="text-sm font-bold text-orange-900">Kirim ke Retest UAT</h4>
+                          <p className="mt-1 max-w-md text-2xs leading-relaxed text-orange-700">
+                            Pastikan finding selesai, progress 100%, worklog rework dan internal test sukses sudah
+                            dicatat.
+                          </p>
+                        </div>
+                        <Button
+                          variant="primary"
+                          disabled={
+                            busy ||
+                            ticket.status !== 'development_in_progress' ||
+                            ticket.progress_percentage !== 100 ||
+                            uatFindings.some((finding) => ['open', 'in_progress', 'reopened'].includes(finding.status))
+                          }
+                          onClick={() =>
+                            void act(
+                              () => ticketService.picSubmitUatRetest(ticket.id, { requires_qa_retest: false }),
+                              'Tiket berhasil dikirim ulang ke UAT.',
+                            )
+                          }
+                        >
+                          Kirim ke UAT Retest
                         </Button>
                       </div>
                     </div>
