@@ -5,7 +5,7 @@ namespace App\Http\Requests\Api\V1;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
-class UploadDevelopmentEvidenceRequest extends FormRequest
+class UploadQaEvidenceRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -23,11 +23,7 @@ class UploadDevelopmentEvidenceRequest extends FormRequest
             ],
             'category' => [
                 'required',
-                Rule::in(['development_evidence', 'test_evidence', 'log', 'documentation']),
-            ],
-            'visibility' => [
-                'nullable',
-                Rule::in(['internal', 'requester']),
+                Rule::in(['qa_evidence', 'defect_evidence', 'retest_evidence']),
             ],
             'defect_id' => [
                 'nullable',

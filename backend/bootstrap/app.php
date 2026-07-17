@@ -91,11 +91,21 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {
-            if (! $request->is('api/*') || $exception->getStatusCode() !== 419) {
+            if (! $request->is('api/*')) {
                 return null;
             }
+            if (
+                $exception instanceof MethodNotAllowedHttpException ||
+                $exception instanceof NotFoundHttpException ||
+                $exception instanceof AccessDeniedHttpException
+            ) {
+                return null;
+            }
+            if ($exception->getStatusCode() === 419) {
+                return ApiResponse::error($request, 'CSRF token mismatch.', 'CSRF_TOKEN_MISMATCH', 419);
+            }
 
-            return ApiResponse::error($request, 'CSRF token mismatch.', 'CSRF_TOKEN_MISMATCH', 419);
+            return ApiResponse::error($request, $exception->getMessage(), 'ERROR', $exception->getStatusCode());
         });
 
         $exceptions->render(function (MethodNotAllowedHttpException $exception, Request $request) {

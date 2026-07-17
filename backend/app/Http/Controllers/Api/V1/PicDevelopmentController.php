@@ -55,17 +55,43 @@ final class PicDevelopmentController extends Controller
 
     public function evidence(UploadDevelopmentEvidenceRequest $request, Ticket $ticket, TicketDevelopmentService $service): JsonResponse
     {
-        $service->assertOwner($ticket, $request->user());
-        if ($ticket->status !== TicketStatus::DevelopmentInProgress) {
-            abort(409);
-        }$file = $request->file('file');
+        $user = $request->user();
+        $service->assertOwner($ticket, $user);
+
+        if (! in_array($ticket->status, [TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting])) {
+            abort(409, 'PIC evidence can only be uploaded during development or internal testing.');
+        }
+
+        $file = $request->file('file');
         $disk = config('tickets.attachment_disk', 'local');
         $stored = Str::uuid()->toString();
         $path = $file->storeAs("tickets/{$ticket->id}", $stored, $disk);
         try {
-            $attachment = DB::transaction(function () use ($request, $ticket, $file, $disk, $stored, $path) {
-                $a = $ticket->attachments()->create(['uploaded_by' => $request->user()->id, 'original_name' => $file->getClientOriginalName(), 'stored_name' => $stored, 'disk' => $disk, 'path' => $path, 'mime_type' => $file->getMimeType() ?: 'application/octet-stream', 'size' => $file->getSize(), 'category' => $request->string('category'), 'visibility' => $request->input('visibility', 'internal')]);
-                $ticket->histories()->create(['from_status' => $ticket->status->value, 'to_status' => $ticket->status->value, 'action' => 'development_evidence_uploaded', 'actor_id' => $request->user()->id, 'actor_role' => 'pic', 'metadata' => ['evidence_count' => $ticket->attachments()->whereIn('category', ['development_evidence', 'test_evidence', 'log', 'documentation'])->count()]]);
+            $attachment = DB::transaction(function () use ($request, $ticket, $file, $disk, $stored, $path, $user) {
+                $a = $ticket->attachments()->create([
+                    'uploaded_by' => $user->id,
+                    'original_name' => $file->getClientOriginalName(),
+                    'stored_name' => $stored,
+                    'disk' => $disk,
+                    'path' => $path,
+                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
+                    'size' => $file->getSize(),
+                    'category' => $request->string('category'),
+                    'visibility' => $request->input('visibility', 'internal'),
+                    'defect_id' => $request->input('defect_id'),
+                ]);
+
+                $ticket->histories()->create([
+                    'from_status' => $ticket->status->value,
+                    'to_status' => $ticket->status->value,
+                    'action' => 'development_evidence_uploaded',
+                    'actor_id' => $user->id,
+                    'actor_role' => 'pic',
+                    'metadata' => [
+                        'evidence_count' => $ticket->attachments()->whereIn('category', ['development_evidence', 'test_evidence', 'log', 'documentation'])->count(),
+                        'defect_id' => $a->defect_id,
+                    ],
+                ]);
 
                 return $a;
             });
@@ -74,6 +100,6 @@ final class PicDevelopmentController extends Controller
             throw $e;
         }
 
-return ApiResponse::success($request,'Development evidence uploaded',(new TicketAttachmentResource($attachment))->resolve($request),201);
+        return ApiResponse::success($request, 'Evidence uploaded', (new TicketAttachmentResource($attachment))->resolve($request), 201);
     }
 }

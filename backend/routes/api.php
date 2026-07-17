@@ -3,12 +3,15 @@
 use App\Http\Controllers\Api\V1\AdminMasterDataController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\ItLeadQaController;
 use App\Http\Controllers\Api\V1\ItLeadTicketController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PicDevelopmentController;
 use App\Http\Controllers\Api\V1\PicInternalTestingController;
+use App\Http\Controllers\Api\V1\PicReworkController;
 use App\Http\Controllers\Api\V1\PicTicketController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
+use App\Http\Controllers\Api\V1\QaController;
 use App\Http\Controllers\Api\V1\SupervisorTicketController;
 use App\Http\Controllers\Api\V1\TicketAttachmentController;
 use App\Http\Controllers\Api\V1\TicketController;
@@ -64,6 +67,12 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/solution-plan/{plan}/request-revision', [ItLeadTicketController::class, 'requestPlanRevision'])->middleware('permission:ticket.solution_plan.request_revision');
             Route::get('/development-queue', [ItLeadTicketController::class, 'developmentQueue'])->middleware('permission:ticket.development_queue.view');
             Route::get('/tickets/{ticket}/development', [ItLeadTicketController::class, 'development'])->middleware('permission:ticket.development_queue.view');
+
+            // QA Assignment routes
+            Route::get('/qa-assignment-queue', [ItLeadQaController::class, 'queue'])->middleware('permission:ticket.qa_assignment_queue.view');
+            Route::get('/qa-options', [ItLeadQaController::class, 'qaOptions'])->middleware('permission:ticket.qa_options.view');
+            Route::get('/qa-workloads', [ItLeadQaController::class, 'qaWorkloads'])->middleware('permission:ticket.qa_workload.view');
+            Route::post('/tickets/{ticket}/assign-qa', [ItLeadQaController::class, 'assignQa'])->middleware('permission:ticket.qa.assign');
         });
 
         Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {
@@ -93,6 +102,33 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/tickets/{ticket}/internal-test-runs/{run}', [PicInternalTestingController::class, 'run'])->middleware('permission:ticket.internal_test_run.view');
             Route::post('/tickets/{ticket}/internal-test-runs/{run}/results', [PicInternalTestingController::class, 'result'])->middleware('permission:ticket.internal_test_run.manage');
             Route::post('/tickets/{ticket}/internal-test-runs/{run}/complete', [PicInternalTestingController::class, 'complete'])->middleware('permission:ticket.internal_test.complete');
+
+            // PIC Rework/Defects and Retest routes
+            Route::get('/tickets/{ticket}/qa-defects', [PicReworkController::class, 'defects'])->middleware('permission:ticket.qa_defect.view');
+            Route::post('/tickets/{ticket}/qa-defects/{defect}/start', [PicReworkController::class, 'startDefect'])->middleware('permission:ticket.qa_defect.manage');
+            Route::post('/tickets/{ticket}/qa-defects/{defect}/resolve', [PicReworkController::class, 'resolveDefect'])->middleware('permission:ticket.qa_defect.manage');
+            Route::post('/tickets/{ticket}/submit-qa-retest', [PicReworkController::class, 'submitRetest'])->middleware('permission:ticket.qa_retest.submit');
+        });
+
+        Route::prefix('qa')->middleware('permission:ticket.assigned.view')->name('api.v1.qa.')->group(function (): void {
+            Route::get('/assignments', [QaController::class, 'assignments']);
+            Route::get('/tickets/{ticket}', [QaController::class, 'show']);
+            Route::post('/tickets/{ticket}/start', [QaController::class, 'start']);
+            Route::get('/tickets/{ticket}/test-cases', [QaController::class, 'cases']);
+            Route::post('/tickets/{ticket}/test-cases', [QaController::class, 'storeCase']);
+            Route::put('/tickets/{ticket}/test-cases/{case}', [QaController::class, 'updateCase']);
+            Route::delete('/tickets/{ticket}/test-cases/{case}', [QaController::class, 'destroyCase']);
+            Route::get('/tickets/{ticket}/test-runs', [QaController::class, 'runs']);
+            Route::post('/tickets/{ticket}/test-runs', [QaController::class, 'storeRun']);
+            Route::get('/tickets/{ticket}/test-runs/{run}', [QaController::class, 'showRun']);
+            Route::post('/tickets/{ticket}/test-runs/{run}/results', [QaController::class, 'storeResult']);
+            Route::post('/tickets/{ticket}/test-runs/{run}/complete', [QaController::class, 'completeRun']);
+            Route::get('/tickets/{ticket}/defects', [QaController::class, 'defects']);
+            Route::post('/tickets/{ticket}/defects', [QaController::class, 'storeDefect']);
+            Route::put('/tickets/{ticket}/defects/{defect}', [QaController::class, 'updateDefect']);
+            Route::post('/tickets/{ticket}/defects/{defect}/verify', [QaController::class, 'verifyDefect']);
+            Route::post('/tickets/{ticket}/defects/{defect}/reopen', [QaController::class, 'reopenDefect']);
+            Route::post('/tickets/{ticket}/evidence', [QaController::class, 'uploadEvidence']);
         });
 
         Route::prefix('master')->middleware('permission:master_data.view')->name('api.v1.master.')->group(function (): void {

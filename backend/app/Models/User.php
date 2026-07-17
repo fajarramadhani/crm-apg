@@ -45,6 +45,26 @@ class User extends Authenticatable
         return $this->hasMany(TicketAssignment::class, 'assigned_to');
     }
 
+    public function qaAssignments(): HasMany
+    {
+        return $this->hasMany(TicketQaAssignment::class, 'qa_user_id');
+    }
+
+    public function qaTestRuns(): HasMany
+    {
+        return $this->hasMany(TicketQaTestRun::class, 'qa_user_id');
+    }
+
+    public function reportedDefects(): HasMany
+    {
+        return $this->hasMany(TicketQaDefect::class, 'reported_by');
+    }
+
+    public function assignedDefects(): HasMany
+    {
+        return $this->hasMany(TicketQaDefect::class, 'assigned_to');
+    }
+
     public function hasRole(string|array $roles): bool
     {
         return in_array($this->role?->key, (array) $roles, true);

@@ -1,52 +1,106 @@
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { TICKETS, formatDate } from '../../data'
+import { useAuth } from '../../context/AuthContext'
+import { ApiRequestError } from '../../api/client'
+import { ticketService, type TicketRecord } from '../../services/ticketService'
 import {
   KPICard,
   SectionCard,
   StatusBadge,
   PriorityBadge,
-  SLAIndicator,
   PageHeader,
   Button,
   Table,
   TR,
   TD,
+  Toast,
+  EmptyState,
 } from '../../components/ui'
-
-const testingQueue = TICKETS.filter((t) => t.status === 'internal_testing')
-const allQA = TICKETS.filter((t) => ['internal_testing', 'uat', 'pending_approval'].includes(t.status))
 
 export default function QADashboard() {
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const [tickets, setTickets] = useState<TicketRecord[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [actionLoading, setActionLoading] = useState<number | null>(null)
+
+  const load = () => {
+    setLoading(true)
+    ticketService
+      .listMyTickets({ per_page: 100 })
+      .then((res) => {
+        setTickets(res.data)
+      })
+      .catch((err) => {
+        setError((err as ApiRequestError).message || 'Gagal memuat antrian QA')
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }
+
+  useEffect(() => {
+    load()
+  }, [])
+
+  const handleStartTesting = (ticketId: number) => {
+    setActionLoading(ticketId)
+    ticketService
+      .qaStart(ticketId)
+      .then(() => {
+        load()
+      })
+      .catch((err) => {
+        setError(err.message || 'Gagal memulai pengujian')
+      })
+      .finally(() => {
+        setActionLoading(null)
+      })
+  }
+
+  // Filter tickets that belong to the current QA assignee
+  const qaTickets = tickets.filter((t) => t.qa_assignee?.id === user?.id)
+
+  // testingQueue: Tickets in qa_assignment, qa_in_progress, or qa_retest
+  const testingQueue = qaTickets.filter((t) => ['qa_assignment', 'qa_in_progress', 'qa_retest'].includes(t.status))
+
+  // Ready for UAT or completed QA
+  const completedQa = qaTickets.filter((t) => ['ready_for_uat', 'uat', 'closed'].includes(t.status))
+
+  // Failed testing / rework in progress
+  const failedQa = qaTickets.filter(
+    (t) => t.status === 'qa_failed' || (t.status === 'development_in_progress' && t.latest_qa_result === 'failed'),
+  )
 
   return (
     <div>
-      <PageHeader title="Dashboard QA" subtitle="Kelola pengujian internal dan verifikasi kualitas" />
+      {error && <Toast type="error" message={error} onClose={() => setError('')} />}
+
+      <PageHeader
+        title="Dashboard QA"
+        subtitle="Kelola antrian pengujian, eksekusi test case, dan verifikasi kualitas tiket"
+      />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <KPICard title="Antrian Testing" value={testingQueue.length} subtitle="Menunggu QA" color="indigo" icon="🧪" />
-        <KPICard title="Total QA Bulan Ini" value={18} subtitle="Tiket diuji" color="blue" icon="🔬" />
-        <KPICard title="Pass Rate" value="94.4%" subtitle="Lulus testing" color="green" icon="✅" />
         <KPICard
-          title="Dikirim ke UAT"
-          value={allQA.filter((t) => t.status === 'uat').length}
-          subtitle="Siap UAT"
-          color="cyan"
-          icon="👤"
+          title="Antrian Testing"
+          value={testingQueue.length}
+          subtitle="Perlu pengujian"
+          color="indigo"
+          icon="🧪"
         />
+        <KPICard title="QA Rework" value={failedQa.length} subtitle="PIC sedang rework" color="red" icon="🛠️" />
+        <KPICard title="Lulus QA" value={completedQa.length} subtitle="Siap UAT / Selesai" color="green" icon="✅" />
+        <KPICard title="Total Ditugaskan" value={qaTickets.length} subtitle="Tiket QA Anda" color="blue" icon="🔬" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2">
-          <SectionCard
-            title={`Antrian Testing (${testingQueue.length})`}
-            actions={
-              <Button size="sm" variant="primary" onClick={() => navigate('/qa/testing')}>
-                Buka Form
-              </Button>
-            }
-          >
-            {testingQueue.length === 0 ? (
+          <SectionCard title={`Antrian Testing (${testingQueue.length})`}>
+            {loading ? (
+              <p className="py-12 text-center text-sm text-gray-500">Memuat data...</p>
+            ) : testingQueue.length === 0 ? (
               <div className="text-center py-10">
                 <div className="text-4xl mb-3">🧪</div>
                 <p className="text-sm text-gray-600 font-medium">Tidak ada tiket menunggu testing</p>
@@ -56,25 +110,46 @@ export default function QADashboard() {
                 {testingQueue.map((t) => (
                   <div
                     key={t.id}
-                    onClick={() => navigate('/qa/testing')}
-                    className={`border rounded-xl p-4 cursor-pointer hover:shadow-md transition-all ${t.overSla ? 'border-red-200 bg-red-50/30' : 'border-gray-200 hover:border-[#1E3A8A]/30'}`}
+                    className={`border rounded-xl p-4 transition-all border-gray-200 hover:border-[#1E3A8A]/30 bg-white`}
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <span className="font-mono text-xs text-gray-400">{t.id}</span>
-                        <p className="text-sm font-semibold text-gray-900">{t.title}</p>
+                        <span className="font-mono text-xs text-gray-400">{t.ticket_number}</span>
+                        <h4 className="text-sm font-semibold text-gray-900">{t.title}</h4>
                         <p className="text-xs text-gray-500 mt-0.5">
-                          PIC: {t.pic} · {t.application}
+                          PIC: {t.assignee?.name || '—'} · Aplikasi: {t.application?.name || '—'}
                         </p>
                       </div>
-                      <PriorityBadge priority={t.priority} />
+                      <PriorityBadge priority={t.final_priority?.key || 'medium'} />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <StatusBadge status={t.status} />
-                      <span className="text-xs text-gray-400">{formatDate(t.updatedAt)}</span>
-                    </div>
-                    <div className="mt-2">
-                      <SLAIndicator slaRemaining={t.slaRemaining} overSla={t.overSla} slaHours={t.slaHours} />
+
+                    <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-50">
+                      <div className="flex items-center gap-3">
+                        <StatusBadge status={t.status} />
+                        <span className="text-xs text-gray-400">
+                          Cycle {t.qa_cycle_number || 1} · Run #{t.qa_run_number || 0}
+                        </span>
+                      </div>
+                      <div className="flex gap-2">
+                        {t.status === 'qa_assignment' ? (
+                          <Button
+                            size="sm"
+                            variant="primary"
+                            disabled={actionLoading === t.id}
+                            onClick={() => handleStartTesting(t.id)}
+                          >
+                            {actionLoading === t.id ? 'Memulai...' : 'Mulai Testing'}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="success"
+                            onClick={() => navigate('/qa/testing', { state: { ticketId: t.id } })}
+                          >
+                            Uji Sekarang
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -85,17 +160,20 @@ export default function QADashboard() {
 
         <div className="space-y-4">
           <SectionCard title="Status Testing">
-            <div className="space-y-3">
+            <div className="space-y-3 font-medium">
               {[
-                { label: 'Menunggu Testing', count: testingQueue.length, color: 'bg-indigo-500' },
-                { label: 'Di UAT', count: TICKETS.filter((t) => t.status === 'uat').length, color: 'bg-cyan-500' },
                 {
-                  label: 'Menunggu Approval',
-                  count: TICKETS.filter((t) => t.status === 'pending_approval').length,
-                  color: 'bg-amber-500',
+                  label: 'Menunggu Pengujian',
+                  count: testingQueue.filter((t) => t.status === 'qa_assignment').length,
+                  color: 'bg-indigo-500',
                 },
-                { label: 'Lulus (Bulan Ini)', count: 17, color: 'bg-emerald-500' },
-                { label: 'Gagal Testing', count: 1, color: 'bg-red-500' },
+                {
+                  label: 'Sedang Diuji',
+                  count: testingQueue.filter((t) => t.status === 'qa_in_progress' || t.status === 'qa_retest').length,
+                  color: 'bg-yellow-500',
+                },
+                { label: 'Sedang Rework', count: failedQa.length, color: 'bg-red-500' },
+                { label: 'Lulus & Siap UAT', count: completedQa.length, color: 'bg-emerald-500' },
               ].map((s) => (
                 <div key={s.label} className="flex items-center gap-3">
                   <div className={`w-2.5 h-2.5 rounded-full ${s.color} shrink-0`} />
@@ -106,50 +184,70 @@ export default function QADashboard() {
             </div>
           </SectionCard>
 
-          <SectionCard title="Aksi Cepat">
-            <div className="space-y-2">
-              <button
-                onClick={() => navigate('/qa/testing')}
-                className="w-full text-left p-3 rounded-xl text-sm font-medium bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors"
-              >
-                🧪 Form Hasil Pengujian
-              </button>
+          <SectionCard title="Panduan Proses QA">
+            <div className="text-xs text-gray-600 space-y-2 leading-relaxed">
+              <p>
+                <b>1. Mulai Testing:</b> Ubah status tiket dari Ready for QA menjadi QA In Progress.
+              </p>
+              <p>
+                <b>2. Buat Test Case & Run:</b> Definisikan langkah uji dan jalankan pengujian.
+              </p>
+              <p>
+                <b>3. Laporkan Defect:</b> Jika uji gagal, laporkan defect agar PIC bisa langsung melakukan rework.
+              </p>
+              <p>
+                <b>4. Verifikasi Fix:</b> Jalankan retest setelah PIC menyerahkan perbaikan.
+              </p>
             </div>
           </SectionCard>
         </div>
       </div>
 
       <div className="mt-6">
-        <SectionCard title="Semua Tiket dalam QA Scope">
-          <Table headers={['ID', 'Judul', 'PIC', 'Prioritas', 'Status', 'SLA', 'Diupdate']}>
-            {allQA.map((t) => (
-              <TR key={t.id} highlight={t.overSla}>
-                <TD>
-                  <span className="font-mono text-xs">{t.id}</span>
-                </TD>
-                <TD>
-                  <p className="text-sm font-medium max-w-[200px] truncate">{t.title}</p>
-                </TD>
-                <TD>
-                  <span className="text-xs">{t.pic}</span>
-                </TD>
-                <TD>
-                  <PriorityBadge priority={t.priority} />
-                </TD>
-                <TD>
-                  <StatusBadge status={t.status} />
-                </TD>
-                <TD>
-                  <div className="w-28">
-                    <SLAIndicator slaRemaining={t.slaRemaining} overSla={t.overSla} slaHours={t.slaHours} />
-                  </div>
-                </TD>
-                <TD>
-                  <span className="text-xs text-gray-400 whitespace-nowrap">{formatDate(t.updatedAt)}</span>
-                </TD>
-              </TR>
-            ))}
-          </Table>
+        <SectionCard title="Semua Tiket dalam Lingkup QA Anda">
+          {loading ? (
+            <p className="py-12 text-center text-sm text-gray-500">Memuat data...</p>
+          ) : qaTickets.length === 0 ? (
+            <EmptyState title="Tidak ada tiket" message="Anda belum ditugaskan ke tiket mana pun." />
+          ) : (
+            <Table headers={['Ticket Number', 'Judul', 'PIC', 'Prioritas', 'Status', 'QA Run/Cycle', 'QA Hasil']}>
+              {qaTickets.map((t) => (
+                <TR key={t.id} onClick={() => navigate(`/user/tickets/${t.id}`)}>
+                  <TD>
+                    <span className="font-mono text-xs font-bold text-gray-700">{t.ticket_number}</span>
+                  </TD>
+                  <TD>
+                    <p className="text-sm font-medium max-w-[240px] truncate">{t.title}</p>
+                  </TD>
+                  <TD>
+                    <span className="text-xs">{t.assignee?.name || '—'}</span>
+                  </TD>
+                  <TD>
+                    <PriorityBadge priority={t.final_priority?.key || 'medium'} />
+                  </TD>
+                  <TD>
+                    <StatusBadge status={t.status} />
+                  </TD>
+                  <TD>
+                    <span className="text-xs">
+                      Cycle {t.qa_cycle_number || 1} · Run #{t.qa_run_number || 0}
+                    </span>
+                  </TD>
+                  <TD>
+                    {t.latest_qa_result ? (
+                      <span
+                        className={`inline-block px-1.5 py-0.5 text-2xs font-bold rounded ${t.latest_qa_result === 'passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                      >
+                        {t.latest_qa_result.toUpperCase()}
+                      </span>
+                    ) : (
+                      '—'
+                    )}
+                  </TD>
+                </TR>
+              ))}
+            </Table>
+          )}
         </SectionCard>
       </div>
     </div>

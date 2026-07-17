@@ -1,14 +1,16 @@
 # Implementation Roadmap
 
+## Phase 9 delivered scope
+
+QA assignment queue and workload charts, testing dashboard, test case/run/result execution, inline defect creation with immutable defect history logs, PIC defect rework, internal validation test gates, QA retesting cycles, and requester/executive technical data redactions are fully implemented and verified.
+
 ## Phase 8 delivered scope
 
-Development execution, actual-effort worklogs, progress snapshots, private evidence, internal test case/run/result persistence, failure/rework/retest, Ready for QA, PIC UI, IT Lead monitoring, requester redaction, events, and feature coverage are implemented. Phase 9 begins at Ready for QA and owns QA assignment/execution and defects; it must preserve internal-test history.
+Development execution, actual-effort worklogs, progress snapshots, private evidence, internal test case/run/result persistence, failure/rework/retest, Ready for QA, PIC UI, IT Lead monitoring, requester redaction, events, and feature coverage are implemented.
 
 ## Current delivery numbering
 
-Phase 7 is now implemented as **PIC Analysis, RCA, and Solution Planning**: `assigned -> analysis -> solution_planning -> plan_review -> ready_for_development`, immutable solution-plan versions after review, optimistic locking, an IT Lead review queue, and requester-safe progress projection. Phase 8 should begin development execution and internal testing from `ready_for_development`; it must not duplicate the Phase 7 analysis or plan-review workflow.
-
-The approved execution brief consolidates the earlier ticket read-model and creation/validation split into **Phase 5 — Ticket Creation and Supervisor Validation**. Phase 5 delivers list/detail read models, creation, private attachments, ownership, revision/resubmission, scoped Supervisor validation, history, and event hooks. The earlier headings below remain historical planning context. The next active delivery is **Phase 6 — IT Lead triage, final priority, assignment, analysis, and planning**. SLA calculation, QA/UAT, approval, deployment, notifications, and Knowledge Base remain later.
+Phase 7 is now implemented as **PIC Analysis, RCA, and Solution Planning**. Phase 8 is implemented as **Development Execution and Internal Testing**. Phase 9 is implemented as **QA Assignment, Execution, Defect Rework, and Retests**. UAT execution, approval, deployment, monitoring, notifications, and Knowledge Base remain in later phases.
 
 ## Delivery rules
 

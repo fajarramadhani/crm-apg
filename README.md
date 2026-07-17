@@ -117,6 +117,6 @@ vendor/bin/pint --test
 
 ## Status implementasi
 
-Phase 3 menyediakan Laravel Sanctum SPA authentication, delapan primary role, permission registry, middleware role/permission, login rate limit, seeder lokal, frontend auth bootstrap, protected route, role guard, real login/logout, dan session persistence. Backend tetap menjadi sumber kebenaran authorization.
-
-Phase 7 analysis and planning are implemented. Development execution, internal testing, QA/UAT, deployment approval, deployment/monitoring/closure, broader dashboards, SSO, reset password, MFA, and multi-role UI remain later phases.
+- Phase 3: Laravel Sanctum SPA authentication, primary roles, permission registry, login rate limit, local seeders, frontend auth bootstrap, protected routes, role guards, and session persistence.
+- Phase 8: Development execution, worklogs, progress updates, and internal test runs.
+- Phase 9: IT Lead QA assignment queue, QA dashboard & testing workspace, case/run/result execution, defect reporting, immutable defect history logs, PIC defect fixes, internal test validation gates, QA retests, and role-based data redaction.

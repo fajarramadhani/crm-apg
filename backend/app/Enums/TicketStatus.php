@@ -17,6 +17,11 @@ enum TicketStatus: string
     case DevelopmentInProgress = 'development_in_progress';
     case InternalTesting = 'internal_testing';
     case ReadyForQa = 'ready_for_qa';
+    case QaAssignment = 'qa_assignment';
+    case QaInProgress = 'qa_in_progress';
+    case QaFailed = 'qa_failed';
+    case QaRetest = 'qa_retest';
+    case ReadyForUat = 'ready_for_uat';
     case Rejected = 'rejected';
     case Transferred = 'transferred';
     case Cancelled = 'cancelled';

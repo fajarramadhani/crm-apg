@@ -133,15 +133,22 @@ final class TicketInternalTestingService
                 });
                 $this->history($locked, $actor, 'development_rework_started', ['progress' => $locked->progress_percentage, 'reason' => 'internal_test_failed']);
             } else {
-                $this->transitions->phaseTransition($locked, $actor, TicketStatus::InternalTesting, TicketStatus::ReadyForQa, 'internal_testing_passed', metadata: ['test_run_number' => $active->run_number, 'passed' => $passed, 'failed' => 0], mutate: function (Ticket $t) {
-                    $t->development_completed_at = now();
-                    $t->internal_testing_completed_at = now();
-                    $t->ready_for_qa_at = now();
-                });
-                $this->history($locked, $actor, 'ready_for_qa', ['test_run_number' => $active->run_number]);
+                if ($locked->qa_assignee_id !== null) {
+                    $this->transitions->phaseTransition($locked, $actor, TicketStatus::InternalTesting, TicketStatus::DevelopmentInProgress, 'internal_testing_passed', metadata: ['test_run_number' => $active->run_number, 'passed' => $passed, 'failed' => 0], mutate: function (Ticket $t) {
+                        $t->internal_testing_completed_at = now();
+                    });
+                    $this->history($locked, $actor, 'internal_testing_passed_rework', ['test_run_number' => $active->run_number]);
+                } else {
+                    $this->transitions->phaseTransition($locked, $actor, TicketStatus::InternalTesting, TicketStatus::ReadyForQa, 'internal_testing_passed', metadata: ['test_run_number' => $active->run_number, 'passed' => $passed, 'failed' => 0], mutate: function (Ticket $t) {
+                        $t->development_completed_at = now();
+                        $t->internal_testing_completed_at = now();
+                        $t->ready_for_qa_at = now();
+                    });
+                    $this->history($locked, $actor, 'ready_for_qa', ['test_run_number' => $active->run_number]);
+                }
             }
 
-return $active->fresh('results');
+            return $active->fresh('results');
         });
         if ($outcome === 'failed') {
             TicketInternalTestingFailed::dispatch($ticket->fresh(), $actor);
@@ -149,7 +156,7 @@ return $active->fresh('results');
             TicketReadyForQa::dispatch($ticket->fresh(), $actor);
         }
 
-return $completed;
+        return $completed;
     }
 
     private function assertCaseMutable(Ticket $ticket, User $actor): void
@@ -158,11 +165,11 @@ return $completed;
         if (! $ticket->development_started_at || ! in_array($ticket->status, [TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting], true)) {
             throw new InvalidTicketTransition($ticket->status->value);
         }if ($ticket->internalTestRuns()->where('status', 'in_progress')->exists()) {
-            throw new InvalidTicketTransition($ticket->status->value,'Test cases cannot change during an active run.');
+            throw new InvalidTicketTransition($ticket->status->value, 'Test cases cannot change during an active run.');
         }
     }
 
-    private function history(Ticket $ticket,User $actor,string $action,array $metadata): void
+    private function history(Ticket $ticket, User $actor, string $action, array $metadata): void
     {
         $ticket->histories()->create(['from_status' => $ticket->status->value, 'to_status' => $ticket->status->value, 'action' => $action, 'actor_id' => $actor->id, 'actor_role' => 'pic', 'metadata' => $metadata]);
     }

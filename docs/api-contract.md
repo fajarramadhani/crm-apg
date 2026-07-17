@@ -1,12 +1,32 @@
 # API Contract Plan
 
+## Phase 9 endpoints
+
+QA assignment, test execution, defect tracking, and PIC rework endpoints:
+
+- IT Lead:
+  - `GET /api/v1/it-lead/qa-assignment-queue` (List ready-for-QA tickets)
+  - `GET /api/v1/it-lead/qa-workloads` (Get QA workload metadata)
+  - `POST /api/v1/it-lead/tickets/{ticket}/assign-qa` (Assign QA, notes; returns 200 or 409 if duplicate)
+- QA Workspace:
+  - `GET /api/v1/qa/assignments` (Get assigned tickets list)
+  - `POST /api/v1/qa/tickets/{ticket}/start` (Start testing or retesting)
+  - `GET|POST /api/v1/qa/tickets/{ticket}/test-cases` (Define test cases; POST requires case number, title, type, steps, expected result, priority)
+  - `GET|POST /api/v1/qa/tickets/{ticket}/test-runs` (Start test run with environment)
+  - `POST /api/v1/qa/tickets/{ticket}/test-runs/{run}/results` (Record test case result: passed, failed, blocked)
+  - `POST /api/v1/qa/tickets/{ticket}/test-runs/{run}/complete` (Complete run; rejects with 409 if failed results lack linked defects)
+  - `GET|POST /api/v1/qa/tickets/{ticket}/defects` (Report defect; requires title, severity, priority, replication steps, expected/actual)
+  - `POST /api/v1/qa/tickets/{ticket}/defects/{defect}/verify` (Verify/close defect)
+  - `POST /api/v1/qa/tickets/{ticket}/defects/{defect}/reopen` (Reopen verified/resolved defect)
+  - `POST /api/v1/qa/tickets/{ticket}/evidence` (Upload QA evidence)
+- PIC Rework Workspace:
+  - `GET /api/v1/pic/tickets/{ticket}/qa-defects` (List assigned QA defects)
+  - `POST /api/v1/pic/tickets/{ticket}/qa-defects/{defect}/start` (Start fixing defect)
+  - `POST /api/v1/pic/tickets/{ticket}/qa-defects/{defect}/resolve` (Resolve defect with resolution notes)
+  - `POST /api/v1/pic/tickets/{ticket}/submit-qa-retest` (Submit ticket for QA retesting; verifies progress, rework logs, and internal test runs)
+  - `POST /api/v1/pic/tickets/{ticket}/development-evidence` (Upload PIC evidence)
+
 ## Phase 8 endpoints
-
-PIC endpoints under `/api/v1/pic/tickets/{ticket}`: `POST start-development`; `GET|POST worklogs`; `GET|POST development-updates`; `POST development-evidence`; `GET|POST internal-test-cases`; `PUT|DELETE internal-test-cases/{case}`; `GET|POST internal-test-runs`; `GET internal-test-runs/{run}`; `POST internal-test-runs/{run}/results`; and `POST internal-test-runs/{run}/complete`.
-
-IT Lead endpoints are `GET /api/v1/it-lead/development-queue` and `GET /api/v1/it-lead/tickets/{ticket}/development`. Queue filters: `search`, `status`, `pic`, `priority`, `application`, and pagination. Stale/duplicate/invalid workflow mutations return 409; validation 422; unauthorized roles 403. JSON responses contain `meta.request_id`.
-
-## Phase 6 canonical endpoints
 
 All routes use `/api/v1`, Sanctum authentication, active-user and permission middleware, the standard envelope, and `meta.request_id`.
 

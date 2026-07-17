@@ -188,3 +188,16 @@ The implemented Phase 7 tables supersede the earlier conceptual `root_cause_anal
 - `tickets`: summary timestamps plus `current_analysis_id` and `current_solution_plan_id` point to the active records.
 
 Draft updates require the submitted `expected_lock_version`; stale writes return `409`. A revision request makes the submitted version non-current and the PIC creates a new version, preserving the complete review trail.
+
+## Phase 9 implemented QA and defect tracking schema
+
+The implemented Phase 9 tables introduce QA assignment, test case definition, test execution runs, defect reporting, and immutable defect logs:
+
+- `ticket_qa_assignments`: tracks QA assignees, assignment times, notes, and active status indicators.
+- `ticket_qa_test_cases`: manages test case definitions (case number, title, test type, preconditions, steps array, expected result, priority, and active state).
+- `ticket_qa_test_runs`: tracks test run cycles, execution environments, build references, start/completion times, and run summaries.
+- `ticket_qa_test_results`: records outcomes (passed, failed, blocked), actual results, and notes for each test case in a run.
+- `ticket_qa_defects`: tracks reported defects (defect number, status, severity, priority, title, description, steps to reproduce, expected/actual results, and resolution notes).
+- `ticket_qa_defect_histories`: immutable audit history logging every status change and action for defects.
+- `tickets`: status fields updated to include `qa_assignment`, `qa_in_progress`, `qa_failed`, `qa_retest`, `ready_for_uat`, `qa_cycle_number`, and `latest_qa_result`.
+- `ticket_attachments`/`ticket_comments`: updated with nullable `defect_id` foreign keys to track defect-related evidence and internal discussion.

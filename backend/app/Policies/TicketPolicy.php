@@ -12,7 +12,8 @@ class TicketPolicy
     {
         return ($user->hasPermission('ticket.own.view') && $ticket->requester_id === $user->id)
             || ($user->hasPermission('ticket.division.view') && $ticket->current_division_id === $user->division_id)
-            || ($user->hasPermission('ticket.assigned.view') && $ticket->current_assignee_id === $user->id);
+            || ($user->hasPermission('ticket.assigned.view') && $ticket->current_assignee_id === $user->id)
+            || ($user->hasPermission('ticket.assigned.view') && $ticket->qa_assignee_id === $user->id);
     }
 
     public function update(User $user, Ticket $ticket): bool
@@ -38,6 +39,16 @@ class TicketPolicy
     public function triage(User $user, Ticket $ticket): bool
     {
         return $user->hasPermission('ticket.triage_queue.view');
+    }
+
+    public function assignQa(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.qa.assign');
+    }
+
+    public function executeQa(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.assigned.view') && $ticket->qa_assignee_id === $user->id;
     }
 
     public function analyze(User $user, Ticket $ticket): bool

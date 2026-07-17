@@ -209,9 +209,14 @@ export default function Workspace() {
                       </Button>
                     </div>
                   )}
-                  {['ready_for_development', 'development_in_progress', 'internal_testing', 'ready_for_qa'].includes(
-                    selected.status,
-                  ) && (
+                  {[
+                    'ready_for_development',
+                    'development_in_progress',
+                    'internal_testing',
+                    'ready_for_qa',
+                    'qa_retest',
+                    'ready_for_uat',
+                  ].includes(selected.status) && (
                     <div className="mt-5">
                       <Button onClick={() => navigate('/pic/testing')}>
                         {selected.status === 'ready_for_development'

@@ -10,7 +10,12 @@ import {
   StatusBadge,
   Toast,
 } from '../../components/ui'
-import { ticketService, type DevelopmentDetail, type TicketRecord } from '../../services/ticketService'
+import {
+  ticketService,
+  type DevelopmentDetail,
+  type TicketRecord,
+  type QaUserWorkload,
+} from '../../services/ticketService'
 
 export default function DevelopmentMonitoring() {
   const [tickets, setTickets] = useState<TicketRecord[]>([]),
@@ -52,6 +57,11 @@ export default function DevelopmentMonitoring() {
             { value: 'development_in_progress', label: 'Development In Progress' },
             { value: 'internal_testing', label: 'Internal Testing' },
             { value: 'ready_for_qa', label: 'Ready for QA' },
+            { value: 'qa_assignment', label: 'QA Assignment' },
+            { value: 'qa_in_progress', label: 'QA In Progress' },
+            { value: 'qa_failed', label: 'QA Failed' },
+            { value: 'qa_retest', label: 'QA Retest' },
+            { value: 'ready_for_uat', label: 'Ready for UAT' },
           ]}
         />
       </FilterBar>
@@ -140,12 +150,52 @@ export default function DevelopmentMonitoring() {
                 ✕
               </button>
             </div>
-            <SectionCard title="Approved Plan">
-              <p className="text-sm whitespace-pre-wrap">{detail.solution_plan?.solution_summary || '—'}</p>
-              <p className="text-xs text-gray-500 mt-2">
-                Estimate: {detail.solution_plan?.estimated_effort_minutes || 0} menit
-              </p>
-            </SectionCard>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <SectionCard title="Approved Plan">
+                <p className="text-sm whitespace-pre-wrap">{detail.solution_plan?.solution_summary || '—'}</p>
+                <p className="text-xs text-gray-500 mt-2">
+                  Estimate: {detail.solution_plan?.estimated_effort_minutes || 0} menit
+                </p>
+              </SectionCard>
+
+              {detail.ticket.status === 'ready_for_qa' && (
+                <QaAssignmentForm
+                  ticketId={detail.ticket.id}
+                  onAssigned={() => {
+                    setDetail(null)
+                    load()
+                  }}
+                />
+              )}
+
+              {detail.ticket.qa_assignee && (
+                <SectionCard title="Informasi QA" className="bg-[#EEF2F6] border border-blue-100">
+                  <div className="grid grid-cols-2 gap-2 text-sm font-medium">
+                    <div>
+                      <p className="text-xs text-gray-400">QA Assignee</p>
+                      <p className="font-semibold text-gray-800">{detail.ticket.qa_assignee.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-xs text-gray-400">QA Cycle & Run</p>
+                      <p className="font-semibold text-gray-800">
+                        Cycle {detail.ticket.qa_cycle_number || 1} · Run #{detail.ticket.qa_run_number || 0}
+                      </p>
+                    </div>
+                    {detail.ticket.latest_qa_result && (
+                      <div className="col-span-2 mt-1">
+                        <p className="text-xs text-gray-400 font-semibold">Hasil QA Terakhir</p>
+                        <span
+                          className={`inline-block px-2 py-0.5 text-xs font-bold rounded ${detail.ticket.latest_qa_result === 'passed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                        >
+                          {detail.ticket.latest_qa_result.toUpperCase()}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </SectionCard>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               <SectionCard title="Progress Updates">
                 {detail.updates.map((u) => (
@@ -156,7 +206,9 @@ export default function DevelopmentMonitoring() {
                 ))}
               </SectionCard>
               <SectionCard title="Worklogs">
-                <b className="text-sm">Total {detail.worklogs.reduce((n, w) => n + w.minutes_spent, 0)} menit</b>
+                <b className="text-sm font-semibold">
+                  Total {detail.worklogs.reduce((n, w) => n + w.minutes_spent, 0)} menit
+                </b>
                 {detail.worklogs.map((w) => (
                   <div key={w.id} className="border-b py-2 text-sm">
                     {w.work_date} · {w.minutes_spent} min · {w.description}
@@ -192,5 +244,76 @@ export default function DevelopmentMonitoring() {
         </div>
       )}
     </div>
+  )
+}
+
+function QaAssignmentForm({ ticketId, onAssigned }: { ticketId: number; onAssigned: () => void }) {
+  const [qas, setQas] = useState<QaUserWorkload[]>([])
+  const [selectedQa, setSelectedQa] = useState<number | ''>('')
+  const [notes, setNotes] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    ticketService
+      .qaWorkloads()
+      .then(setQas)
+      .catch((err) => setError(err.message || 'Gagal memuat daftar QA'))
+  }, [])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedQa) return
+    setLoading(true)
+    ticketService
+      .assignQa(ticketId, { qa_user_id: Number(selectedQa), notes })
+      .then(() => onAssigned())
+      .catch((err) => setError(err.message || 'Gagal menugaskan QA'))
+      .finally(() => setLoading(false))
+  }
+
+  return (
+    <SectionCard title="Penugasan QA (IT Lead Only)" className="bg-indigo-50/50 border border-indigo-100">
+      {error && <p className="text-xs text-red-600 mb-2 font-medium">{error}</p>}
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">Pilih QA Member</label>
+          <select
+            value={selectedQa}
+            onChange={(e) => setSelectedQa(e.target.value === '' ? '' : Number(e.target.value))}
+            className="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-2"
+            required
+            disabled={loading}
+          >
+            <option value="">-- Pilih Anggota QA --</option>
+            {qas.map((qa) => (
+              <option key={qa.id} value={qa.id}>
+                {qa.name} (Beban: {qa.active_tickets_count} Tiket Aktif)
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-gray-700 mb-1">Catatan Instruksi QA (Opsional)</label>
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full text-sm rounded-lg border border-gray-300 bg-white px-3 py-1.5"
+            rows={2}
+            placeholder="Tambahkan arahan pengujian khusus..."
+            disabled={loading}
+          />
+        </div>
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="px-4 py-2 text-xs font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+            disabled={!selectedQa || loading}
+          >
+            {loading ? 'Menyimpan...' : 'Tugaskan QA'}
+          </button>
+        </div>
+      </form>
+    </SectionCard>
   )
 }

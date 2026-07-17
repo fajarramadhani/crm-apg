@@ -53,6 +53,8 @@ export default function InternalTestingPIC() {
     }),
     [environment, setEnvironment] = useState('staging'),
     [build, setBuild] = useState(''),
+    [activityType, setActivityType] = useState('development'),
+    [defectNotes, setDefectNotes] = useState<Record<number, string>>({}),
     [resultDrafts, setResultDrafts] = useState<
       Record<number, { status: string; actual_result: string; notes: string }>
     >({})
@@ -71,6 +73,7 @@ export default function InternalTestingPIC() {
     ])
     setTicket(t)
     setProgress(t.progress_percentage)
+    setActivityType(t.qa_defects && t.qa_defects.length > 0 ? 'rework' : 'development')
     setWorklogs(w)
     setUpdates(u)
     setCases(c)
@@ -79,7 +82,14 @@ export default function InternalTestingPIC() {
   const load = async (id?: number) => {
     const response = await ticketService.picAssignments({ per_page: 50 })
     const eligible = response.data.filter((t) =>
-      ['ready_for_development', 'development_in_progress', 'internal_testing', 'ready_for_qa'].includes(t.status),
+      [
+        'ready_for_development',
+        'development_in_progress',
+        'internal_testing',
+        'ready_for_qa',
+        'qa_retest',
+        'ready_for_uat',
+      ].includes(t.status),
     )
     setTickets(eligible)
     const selected = id || ticket?.id || eligible[0]?.id
@@ -110,7 +120,7 @@ export default function InternalTestingPIC() {
         ticketService.addWorklog(ticket!.id, {
           work_date: new Date().toISOString().slice(0, 10),
           minutes_spent: minutes,
-          activity_type: 'development',
+          activity_type: activityType,
           description,
           progress_after: progress,
           expected_progress: ticket!.progress_percentage,
@@ -209,6 +219,144 @@ export default function InternalTestingPIC() {
                     Internal testing lulus. Tiket siap dikirim ke QA.
                   </div>
                 )}
+                {ticket.qa_defects && ticket.qa_defects.length > 0 && (
+                  <SectionCard
+                    title={`Temuan Defect QA (${ticket.qa_defects.length})`}
+                    className="border-red-100 bg-red-50/10"
+                  >
+                    <div className="space-y-4">
+                      {ticket.qa_defects.map((d) => (
+                        <div key={d.id} className="border border-red-100 rounded-xl p-4 bg-white shadow-2xs">
+                          <div className="flex justify-between items-start mb-2">
+                            <div>
+                              <span className="font-mono text-2xs text-red-500 font-bold">{d.defect_number}</span>
+                              <h4 className="text-sm font-bold text-gray-900">{d.title}</h4>
+                            </div>
+                            <span
+                              className={`px-2 py-0.5 text-xs font-bold rounded uppercase ${
+                                d.status === 'open' || d.status === 'reopened'
+                                  ? 'bg-red-100 text-red-800'
+                                  : d.status === 'in_progress'
+                                    ? 'bg-blue-100 text-blue-800'
+                                    : d.status === 'resolved'
+                                      ? 'bg-green-100 text-green-800'
+                                      : 'bg-gray-100 text-gray-800'
+                              }`}
+                            >
+                              {d.status}
+                            </span>
+                          </div>
+
+                          <p className="text-xs text-gray-600 mb-3 leading-relaxed">{d.description}</p>
+
+                          <div className="grid grid-cols-2 gap-2 text-2xs text-gray-500 mb-3 bg-gray-50 p-2 rounded-lg font-medium">
+                            <p>
+                              <b>Severity:</b> {d.severity.toUpperCase()}
+                            </p>
+                            <p>
+                              <b>Priority:</b> {d.priority.toUpperCase()}
+                            </p>
+                            {d.expected_result && (
+                              <p className="col-span-2">
+                                <b>Ekspektasi:</b> {d.expected_result}
+                              </p>
+                            )}
+                            {d.actual_result && (
+                              <p className="col-span-2">
+                                <b>Aktual:</b> {d.actual_result}
+                              </p>
+                            )}
+                          </div>
+
+                          {(d.status === 'open' || d.status === 'reopened') && (
+                            <div className="flex justify-end pt-2 border-t">
+                              <Button
+                                size="sm"
+                                disabled={busy}
+                                onClick={() =>
+                                  void act(
+                                    () => ticketService.startDefectFix(ticket.id, d.id),
+                                    'Mulai memperbaiki defect.',
+                                  )
+                                }
+                              >
+                                🛠️ Mulai Perbaikan
+                              </Button>
+                            </div>
+                          )}
+
+                          {d.status === 'in_progress' && (
+                            <div className="pt-3 border-t space-y-2">
+                              <Textarea
+                                placeholder="Tuliskan catatan perbaikan..."
+                                rows={2}
+                                value={defectNotes[d.id] || ''}
+                                onChange={(e) => setDefectNotes((prev) => ({ ...prev, [d.id]: e.target.value }))}
+                              />
+                              <div className="flex justify-end">
+                                <Button
+                                  size="sm"
+                                  variant="success"
+                                  disabled={busy || !(defectNotes[d.id] || '').trim()}
+                                  onClick={() =>
+                                    void act(
+                                      () =>
+                                        ticketService.resolveDefect(ticket.id, d.id, {
+                                          resolution_notes: defectNotes[d.id],
+                                        }),
+                                      'Defect diselesaikan.',
+                                    ).then(() => {
+                                      setDefectNotes((prev) => {
+                                        const next = { ...prev }
+                                        delete next[d.id]
+                                        return next
+                                      })
+                                    })
+                                  }
+                                >
+                                  ✓ Selesaikan Perbaikan
+                                </Button>
+                              </div>
+                            </div>
+                          )}
+
+                          {d.status === 'resolved' && d.resolution_notes && (
+                            <div className="text-2xs text-green-700 bg-green-50 p-2 rounded border border-green-100 font-medium">
+                              <b>Catatan Perbaikan:</b> {d.resolution_notes}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+
+                      <div className="border-t pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-indigo-50/30 p-4 rounded-xl border border-indigo-100/50 mt-4">
+                        <div>
+                          <h4 className="text-sm font-bold text-indigo-900">Kirim Perbaikan ke QA</h4>
+                          <p className="text-2xs text-indigo-700 mt-1 leading-relaxed max-w-md">
+                            Pastikan seluruh defect telah diselesaikan, progress mencapai 100%, serta Anda telah
+                            mencatat minimal 1 worklog rework dan 1 internal test run yang sukses setelah kegagalan QA.
+                          </p>
+                        </div>
+                        <Button
+                          variant="primary"
+                          disabled={
+                            busy ||
+                            ticket.status !== 'development_in_progress' ||
+                            ticket.progress_percentage !== 100 ||
+                            ticket.qa_defects.some((d) => ['open', 'in_progress', 'reopened'].includes(d.status))
+                          }
+                          onClick={() =>
+                            void act(
+                              () => ticketService.submitQaRetest(ticket.id),
+                              'Tiket berhasil dikirim ulang ke QA.',
+                            )
+                          }
+                        >
+                          🚀 Kirim ke QA
+                        </Button>
+                      </div>
+                    </div>
+                  </SectionCard>
+                )}
               </SectionCard>
               {ticket.status === 'development_in_progress' && (
                 <>
@@ -226,7 +374,19 @@ export default function InternalTestingPIC() {
                         value={progress}
                         onChange={(e) => setProgress(Number(e.target.value))}
                       />
-                      <Input label="Aktivitas" value="Development" disabled />
+                      {ticket.qa_defects && ticket.qa_defects.length > 0 ? (
+                        <Select
+                          label="Aktivitas"
+                          value={activityType}
+                          onChange={(e) => setActivityType(e.target.value)}
+                          options={[
+                            { value: 'development', label: 'Development' },
+                            { value: 'rework', label: 'Rework (Perbaikan Defect)' },
+                          ]}
+                        />
+                      ) : (
+                        <Input label="Aktivitas" value="Development" disabled />
+                      )}
                     </div>
                     <Textarea
                       label="Deskripsi pekerjaan"

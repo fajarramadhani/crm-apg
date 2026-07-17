@@ -1,17 +1,21 @@
 # Role Permission Matrix
 
-## Phase 8 permissions
+## Phase 9 permissions
 
-| Capability | PIC | IT Lead | Requester/Supervisor | Executive |
+| Capability | QA | PIC | IT Lead | Requester/Executive |
 | --- | --- | --- | --- | --- |
-| Start/update development | Own active assignment | No | No | No |
-| Worklog/evidence/test management | Own active assignment | Read-only | No technical detail | No |
-| Development queue/detail | No | Read-only | No | No |
-| General status/progress | Assigned view | Yes | Requester sees own safe summary | Aggregate only |
+| Assign QA / Workload View | No | No | Yes (`ticket.qa.assign`, `ticket.qa_workload.view`) | No |
+| Start Testing / Retesting | Yes (`ticket.qa.start`) | No | No | No |
+| Manage Test Cases / Runs | Yes (`ticket.qa_test_case.manage`, `ticket.qa_test_run.manage`) | No | No | No |
+| Report & Verify QA Defects | Yes (`ticket.qa_defect.manage`, `ticket.qa_defect.verify`) | No | No | No |
+| Upload QA Evidence | Yes (`ticket.assigned.view`) | No | No | No |
+| PIC Defect Start & Resolution | No | Yes (`ticket.qa_defect.manage`) | No | No |
+| Submit Ticket for Retesting | No | Yes (`ticket.qa_retest.submit`) | No | No |
+| View Defect Comments/Files | Yes | Yes | Yes | Redacted/Not Visible |
 
-Added permissions: `ticket.development.start/view/update`, `ticket.worklog.view/manage`, `ticket.development_evidence.manage`, `ticket.internal_test_case.view/manage`, `ticket.internal_test_run.view/manage`, `ticket.internal_test.complete`, and `ticket.development_queue.view`.
+Added permissions: `ticket.qa.assign`, `ticket.qa_assignment_queue.view`, `ticket.qa_options.view`, `ticket.qa_workload.view`, `ticket.qa_test_case.view`, `ticket.qa_test_case.manage`, `ticket.qa_test_run.view`, `ticket.qa_test_run.manage`, `ticket.qa_defect.view`, `ticket.qa_defect.manage`, `ticket.qa_defect.verify`, `ticket.qa_retest.submit`.
 
-## Phase 6 permissions
+## Phase 8 permissions
 
 | Permission | Requester | Supervisor | IT Lead | PIC | Executive |
 | --- | ---: | ---: | ---: | ---: | ---: |

@@ -3,6 +3,11 @@
 namespace App\Services;
 
 use App\Enums\TicketStatus;
+use App\Events\TicketQaAssigned;
+use App\Events\TicketQaFailed;
+use App\Events\TicketQaRetestSubmitted;
+use App\Events\TicketQaStarted;
+use App\Events\TicketReadyForUat;
 use App\Events\TicketRejected;
 use App\Events\TicketResubmitted;
 use App\Events\TicketRevisionRequested;
@@ -124,6 +129,89 @@ final class TicketTransitionService
         $dispatch($fresh);
 
         return $fresh;
+    }
+
+    public function assignQa(Ticket $ticket, User $actor, User $qaUser, ?string $notes): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::ReadyForQa, TicketStatus::QaAssignment, 'qa_assigned', $notes, null, function (Ticket $locked) use ($qaUser, $actor): void {
+            $locked->qa_assignee_id = $qaUser->id;
+            $locked->qa_assigned_by = $actor->id;
+            $locked->qa_assigned_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketQaAssigned::dispatch($fresh, $actor);
+        });
+    }
+
+    public function startQa(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::QaAssignment, TicketStatus::QaInProgress, 'qa_started', null, null, function (Ticket $locked): void {
+            $locked->qa_started_at = now();
+            if ((int) $locked->qa_cycle_number === 0) {
+                $locked->qa_cycle_number = 1;
+            }
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketQaStarted::dispatch($fresh, $actor);
+        });
+    }
+
+    public function startQaRetest(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::QaRetest, TicketStatus::QaInProgress, 'qa_retest_started', null, null, function (Ticket $locked): void {
+            $locked->qa_cycle_number = ((int) $locked->qa_cycle_number) + 1;
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketQaStarted::dispatch($fresh, $actor);
+        });
+    }
+
+    public function passQa(Ticket $ticket, User $actor, ?string $summary, ?array $metadata): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::QaInProgress, TicketStatus::ReadyForUat, 'qa_passed', $summary, null, function (Ticket $locked): void {
+            $locked->qa_completed_at = now();
+            $locked->latest_qa_result = 'passed';
+            $locked->ready_for_uat_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketReadyForUat::dispatch($fresh, $actor);
+        });
+    }
+
+    public function recordQaFailure(Ticket $ticket, User $actor, ?string $summary, ?array $metadata, ?callable $mutate = null): Ticket
+    {
+        $fresh = DB::transaction(function () use ($ticket, $actor, $summary, $metadata, $mutate): Ticket {
+            $locked = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
+            if ($locked->status !== TicketStatus::QaInProgress) {
+                throw new InvalidTicketTransition($locked->status->value);
+            }
+
+            // First transition: qa_in_progress -> qa_failed
+            $locked->status = TicketStatus::QaFailed;
+            $locked->latest_qa_result = 'failed';
+            $locked->save();
+            $this->history($locked, $actor, TicketStatus::QaInProgress, TicketStatus::QaFailed, 'qa_failed', $summary, $metadata);
+
+            // Second transition: qa_failed -> development_in_progress
+            $locked->status = TicketStatus::DevelopmentInProgress;
+            if ($mutate) {
+                $mutate($locked);
+            }
+            $locked->save();
+            $this->history($locked, $actor, TicketStatus::QaFailed, TicketStatus::DevelopmentInProgress, 'qa_rework_started', $summary, $metadata);
+
+            return $locked->fresh();
+        });
+
+        TicketQaFailed::dispatch($fresh, $actor);
+
+        return $fresh;
+    }
+
+    public function submitQaRetest(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::DevelopmentInProgress, TicketStatus::QaRetest, 'qa_retest_submitted', null, null, function (Ticket $locked): void {
+            $locked->progress_percentage = 100;
+            $locked->latest_progress_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketQaRetestSubmitted::dispatch($fresh, $actor);
+        });
     }
 
     private function history(Ticket $ticket, User $actor, ?TicketStatus $from, TicketStatus $to, string $action, ?string $notes, ?array $metadata = null): void

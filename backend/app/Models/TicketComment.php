@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['ticket_id', 'user_id', 'type', 'comment', 'is_internal'])]
+#[Fillable(['ticket_id', 'user_id', 'type', 'comment', 'is_internal', 'defect_id'])]
 class TicketComment extends Model
 {
     protected function casts(): array
@@ -17,5 +17,10 @@ class TicketComment extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function defect(): BelongsTo
+    {
+        return $this->belongsTo(TicketQaDefect::class, 'defect_id');
     }
 }

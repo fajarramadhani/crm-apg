@@ -13,8 +13,11 @@ class TicketResource extends JsonResource
         $own = $request->user()?->id === $this->requester_id;
         $technical = $request->user()?->hasPermission('ticket.technical.view') ?? false;
         $safeAttachments = $this->relationLoaded('attachments')
-            ? ($own ? $this->attachments->filter(fn ($attachment) => ! in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation'], true) || ($attachment->visibility ?? 'internal') === 'requester') : $this->attachments)
+            ? ($technical ? $this->attachments : $this->attachments->filter(fn ($attachment) => $attachment->defect_id === null && (! in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation', 'qa_evidence', 'defect_evidence', 'retest_evidence'], true) || ($attachment->visibility ?? 'internal') === 'requester')))
             : null;
+
+        $defectCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->count() : $this->qaDefects()->count();
+        $defectOpenCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->count();
 
         return [
             'id' => $this->id, 'ticket_number' => $this->ticket_number, 'title' => $this->title, 'description' => $this->description,
@@ -43,16 +46,28 @@ class TicketResource extends JsonResource
                 TicketStatus::InternalTesting => 'in_progress', TicketStatus::ReadyForQa => 'passed', default => null
             },
             'analysis_summary' => ['status' => $this->analysis_completed_at ? 'completed' : ($this->analysis_started_at ? 'in_progress' : 'not_started'), 'completed_at' => $this->analysis_completed_at?->toISOString()],
-            'solution_plan_summary' => ['status' => in_array($this->status, [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa], true) ? 'approved' : ($this->status === TicketStatus::PlanReview ? 'submitted' : ($this->current_solution_plan_id ? 'draft' : 'not_started')), 'submitted_at' => $this->plan_submitted_at?->toISOString(), 'approved_at' => $this->plan_approved_at?->toISOString()],
+            'solution_plan_summary' => ['status' => in_array($this->status, [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa, TicketStatus::QaAssignment, TicketStatus::QaInProgress, TicketStatus::QaFailed, TicketStatus::QaRetest, TicketStatus::ReadyForUat], true) ? 'approved' : ($this->status === TicketStatus::PlanReview ? 'submitted' : ($this->current_solution_plan_id ? 'draft' : 'not_started')), 'submitted_at' => $this->plan_submitted_at?->toISOString(), 'approved_at' => $this->plan_approved_at?->toISOString()],
             'submitted_at' => $this->submitted_at?->toISOString(), 'validated_at' => $this->validated_at?->toISOString(), 'rejected_at' => $this->rejected_at?->toISOString(), 'created_at' => $this->created_at?->toISOString(), 'updated_at' => $this->updated_at?->toISOString(),
             'allowed_actions' => $this->allowedActions($request, $own),
             'attachments' => $safeAttachments === null ? [] : TicketAttachmentResource::collection($safeAttachments)->resolve($request),
-            'comments' => TicketCommentResource::collection($this->whenLoaded('comments')),
+            'comments' => TicketCommentResource::collection($this->whenLoaded('comments', fn () => $technical ? $this->comments : $this->comments->whereNull('defect_id'))),
             'history' => TicketStatusHistoryResource::collection($this->whenLoaded('histories')),
             'assignment_notes' => $this->when($technical && ! $own && $this->relationLoaded('assignments'), fn () => $this->assignments->where('is_current', true)->first()?->notes),
             'solution_plan_preview' => $this->when($technical && ! $own && $this->relationLoaded('currentSolutionPlan'), fn () => $this->currentSolutionPlan ? ['version' => $this->currentSolutionPlan->version, 'estimated_effort_minutes' => $this->currentSolutionPlan->estimated_effort_minutes, 'risk_level' => $this->currentSolutionPlan->risk_level, 'submitted_at' => $this->currentSolutionPlan->submitted_at?->toISOString()] : null),
             'actual_work_minutes' => $this->when($technical && ! $own, fn () => isset($this->actual_work_minutes) ? (int) $this->actual_work_minutes : ($this->relationLoaded('worklogs') ? (int) $this->worklogs->sum('minutes_spent') : 0)),
             'latest_development_update' => $this->when($technical && ! $own && $this->relationLoaded('developmentUpdates'), fn () => ($latest = $this->developmentUpdates->first()) ? ['progress_percentage' => $latest->progress_percentage, 'summary' => $latest->summary, 'blockers' => $latest->blockers ?? [], 'created_at' => $latest->created_at?->toISOString()] : null),
+
+            // QA Phase 9 fields
+            'qa_assignee' => $this->whenLoaded('qaAssignee', fn () => $this->qaAssignee ? ['id' => $this->qaAssignee->id, 'name' => $this->qaAssignee->name] : null),
+            'qa_assigned_by' => $this->when($technical && ! $own && $this->relationLoaded('qaAssignedBy'), fn () => $this->qaAssignedBy ? ['id' => $this->qaAssignedBy->id, 'name' => $this->qaAssignedBy->name] : null),
+            'qa_assigned_at' => $this->when($technical && ! $own, $this->qa_assigned_at?->toISOString()),
+            'qa_started_at' => $this->when($technical && ! $own, $this->qa_started_at?->toISOString()),
+            'qa_completed_at' => $this->when($technical && ! $own, $this->qa_completed_at?->toISOString()),
+            'qa_cycle_number' => (int) $this->qa_cycle_number,
+            'latest_qa_result' => $this->latest_qa_result,
+            'ready_for_uat_at' => $this->ready_for_uat_at?->toISOString(),
+            'defect_count' => (int) $defectCount,
+            'defect_open_count' => (int) $defectOpenCount,
         ];
     }
 
@@ -71,11 +86,44 @@ class TicketResource extends JsonResource
             return ['start_development'];
         }
         if ($request->user()?->hasPermission('ticket.development.update') && $this->status === TicketStatus::DevelopmentInProgress && $this->current_assignee_id === $request->user()?->id) {
+            $hasDefects = $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->exists();
+            if ($hasDefects) {
+                $actions = ['start_rework_defect', 'resolve_defect'];
+
+                // Retest conditions checking
+                $lastFailure = $this->histories()->where('to_status', 'qa_failed')->latest()->first();
+                if ($lastFailure) {
+                    $hasReworkWorklog = $this->worklogs()->where('created_at', '>', $lastFailure->created_at)->where('activity_type', 'rework')->exists();
+                    $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>', $lastFailure->created_at)->exists();
+                    $hasNoActiveInternal = ! $this->internalTestRuns()->where('status', 'in_progress')->exists();
+
+                    if ($hasReworkWorklog && $hasPassedInternal && $hasNoActiveInternal && $this->progress_percentage === 100) {
+                        $actions[] = 'submit_qa_retest';
+                    }
+                }
+
+                return $actions;
+            }
+
             return ['add_worklog', 'update_progress', 'upload_evidence', 'manage_test_cases', ...($this->progress_percentage === 100 ? ['start_internal_testing'] : [])];
         }
         if ($request->user()?->hasPermission('ticket.internal_test_run.manage') && $this->status === TicketStatus::InternalTesting && $this->current_assignee_id === $request->user()?->id) {
             return ['record_test_result', 'complete_internal_testing'];
         }
+
+        // QA actions
+        if ($request->user()?->hasPermission('ticket.qa.assign') && $this->status === TicketStatus::ReadyForQa && $this->qa_assignee_id === null) {
+            return ['assign_qa'];
+        }
+        if ($request->user()?->hasPermission('ticket.qa.start') && $this->qa_assignee_id === $request->user()?->id) {
+            if ($this->status === TicketStatus::QaAssignment || $this->status === TicketStatus::QaRetest) {
+                return ['start_qa'];
+            }
+        }
+        if ($request->user()?->hasPermission('ticket.qa_test_run.manage') && $this->status === TicketStatus::QaInProgress && $this->qa_assignee_id === $request->user()?->id) {
+            return ['manage_qa', 'start_qa_run', 'record_qa_result', 'complete_qa_run', 'manage_test_cases', 'create_defect'];
+        }
+
         if (! $own) {
             return $this->status === TicketStatus::PendingValidation ? ['validate', 'request_revision', 'reject', 'transfer'] : [];
         }

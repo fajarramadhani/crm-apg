@@ -15,6 +15,12 @@ export type TicketState =
   | 'development_in_progress'
   | 'internal_testing'
   | 'ready_for_qa'
+  | 'qa_assignment'
+  | 'qa_in_progress'
+  | 'qa_failed'
+  | 'qa_retest'
+  | 'ready_for_uat'
+  | 'closed'
   | 'rejected'
   | 'transferred'
   | 'cancelled'
@@ -71,6 +77,11 @@ export interface TicketRecord {
   final_priority: { id: number; key: string; name: string } | null
   sla_policy: { id: number; response_minutes: number | null; resolution_minutes: number } | null
   assignee: { id: number; name: string } | null
+  qa_assignee: { id: number; name: string } | null
+  qa_cycle_number: number | null
+  qa_run_number: number | null
+  latest_qa_result: 'passed' | 'failed' | null
+  qa_defects?: QaDefectRecord[]
   response_due_at: string | null
   resolution_due_at: string | null
   sla_timezone: string | null
@@ -250,6 +261,62 @@ export interface DevelopmentDetail {
   updates: TicketDevelopmentUpdateRecord[]
   test_cases: InternalTestCaseRecord[]
   test_runs: InternalTestRunRecord[]
+}
+export interface QaTestCaseRecord {
+  id: number
+  case_number: string
+  title: string
+  test_type: string
+  preconditions: string | null
+  steps: string[]
+  expected_result: string
+  priority: string
+  is_active: boolean
+  created_at: string
+}
+export interface QaTestResultRecord {
+  id: number
+  qa_test_case_id: number
+  status: 'passed' | 'failed' | 'blocked' | 'not_run'
+  actual_result: string | null
+  notes: string | null
+  executed_by?: { id: number; name: string }
+  executed_at?: string
+}
+export interface QaTestRunRecord {
+  id: number
+  run_number: number
+  cycle_number: number
+  environment: string
+  status: 'in_progress' | 'passed' | 'failed'
+  started_at: string
+  completed_at: string | null
+  summary: string | null
+  results?: QaTestResultRecord[]
+}
+export interface QaDefectRecord {
+  id: number
+  defect_number: string
+  title: string
+  description: string
+  status: 'open' | 'in_progress' | 'resolved' | 'retest' | 'verified' | 'reopened' | 'closed'
+  severity: 'minor' | 'major' | 'critical' | 'blocker'
+  priority: 'low' | 'medium' | 'high' | 'urgent'
+  steps_to_reproduce: string | null
+  expected_result: string | null
+  actual_result: string | null
+  resolution_notes: string | null
+  resolved_at: string | null
+  verified_at: string | null
+  qa_test_run_id: number | null
+  qa_test_case_id: number | null
+  created_by?: { id: number; name: string }
+  created_at: string
+}
+export interface QaUserWorkload {
+  id: number
+  name: string
+  active_tickets_count: number
 }
 export interface TicketPayload {
   ticket_category_id: number
@@ -450,4 +517,83 @@ export const ticketService = {
     apiClient.get<TicketPage>(`/it-lead/development-queue?${query(filters)}`),
   developmentDetail: (id: number) =>
     data(apiClient.get<ApiResponse<DevelopmentDetail>>(`/it-lead/tickets/${id}/development`)),
+
+  // IT Lead QA penugasan
+  assignQa: (id: number, payload: { qa_user_id: number; notes?: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/it-lead/tickets/${id}/assign-qa`, payload)),
+  qaWorkloads: () => data(apiClient.get<ApiResponse<QaUserWorkload[]>>('/it-lead/qa-workloads')),
+
+  // QA pengujian & eksekusi
+  qaStart: (id: number) => data(apiClient.post<ApiResponse<TicketRecord>>(`/qa/tickets/${id}/start`, {})),
+  qaTestCases: (id: number) => data(apiClient.get<ApiResponse<QaTestCaseRecord[]>>(`/qa/tickets/${id}/test-cases`)),
+  createQaTestCase: (
+    id: number,
+    payload: {
+      case_number: string
+      title: string
+      test_type: string
+      preconditions?: string
+      steps: string[]
+      expected_result: string
+      priority: string
+    },
+  ) => data(apiClient.post<ApiResponse<QaTestCaseRecord>>(`/qa/tickets/${id}/test-cases`, payload)),
+  updateQaTestCase: (
+    ticketId: number,
+    caseId: number,
+    payload: {
+      case_number: string
+      title: string
+      test_type: string
+      preconditions?: string
+      steps: string[]
+      expected_result: string
+      priority: string
+    },
+  ) => data(apiClient.put<ApiResponse<QaTestCaseRecord>>(`/qa/tickets/${ticketId}/test-cases/${caseId}`, payload)),
+  deactivateQaTestCase: (ticketId: number, caseId: number) =>
+    data(apiClient.delete<ApiResponse<QaTestCaseRecord>>(`/qa/tickets/${ticketId}/test-cases/${caseId}`)),
+  qaTestRuns: (id: number) => data(apiClient.get<ApiResponse<QaTestRunRecord[]>>(`/qa/tickets/${id}/test-runs`)),
+  startQaTestRun: (id: number, payload: { environment: string; build_reference?: string; summary?: string }) =>
+    data(apiClient.post<ApiResponse<QaTestRunRecord>>(`/qa/tickets/${id}/test-runs`, payload)),
+  recordQaTestResult: (
+    ticketId: number,
+    runId: number,
+    payload: { qa_test_case_id: number; status: string; actual_result?: string; notes?: string },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<QaTestResultRecord>>(`/qa/tickets/${ticketId}/test-runs/${runId}/results`, payload),
+    ),
+  completeQaTestRun: (ticketId: number, runId: number, summary?: string) =>
+    data(
+      apiClient.post<ApiResponse<QaTestRunRecord>>(`/qa/tickets/${ticketId}/test-runs/${runId}/complete`, { summary }),
+    ),
+  createQaDefect: (
+    id: number,
+    payload: {
+      qa_test_run_id: number
+      qa_test_case_id?: number
+      title: string
+      description: string
+      severity: string
+      priority: string
+      steps_to_reproduce?: string
+      expected_result?: string
+      actual_result?: string
+    },
+  ) => data(apiClient.post<ApiResponse<QaDefectRecord>>(`/qa/tickets/${id}/defects`, payload)),
+  verifyQaDefect: (ticketId: number, defectId: number, payload: { status: 'verified' | 'reopened'; notes?: string }) =>
+    data(apiClient.post<ApiResponse<QaDefectRecord>>(`/qa/tickets/${ticketId}/defects/${defectId}/verify`, payload)),
+  reopenQaDefect: (ticketId: number, defectId: number, payload: { notes?: string }) =>
+    data(apiClient.post<ApiResponse<QaDefectRecord>>(`/qa/tickets/${ticketId}/defects/${defectId}/reopen`, payload)),
+
+  // PIC Rework
+  startDefectFix: (ticketId: number, defectId: number) =>
+    data(apiClient.post<ApiResponse<QaDefectRecord>>(`/pic/tickets/${ticketId}/qa-defects/${defectId}/start`, {})),
+  resolveDefect: (ticketId: number, defectId: number, payload: { resolution_notes: string }) =>
+    data(
+      apiClient.post<ApiResponse<QaDefectRecord>>(`/pic/tickets/${ticketId}/qa-defects/${defectId}/resolve`, payload),
+    ),
+  submitQaRetest: (id: number) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/submit-qa-retest`, {})),
 }
