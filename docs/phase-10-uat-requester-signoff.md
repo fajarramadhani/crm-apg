@@ -114,7 +114,7 @@ Hasil rilis yang tervalidasi:
 Status commit:
 
 - Commit message: `feat: implement UAT execution rework and requester sign-off`.
-- Commit hash: `c72a836da7d0f90ec9a4ec986f1eef9f3aeb514b`.
+- Commit hash: `d4d0a237a27603b0a4447e42a4aaeea09d75e36a`.
 - Phase 10 source, migration, tests, frontend, and documentation are included in the commit.
 
 Phase 11 scope is **Approval and Release Preparation**. It is not started in this closure and must not be inferred from the `uat_approved` sign-off state.
