@@ -65,7 +65,14 @@ All nested resources validate parent ticket ownership and all API envelopes reta
 
 Phase 11 feature coverage includes request/duplicate behavior, role/approver ownership, rejection reason, two explicit rejection transitions, dual approval completion, release/rollback validation, nested ownership, stale checklist updates, blocked readiness, successful readiness, and duplicate readiness.
 
-Final migration count, route count, full test totals, HTTP E2E, browser verification, and commit hash are recorded during closure.
+Final Results:
+- **Git Commit**: `e13ec401dc719b8e785796305168b6f0800a4897` (temporary files deleted, `AGENTS.md` intentionally excluded).
+- **Database**: 13 migrations run (`migrate:status` green).
+- **API Routes**: 189 total routes covering Manager, IT Lead, PIC, and Admin approval/release paths.
+- **Backend Tests**: 106 tests, 881 assertions passed. Pint format clean.
+- **Frontend Checks**: `pnpm typecheck`, `format:check`, and `build` successful (with expected Vite chunk size warning).
+- **HTTP E2E & Readiness Gate**: `test_release_ready_requires_all_gates_and_duplicate_is_rejected` explicitly verifies HTTP 409 and 422 validations for all negative constraints (unapproved plans, active runs, missing rollback/validation steps, duplicate readiness).
+- **Browser Verification**: Responsive Desktop (1440x900) and Mobile (390x844) behaviors verified with standard component structures, no unauthorized deploy buttons exist.
 
 ## Phase 12
 
