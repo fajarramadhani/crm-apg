@@ -8,27 +8,26 @@ use App\Http\Requests\Ticket\Phase12\RespondConfirmationRequest;
 use App\Http\Resources\Api\V1\TicketResource;
 use App\Models\Ticket;
 use App\Services\TicketClosureService;
+use App\Services\TicketRequesterConfirmationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
 class TicketClosureController extends Controller
 {
     public function __construct(
-        private TicketClosureService $closureService
+        private TicketClosureService $closureService,
+        private TicketRequesterConfirmationService $confirmationService
     ) {}
 
     public function respondToConfirmation(RespondConfirmationRequest $request, Ticket $ticket): JsonResponse
     {
         Gate::authorize('view', $ticket);
 
-        // This should primarily be the requester, but for Phase 12 IT Lead or Supervisor might also do it?
-        // Actually the policy says requester, let's keep it simple. But Phase 3 says Requester can confirm.
-        // I will just use the policy defined in TicketPolicy if it exists, or just ensure the user is the requester.
-        if ($request->user()->id !== $ticket->requester_id && ! $request->user()->hasRole('it_lead')) {
-            abort(403, 'Unauthorized to respond to confirmation.');
+        if ($request->user()->id !== $ticket->requester_id) {
+            abort(403, 'Only the ticket requester can respond to this confirmation.');
         }
 
-        $this->closureService->respondToConfirmation($ticket, $request->user(), $request->validated());
+        $this->confirmationService->respondToConfirmation($ticket, $request->user(), $request->validated());
 
         return response()->json([
             'message' => 'Confirmation response recorded successfully.',

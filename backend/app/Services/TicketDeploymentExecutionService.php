@@ -12,6 +12,7 @@ use App\Models\TicketDeployment;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class TicketDeploymentExecutionService
 {
@@ -89,7 +90,14 @@ class TicketDeploymentExecutionService
             throw new InvalidArgumentException('Only in progress deployments can be completed.');
         }
 
-        // Validate required steps are complete (or not, depending on strictness - we'll allow overriding for now if PIC explicitly completes)
+        $hasPendingRequired = $deployment->steps()
+            ->where('is_required', true)
+            ->where('status', '!=', DeploymentStepStatus::Completed)
+            ->exists();
+
+        if ($hasPendingRequired) {
+            throw new HttpException(400, 'Cannot complete deployment because there are pending required steps.');
+        }
 
         return DB::transaction(function () use ($deployment, $actor, $summary) {
             $ticket = $deployment->ticket;

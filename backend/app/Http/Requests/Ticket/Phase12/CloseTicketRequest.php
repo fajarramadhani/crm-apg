@@ -15,8 +15,8 @@ class CloseTicketRequest extends FormRequest
     {
         return [
             'closure_summary' => 'required|string',
-            'resolution_summary' => 'nullable|string',
-            'business_outcome' => 'nullable|string',
+            'resolution_summary' => 'required|string',
+            'business_outcome' => 'required|string',
             'final_sla_result' => 'nullable|string',
         ];
     }

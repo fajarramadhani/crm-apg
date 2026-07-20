@@ -29,6 +29,16 @@ export type TicketState =
   | 'approval_revision'
   | 'release_preparation'
   | 'release_ready'
+  | 'deployment_scheduled'
+  | 'deployment_in_progress'
+  | 'deployment_failed'
+  | 'rollback_in_progress'
+  | 'rolled_back'
+  | 'deployed'
+  | 'monitoring'
+  | 'post_release_issue'
+  | 'awaiting_requester_confirmation'
+  | 'reopened'
   | 'closed'
   | 'rejected'
   | 'transferred'
@@ -61,6 +71,88 @@ export interface TicketCommentRecord {
   user?: { id: number; name: string }
   created_at: string
 }
+
+export interface TicketDeploymentStepRecord {
+  id: number
+  deployment_id: number
+  step_number: number
+  title: string
+  description?: string
+  step_type: string
+  is_required: boolean
+  status: 'pending' | 'in_progress' | 'completed' | 'failed' | 'skipped'
+  executed_by?: number
+  started_at?: string
+  completed_at?: string
+  notes?: string
+  evidence_attachment_id?: number
+}
+
+export interface TicketDeploymentRecord {
+  id: number
+  ticket_id: number
+  deployment_number: string
+  cycle_number: number
+  title: string
+  description?: string
+  environment: string
+  release_version: string
+  scheduled_start_at: string
+  scheduled_end_at?: string
+  actual_start_at?: string
+  actual_end_at?: string
+  status: 'scheduled' | 'in_progress' | 'succeeded' | 'failed' | 'cancelled'
+  deployment_summary?: string
+  result_summary?: string
+  deployment_owner_id: number
+  release_owner_id: number
+  approved_by?: number
+  steps?: TicketDeploymentStepRecord[]
+}
+
+export interface TicketMonitoringSessionRecord {
+  id: number
+  ticket_id: number
+  session_number: string
+  cycle_number: number
+  started_at: string
+  ended_at?: string
+  status: 'active' | 'completed' | 'incident_reported'
+  started_by: number
+  completed_by?: number
+  overall_result?: 'healthy' | 'unstable' | 'failed'
+  notes?: string
+}
+
+export interface TicketPostReleaseIncidentRecord {
+  id: number
+  ticket_id: number
+  monitoring_session_id?: number
+  incident_number: string
+  title: string
+  description: string
+  reported_at: string
+  reported_by: number
+  assigned_to: number
+  status: 'open' | 'investigating' | 'resolved'
+  business_impact?: string
+  resolution_summary?: string
+  resolved_at?: string
+}
+
+export interface TicketClosureRecord {
+  id: number
+  ticket_id: number
+  closure_summary: string
+  resolution_summary: string
+  business_outcome?: string
+  knowledge_base_reference?: string
+  closed_at: string
+  closed_by: number
+  sla_met: boolean
+  sla_breach_reason?: string
+}
+
 export interface TicketRecord {
   id: number
   ticket_number: string
@@ -170,6 +262,24 @@ export interface TicketRecord {
   attachments: TicketAttachmentRecord[]
   comments: TicketCommentRecord[]
   history: TicketHistoryRecord[]
+
+  // Phase 12 additions
+  deployment_cycle_number?: number
+  deployment_scheduled_at?: string
+  deployment_started_at?: string
+  deployed_at?: string
+  monitoring_started_at?: string
+  monitoring_completed_at?: string
+  requester_confirmation_requested_at?: string
+  requester_confirmed_at?: string
+  closed_at?: string
+  closed_by?: number
+  latest_deployment_result?: string
+  current_deployment_id?: number
+  current_monitoring_session_id?: number
+  post_release_status?: string
+  current_deployment?: TicketDeploymentRecord
+  current_monitoring_session?: TicketMonitoringSessionRecord
 }
 export interface TicketAnalysisRecord {
   id: number
@@ -734,6 +844,38 @@ export const ticketService = {
     apiClient.get<TicketPage>(`/it-lead/uat-assignment-queue?${query(filters)}`),
   assignUat: (id: number, payload: { requester_user_id: number; notes?: string }) =>
     data(apiClient.post<ApiResponse<TicketRecord>>(`/it-lead/tickets/${id}/assign-uat`, payload)),
+
+  // Phase 12 - Deployment & Monitoring
+  deploymentQueue: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/it-lead/deployment-queue?${query(filters)}`),
+  scheduleDeployment: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketDeploymentRecord>>(`/tickets/${id}/deployments/schedule`, payload)),
+  startDeployment: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketDeploymentRecord>>(`/tickets/${id}/deployments/start`, payload)),
+  manageDeploymentStep: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketDeploymentStepRecord>>(`/tickets/${id}/deployments/step`, payload)),
+  completeDeployment: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketDeploymentRecord>>(`/tickets/${id}/deployments/complete`, payload)),
+  failDeployment: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketDeploymentRecord>>(`/tickets/${id}/deployments/fail`, payload)),
+
+  startMonitoring: (id: number) =>
+    data(apiClient.post<ApiResponse<TicketMonitoringSessionRecord>>(`/tickets/${id}/monitoring/start`, {})),
+  completeMonitoring: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketMonitoringSessionRecord>>(`/tickets/${id}/monitoring/complete`, payload)),
+  reportIncident: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketPostReleaseIncidentRecord>>(`/tickets/${id}/monitoring/incident`, payload)),
+
+  // IT Lead Closure
+  closeTicket: (id: number, payload: any) =>
+    data(apiClient.post<ApiResponse<TicketClosureRecord>>(`/tickets/${id}/close`, payload)),
+
+  // Requester Confirmations
+  requesterConfirmationsQueue: () => data(apiClient.get<ApiResponse<TicketRecord[]>>(`/requester/confirmations`)),
+  submitRequesterConfirmation: (
+    id: number,
+    payload: { status: 'accepted' | 'rejected'; rejection_reason?: string; notes?: string },
+  ) => data(apiClient.post<ApiResponse<any>>(`/tickets/${id}/confirmation`, payload)),
 
   // Requester UAT Workspace
   requesterUatAssignments: () => data(apiClient.get<ApiResponse<TicketRecord[]>>('/requester/uat-assignments')),

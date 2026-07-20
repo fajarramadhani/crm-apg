@@ -24,11 +24,12 @@ class TicketRollbackService
         $rollbackPlan = $deployment->rollbackPlan;
 
         return DB::transaction(function () use ($ticket, $deployment, $rollbackPlan, $actor, $data) {
+            $lockedTicket = Ticket::where('id', $ticket->id)->lockForUpdate()->first();
             $count = TicketRollbackExecution::where('deployment_id', $deployment->id)->count();
             $rollbackNumber = $deployment->deployment_number.'-RB-'.str_pad($count + 1, 2, '0', STR_PAD_LEFT);
 
             $rollback = TicketRollbackExecution::create([
-                'ticket_id' => $ticket->id,
+                'ticket_id' => $lockedTicket->id,
                 'deployment_id' => $deployment->id,
                 'rollback_plan_id' => $rollbackPlan?->id,
                 'rollback_number' => $rollbackNumber,
@@ -41,10 +42,10 @@ class TicketRollbackService
                 'status' => RollbackStatus::InProgress,
             ]);
 
-            $ticket->status = TicketStatus::RollbackInProgress;
-            $ticket->save();
+            $lockedTicket->status = TicketStatus::RollbackInProgress;
+            $lockedTicket->save();
 
-            $ticket->histories()->create([
+            $lockedTicket->histories()->create([
                 'from_status' => TicketStatus::DeploymentFailed->value,
                 'to_status' => TicketStatus::RollbackInProgress->value,
                 'action' => 'rollback_started',
@@ -66,7 +67,7 @@ class TicketRollbackService
         }
 
         return DB::transaction(function () use ($rollback, $actor, $summary) {
-            $ticket = $rollback->ticket;
+            $ticket = Ticket::where('id', $rollback->ticket_id)->lockForUpdate()->first();
 
             $rollback->status = RollbackStatus::Completed;
             $rollback->completed_at = now();
@@ -83,6 +84,18 @@ class TicketRollbackService
                 'actor_id' => $actor->id,
                 'actor_role' => $actor->role_id ?? 'system',
                 'notes' => 'Rollback completed: '.$summary,
+            ]);
+
+            $ticket->status = TicketStatus::DevelopmentInProgress;
+            $ticket->save();
+
+            $ticket->histories()->create([
+                'from_status' => TicketStatus::RolledBack->value,
+                'to_status' => TicketStatus::DevelopmentInProgress->value,
+                'action' => 'development_started',
+                'actor_id' => $actor->id,
+                'actor_role' => $actor->role_id ?? 'system',
+                'notes' => 'Ticket moved back to development after successful rollback.',
             ]);
 
             event(new TicketRollbackCompleted($ticket, $actor));

@@ -25,11 +25,12 @@ class TicketMonitoringService
         }
 
         return DB::transaction(function () use ($ticket, $deployment, $actor, $data) {
+            $lockedTicket = Ticket::where('id', $ticket->id)->lockForUpdate()->first();
             $count = TicketMonitoringSession::where('deployment_id', $deployment->id)->count();
             $cycleNumber = $count + 1;
 
             $session = TicketMonitoringSession::create([
-                'ticket_id' => $ticket->id,
+                'ticket_id' => $lockedTicket->id,
                 'deployment_id' => $deployment->id,
                 'cycle_number' => $cycleNumber,
                 'started_by' => $actor->id,
@@ -38,10 +39,10 @@ class TicketMonitoringService
                 'status' => MonitoringStatus::Active,
             ]);
 
-            $ticket->status = TicketStatus::Monitoring;
-            $ticket->save();
+            $lockedTicket->status = TicketStatus::Monitoring;
+            $lockedTicket->save();
 
-            $ticket->histories()->create([
+            $lockedTicket->histories()->create([
                 'from_status' => TicketStatus::Deployed->value,
                 'to_status' => TicketStatus::Monitoring->value,
                 'action' => 'monitoring_started',
@@ -63,9 +64,10 @@ class TicketMonitoringService
         }
 
         return DB::transaction(function () use ($session, $data, $actor) {
-            $count = $session->checks()->count();
+            $lockedSession = TicketMonitoringSession::where('id', $session->id)->lockForUpdate()->first();
+            $count = $lockedSession->checks()->count();
 
-            $check = $session->checks()->create([
+            $check = $lockedSession->checks()->create([
                 'check_number' => $count + 1,
                 'category' => $data['category'] ?? 'general',
                 'title' => $data['title'],
@@ -92,12 +94,13 @@ class TicketMonitoringService
         }
 
         return DB::transaction(function () use ($session, $data, $actor) {
-            $count = $session->incidents()->count();
-            $incidentNumber = 'INC-'.$session->deployment->deployment_number.'-'.str_pad($count + 1, 2, '0', STR_PAD_LEFT);
+            $lockedSession = TicketMonitoringSession::where('id', $session->id)->lockForUpdate()->first();
+            $count = $lockedSession->incidents()->count();
+            $incidentNumber = 'INC-'.$lockedSession->deployment->deployment_number.'-'.str_pad($count + 1, 2, '0', STR_PAD_LEFT);
 
-            $incident = $session->incidents()->create([
-                'ticket_id' => $session->ticket_id,
-                'deployment_id' => $session->deployment_id,
+            $incident = $lockedSession->incidents()->create([
+                'ticket_id' => $lockedSession->ticket_id,
+                'deployment_id' => $lockedSession->deployment_id,
                 'incident_number' => $incidentNumber,
                 'reported_by' => $actor->id,
                 'assigned_to' => $data['assigned_to'] ?? null,
@@ -111,6 +114,21 @@ class TicketMonitoringService
 
             $session->ticket->touch();
 
+            if ($session->ticket->status !== TicketStatus::PostReleaseIssue) {
+                $session->ticket->status = TicketStatus::PostReleaseIssue;
+                $session->ticket->post_release_status = 'issue';
+                $session->ticket->save();
+
+                $session->ticket->histories()->create([
+                    'from_status' => TicketStatus::Monitoring->value,
+                    'to_status' => TicketStatus::PostReleaseIssue->value,
+                    'action' => 'post_release_issue_reported',
+                    'actor_id' => $actor->id,
+                    'actor_role' => $actor->role_id ?? 'system',
+                    'notes' => 'Ticket moved to post_release_issue due to incident: '.$incidentNumber,
+                ]);
+            }
+
             return $incident;
         });
     }
@@ -122,7 +140,7 @@ class TicketMonitoringService
         }
 
         return DB::transaction(function () use ($session, $actor, $data) {
-            $ticket = $session->ticket;
+            $ticket = Ticket::where('id', $session->ticket_id)->lockForUpdate()->first();
 
             $session->status = MonitoringStatus::Completed;
             $session->completed_at = now();

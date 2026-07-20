@@ -11,6 +11,7 @@ import UserDashboard from './pages/user/UserDashboard'
 import CreateTicket from './pages/user/CreateTicket'
 import TicketHistory from './pages/user/TicketHistory'
 import TicketDetail from './pages/user/TicketDetail'
+import Confirmations from './pages/user/Confirmations'
 import UAT from './pages/user/UAT'
 import SupervisorDashboard from './pages/supervisor/SupervisorDashboard'
 import ValidationQueue from './pages/supervisor/ValidationQueue'
@@ -19,6 +20,7 @@ import TriageQueue from './pages/itlead/TriageQueue'
 import PriorityAssignment from './pages/itlead/PriorityAssignment'
 import PlanReview from './pages/itlead/PlanReview'
 import DevelopmentMonitoring from './pages/itlead/DevelopmentMonitoring'
+import DeploymentQueue from './pages/itlead/DeploymentQueue'
 import UatAssignmentQueue from './pages/itlead/UatAssignmentQueue'
 import ReleasePreparation from './pages/itlead/ReleasePreparation'
 import PICDashboard from './pages/pic/PICDashboard'
@@ -113,6 +115,7 @@ function AppRoutes() {
         <Route path="/user/create-ticket" element={guard(['requester'], <CreateTicket />)} />
         <Route path="/user/tickets" element={guard(['requester'], <TicketHistory />)} />
         <Route path="/user/tickets/:id" element={guard(['requester'], <TicketDetail />)} />
+        <Route path="/user/confirmations" element={guard(['requester'], <Confirmations />)} />
         <Route path="/user/uat" element={guard(['requester'], <UAT />)} />
         <Route path="/supervisor/dashboard" element={guard(['supervisor'], <SupervisorDashboard />)} />
         <Route path="/supervisor/validation-queue" element={guard(['supervisor'], <ValidationQueue />)} />
@@ -123,6 +126,7 @@ function AppRoutes() {
         <Route path="/itlead/development" element={guard(['it_lead'], <DevelopmentMonitoring />)} />
         <Route path="/itlead/uat-assignment" element={guard(['it_lead'], <UatAssignmentQueue />)} />
         <Route path="/itlead/release-preparation" element={guard(['it_lead'], <ReleasePreparation />)} />
+        <Route path="/itlead/deployment" element={guard(['it_lead'], <DeploymentQueue />)} />
         <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
         <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
         <Route path="/pic/rca" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />

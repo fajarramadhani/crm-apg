@@ -13,7 +13,19 @@ class TicketReleasePlan extends Model
 
     protected function casts(): array
     {
-        return ['affected_components' => 'array', 'dependencies' => 'array', 'data_migration_required' => 'boolean', 'downtime_required' => 'boolean', 'proposed_start_at' => 'datetime', 'validation_steps' => 'array', 'monitoring_plan' => 'array'];
+        return [
+            'affected_components' => 'array',
+            'dependencies' => 'array',
+            'data_migration_required' => 'boolean',
+            'downtime_required' => 'boolean',
+            'proposed_start_at' => 'datetime',
+            'validation_steps' => 'array',
+            'monitoring_plan' => 'array',
+            'pre_deployment_steps' => 'array',
+            'deployment_steps' => 'array',
+            'database_execution_steps' => 'array',
+            'post_deployment_steps' => 'array',
+        ];
     }
 
     public function ticket(): BelongsTo

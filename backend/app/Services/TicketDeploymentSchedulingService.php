@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\DeploymentStatus;
+use App\Enums\DeploymentStepStatus;
 use App\Enums\TicketStatus;
 use App\Events\TicketDeploymentScheduled;
 use App\Models\Ticket;
@@ -28,8 +29,10 @@ class TicketDeploymentSchedulingService
         $rollbackPlan = $ticket->rollbackPlans()->latest('version')->first();
 
         return DB::transaction(function () use ($ticket, $data, $actor, $releasePlan, $rollbackPlan) {
-            $ticketNumberForDeployment = $ticket->ticket_number;
-            $count = TicketDeployment::where('ticket_id', $ticket->id)->count();
+            $lockedTicket = Ticket::where('id', $ticket->id)->lockForUpdate()->first();
+
+            $ticketNumberForDeployment = $lockedTicket->ticket_number;
+            $count = TicketDeployment::where('ticket_id', $lockedTicket->id)->count();
             $deploymentNumber = $ticketNumberForDeployment.'-DEP-'.str_pad($count + 1, 2, '0', STR_PAD_LEFT);
 
             $deployment = TicketDeployment::create([
@@ -52,12 +55,12 @@ class TicketDeploymentSchedulingService
                 'scheduled_by' => $actor->id,
             ]);
 
-            $ticket->deployment_cycle_number += 1;
-            $ticket->status = TicketStatus::DeploymentScheduled;
-            $ticket->current_deployment_id = $deployment->id;
-            $ticket->save();
+            $lockedTicket->deployment_cycle_number += 1;
+            $lockedTicket->status = TicketStatus::DeploymentScheduled;
+            $lockedTicket->current_deployment_id = $deployment->id;
+            $lockedTicket->save();
 
-            $ticket->histories()->create([
+            $lockedTicket->histories()->create([
                 'from_status' => TicketStatus::ReleaseReady->value,
                 'to_status' => TicketStatus::DeploymentScheduled->value,
                 'action' => 'deployment_scheduled',
@@ -75,9 +78,57 @@ class TicketDeploymentSchedulingService
                 'notes' => 'Deployment initially scheduled.',
             ]);
 
+            $this->createDeploymentSteps($deployment, $releasePlan, $actor);
+
             event(new TicketDeploymentScheduled($ticket, $actor));
 
             return $deployment;
         });
+    }
+
+    private function createDeploymentSteps(TicketDeployment $deployment, $releasePlan, User $actor): void
+    {
+        $stepNumber = 1;
+
+        $sections = [
+            'pre_deployment_steps' => 'pre_deployment',
+            'deployment_steps' => 'deployment',
+            'database_execution_steps' => 'database',
+            'validation_steps' => 'validation',
+            'post_deployment_steps' => 'post_deployment',
+        ];
+
+        $hasSteps = false;
+
+        foreach ($sections as $field => $stepType) {
+            $steps = $releasePlan->{$field} ?? [];
+            if (! is_array($steps)) {
+                continue;
+            }
+
+            foreach ($steps as $stepData) {
+                $hasSteps = true;
+                $deployment->steps()->create([
+                    'step_number' => $stepNumber++,
+                    'title' => $stepData['title'] ?? 'Step '.$stepNumber,
+                    'description' => $stepData['description'] ?? null,
+                    'step_type' => $stepType,
+                    'is_required' => $stepData['is_required'] ?? true,
+                    'status' => DeploymentStepStatus::Pending,
+                    'executed_by' => null,
+                ]);
+            }
+        }
+
+        if (! $hasSteps) {
+            $deployment->steps()->create([
+                'step_number' => 1,
+                'title' => 'Default Deployment Step',
+                'description' => 'Automatically generated step because no steps were found in release plan.',
+                'step_type' => 'deployment',
+                'is_required' => true,
+                'status' => DeploymentStepStatus::Pending,
+            ]);
+        }
     }
 }
