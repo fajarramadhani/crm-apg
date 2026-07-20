@@ -266,6 +266,12 @@ Upload validates size/MIME/extension, records checksum and scan state. Ticket mu
 
 UAT failure records both `uat_in_progress → uat_failed` and `uat_failed → development_in_progress` histories. `uat_approved` is a requester sign-off state only and does not start release approval or deployment.
 
+## Phase 11 Approval and Release Preparation
+
+IT Lead endpoints cover approval request/technical queues, release approval request, technical decision, release/rollback plan lifecycle, checklist decisions, and readiness confirmation. Manager endpoints cover assigned business approval queue/detail/decision. PIC endpoints cover assigned release preparation, plan/rollback contribution, and internal evidence. Admin endpoints manage checklist templates through deactivation rather than deletion.
+
+Invalid state, duplicate decision/readiness, and stale version return `409`. `release_ready` is terminal for Phase 11 and has no deployment endpoint.
+
 ## SLA, escalation, dashboards, reports
 
 | Method | Endpoint                               | Purpose                                      |

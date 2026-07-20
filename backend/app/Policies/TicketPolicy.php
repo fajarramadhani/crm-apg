@@ -10,7 +10,8 @@ class TicketPolicy
 {
     public function view(User $user, Ticket $ticket): bool
     {
-        return ($user->hasPermission('ticket.own.view') && $ticket->requester_id === $user->id)
+        return $user->hasPermission('ticket.all.view')
+            || ($user->hasPermission('ticket.own.view') && $ticket->requester_id === $user->id)
             || ($user->hasPermission('ticket.division.view') && $ticket->current_division_id === $user->division_id)
             || ($user->hasPermission('ticket.assigned.view') && $ticket->current_assignee_id === $user->id)
             || ($user->hasPermission('ticket.assigned.view') && $ticket->qa_assignee_id === $user->id)
@@ -77,5 +78,48 @@ class TicketPolicy
     public function executeUat(User $user, Ticket $ticket): bool
     {
         return $user->hasPermission('ticket.uat_assignment.view') && $ticket->uat_assignee_id === $user->id;
+    }
+
+    public function requestReleaseApproval(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.approval_request.create');
+    }
+
+    public function businessApprove(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.business_approval.approve') && $ticket->requester?->division_id === $user->division_id;
+    }
+
+    public function technicalApprove(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.technical_approval.approve');
+    }
+
+    public function viewReleasePreparation(User $user, Ticket $ticket): bool
+    {
+        if (! $user->hasPermission('ticket.release_plan.view')) {
+            return false;
+        }
+
+        return $user->hasRole('it_lead') || $ticket->current_assignee_id === $user->id || $ticket->release_owner_id === $user->id;
+    }
+
+    public function manageReleasePreparation(User $user, Ticket $ticket): bool
+    {
+        if (! $user->hasPermission('ticket.release_plan.manage')) {
+            return false;
+        }
+
+        return $user->hasRole('it_lead') || ($user->hasRole('pic') && $ticket->current_assignee_id === $user->id && $ticket->assignments()->where('assigned_to', $user->id)->where('is_current', true)->exists());
+    }
+
+    public function reviewReleasePlan(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.release_plan.review') && $user->hasRole('it_lead');
+    }
+
+    public function confirmReleaseReady(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.release_readiness.confirm') && $user->hasRole('it_lead');
     }
 }

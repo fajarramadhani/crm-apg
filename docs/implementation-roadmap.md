@@ -1,5 +1,9 @@
 # Implementation Roadmap
 
+## Phase 11 delivered scope
+
+Business approval, technical readiness, approval revision, versioned release/rollback plans, checklist templates/items/history, internal evidence, release ownership, and the `release_ready` gate are implemented without deployment execution. See `docs/phase-11-approval-release-preparation.md`.
+
 ## Phase 10 delivered scope
 
 UAT assignment queue, requester-owned UAT scenarios/runs/results, rejected-run rework, immutable UAT finding history, PIC rework gates, retest cycles, evidence authorization, requester sign-off, and responsive UAT workspaces are implemented and verified. See `docs/phase-10-uat-requester-signoff.md`.
@@ -86,11 +90,11 @@ Konfirmasi business decisions: identity topology, multi-role, approval path, wor
 
 **Acceptance:** accepted and rejected UAT paths, duplicate/stale conflicts, role boundaries, cross-ticket nested resource rejection, evidence redaction, HTTP E2E, and desktop/mobile browser verification are tested. Release approval and deployment are explicitly not started.
 
-## Phase 11 — Approval, deployment, monitoring, and closure
+## Phase 11 — Approval workflow and release preparation (implemented)
 
-**Scope:** notification preferences/templates, email delivery, retry/failure visibility, mark-read persistence, complete audit search/export/retention controls. Add real-time only if polling is insufficient.
+**Scope:** two-step approval, rejection/revision, versioned release and rollback planning, release checklist, evidence, release owner, and final release readiness.
 
-**Acceptance:** event/channel preference tests, idempotent delivery, authorized audit access, sensitive value redaction, failed-job operational procedure.
+**Acceptance:** role boundaries, optimistic/pessimistic concurrency, nested ownership, readiness blockers, redaction, HTTP E2E, responsive browser checks, and no deployment execution.
 
 ## Phase 12 — Knowledge Base
 

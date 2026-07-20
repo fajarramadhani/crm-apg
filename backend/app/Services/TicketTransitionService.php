@@ -9,6 +9,9 @@ use App\Events\TicketQaRetestSubmitted;
 use App\Events\TicketQaStarted;
 use App\Events\TicketReadyForUat;
 use App\Events\TicketRejected;
+use App\Events\TicketReleaseApprovalRequested;
+use App\Events\TicketReleasePreparationStarted;
+use App\Events\TicketReleaseReady;
 use App\Events\TicketResubmitted;
 use App\Events\TicketRevisionRequested;
 use App\Events\TicketTransferred;
@@ -112,9 +115,9 @@ final class TicketTransitionService
         return $fresh;
     }
 
-    private function transition(Ticket $ticket, User $actor, TicketStatus $from, TicketStatus $to, string $action, ?string $notes, ?string $commentType, ?callable $mutate, callable $dispatch): Ticket
+    private function transition(Ticket $ticket, User $actor, TicketStatus $from, TicketStatus $to, string $action, ?string $notes, ?string $commentType, ?callable $mutate, callable $dispatch, ?array $metadata = null): Ticket
     {
-        $fresh = DB::transaction(function () use ($ticket, $actor, $from, $to, $action, $notes, $commentType, $mutate): Ticket {
+        $fresh = DB::transaction(function () use ($ticket, $actor, $from, $to, $action, $notes, $commentType, $mutate, $metadata): Ticket {
             $locked = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
             if ($locked->status !== $from) {
                 throw new InvalidTicketTransition($locked->status->value);
@@ -124,7 +127,7 @@ final class TicketTransitionService
                 $mutate($locked);
             }
             $locked->save();
-            $this->history($locked, $actor, $from, $to, $action, $notes);
+            $this->history($locked, $actor, $from, $to, $action, $notes, $metadata);
             if ($commentType && $notes) {
                 $locked->comments()->create(['user_id' => $actor->id, 'type' => $commentType, 'comment' => $notes, 'is_internal' => false]);
             }
@@ -300,6 +303,61 @@ final class TicketTransitionService
         }, function (Ticket $fresh) use ($actor): void {
             TicketUatRetestSubmitted::dispatch($fresh, $actor);
         });
+    }
+
+    public function requestReleaseApproval(Ticket $ticket, User $actor, ?string $notes, ?array $metadata = null): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::UatApproved, TicketStatus::ApprovalPending, 'release_approval_requested', $notes, null, function (Ticket $locked): void {
+            $locked->approval_requested_at = now();
+            $locked->approval_cycle_number = ((int) $locked->approval_cycle_number) + 1;
+            $locked->latest_approval_result = 'pending';
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketReleaseApprovalRequested::dispatch($fresh, $actor);
+        }, $metadata);
+    }
+
+    public function startReleasePreparation(Ticket $ticket, User $actor): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::ApprovalPending, TicketStatus::ReleasePreparation, 'release_preparation_started', null, null, function (Ticket $locked): void {
+            $locked->release_preparation_started_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketReleasePreparationStarted::dispatch($fresh, $actor);
+        });
+    }
+
+    public function recordApprovalRevision(Ticket $ticket, User $actor, string $reason, ?array $metadata = null): Ticket
+    {
+        $fresh = DB::transaction(function () use ($ticket, $actor, $reason, $metadata): Ticket {
+            $locked = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
+            if ($locked->status !== TicketStatus::ApprovalPending) {
+                throw new InvalidTicketTransition($locked->status->value);
+            }
+            $locked->status = TicketStatus::ApprovalRevision;
+            $locked->latest_approval_result = 'rejected';
+            $locked->approval_completed_at = now();
+            $locked->save();
+            $this->history($locked, $actor, TicketStatus::ApprovalPending, TicketStatus::ApprovalRevision, 'approval_revision_requested', $reason, $metadata);
+
+            $locked->status = TicketStatus::DevelopmentInProgress;
+            $locked->progress_percentage = min(90, (int) $locked->progress_percentage);
+            $locked->latest_progress_at = now();
+            $locked->save();
+            $this->history($locked, $actor, TicketStatus::ApprovalRevision, TicketStatus::DevelopmentInProgress, 'approval_rework_started', $reason, $metadata);
+
+            return $locked->fresh();
+        });
+
+        return $fresh;
+    }
+
+    public function markReleaseReady(Ticket $ticket, User $actor, ?array $metadata = null): Ticket
+    {
+        return $this->transition($ticket, $actor, TicketStatus::ReleasePreparation, TicketStatus::ReleaseReady, 'release_ready', null, null, function (Ticket $locked): void {
+            $locked->release_ready_at = now();
+            $locked->approved_for_release_at = now();
+        }, function (Ticket $fresh) use ($actor): void {
+            TicketReleaseReady::dispatch($fresh, $actor);
+        }, $metadata);
     }
 
     private function history(Ticket $ticket, User $actor, ?TicketStatus $from, TicketStatus $to, string $action, ?string $notes, ?array $metadata = null): void

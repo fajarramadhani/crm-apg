@@ -136,6 +136,10 @@ export default function TicketDetail() {
     uat_failed: 'Ditemukan penyesuaian berdasarkan hasil UAT',
     uat_retest: 'Perbaikan sedang diuji ulang (UAT Retest)',
     uat_approved: 'UAT telah disetujui',
+    approval_pending: 'Menunggu persetujuan rilis',
+    approval_revision: 'Persetujuan rilis memerlukan revisi',
+    release_preparation: 'Persiapan rilis sedang dilakukan',
+    release_ready: 'Tiket siap dijadwalkan untuk rilis',
   }
 
   return (

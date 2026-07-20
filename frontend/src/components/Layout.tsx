@@ -24,6 +24,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/itlead/plan-review', label: 'Plan Review', icon: '✓' },
     { path: '/itlead/development', label: 'Development', icon: '⚙' },
     { path: '/itlead/uat-assignment', label: 'Penugasan UAT', icon: '🧪' },
+    { path: '/itlead/release-preparation', label: 'Approval & Release', icon: '🚦' },
     { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
@@ -31,6 +32,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/pic/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/pic/workspace', label: 'Workspace Tiket', icon: '💻' },
     { path: '/pic/rca', label: 'Root Cause Analysis', icon: '🔍' },
+    { path: '/pic/release-preparation', label: 'Persiapan Release', icon: '🚦' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   qa: [
@@ -39,7 +41,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   manager: [
-    { path: '/manager/approval', label: 'Manager Approval', icon: '✅' },
+    { path: '/manager/approvals', label: 'Business Approval', icon: '✅' },
     { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],

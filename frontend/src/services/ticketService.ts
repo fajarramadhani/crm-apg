@@ -25,6 +25,10 @@ export type TicketState =
   | 'uat_failed'
   | 'uat_retest'
   | 'uat_approved'
+  | 'approval_pending'
+  | 'approval_revision'
+  | 'release_preparation'
+  | 'release_ready'
   | 'closed'
   | 'rejected'
   | 'transferred'
@@ -110,6 +114,31 @@ export interface TicketRecord {
   uat_approved_at?: string | null
   uat_finding_count?: number
   uat_finding_open_count?: number
+  approval_requested_at?: string | null
+  approval_completed_at?: string | null
+  approved_for_release_at?: string | null
+  release_preparation_started_at?: string | null
+  release_ready_at?: string | null
+  release_risk_level?: string | null
+  release_owner?: { id: number; name: string } | null
+  approval_summary?: {
+    status: string | null
+    cycle_number: number | null
+    business_approval: string | null
+    technical_readiness: string | null
+    release_risk_level: string | null
+    proposed_release_at: string | null
+    revision_reason: string | null
+    technical_details_available: boolean
+  }
+  release_preparation?: {
+    plan_status: string | null
+    rollback_status: string | null
+    checklist_total: number
+    checklist_completed: number
+    checklist_blocked: number
+    release_ready_at: string | null
+  }
   progress_percentage: number
   latest_progress_at: string | null
   internal_testing_status: 'in_progress' | 'passed' | null
@@ -362,6 +391,88 @@ export interface PicOption {
   critical_count: number
   high_count: number
   workload_indicator: 'low' | 'medium' | 'high'
+}
+export interface ApprovalStepRecord {
+  id: number
+  step_type: 'business_approval' | 'technical_readiness'
+  sequence: number
+  status: 'pending' | 'approved' | 'rejected' | 'cancelled'
+  approver: { id: number; name: string }
+  assigned_at: string
+  acted_at: string | null
+  decision_notes: string | null
+  version: number
+}
+export interface ApprovalRequestRecord {
+  id: number
+  ticket?: { id: number; ticket_number: string; title: string; status: TicketState }
+  cycle_number: number
+  status: 'draft' | 'pending' | 'approved' | 'rejected' | 'cancelled'
+  summary: string
+  business_impact: string | null
+  release_risk_level: string
+  proposed_release_at: string | null
+  revision_reason: string | null
+  steps: ApprovalStepRecord[]
+  version: number
+}
+export interface ReleaseChecklistItemRecord {
+  id: number
+  ticket_id: number
+  release_plan_id: number
+  label: string
+  description: string | null
+  category: string
+  is_required: boolean
+  status: 'pending' | 'completed' | 'not_applicable' | 'blocked'
+  completed_by: { id: number; name: string } | null
+  completed_at: string | null
+  notes: string | null
+  version: number
+}
+export interface ReleasePlanRecord {
+  id: number
+  ticket_id: number
+  version: number
+  release_owner: { id: number; name: string }
+  release_type: string
+  target_environment: string
+  change_summary: string
+  technical_summary?: string
+  affected_components?: string[]
+  dependencies?: string[] | null
+  database_changes?: string | null
+  data_migration_required?: boolean
+  downtime_required: boolean
+  estimated_downtime_minutes: number | null
+  proposed_start_at: string | null
+  estimated_duration_minutes: number
+  validation_steps?: string[]
+  monitoring_plan?: string[]
+  communication_notes: string | null
+  status: string
+  lock_version: number
+  checklist_items?: ReleaseChecklistItemRecord[]
+}
+export interface RollbackPlanRecord {
+  id: number
+  ticket_id: number
+  release_plan_id: number
+  version: number
+  rollback_trigger?: string
+  rollback_steps?: string[]
+  data_recovery_steps?: string[] | null
+  estimated_rollback_minutes: number
+  validation_after_rollback?: string[]
+  responsible_user: { id: number; name: string }
+  status: string
+  lock_version: number
+}
+export interface ReleasePreparationRecord {
+  ticket: TicketRecord
+  approval: ApprovalRequestRecord | null
+  release_plan: ReleasePlanRecord | null
+  rollback_plan: RollbackPlanRecord | null
 }
 
 const data = async <T>(promise: Promise<ApiResponse<T>>): Promise<T> => (await promise).data
@@ -667,5 +778,91 @@ export const ticketService = {
     body.append('category', category)
     if (findingId) body.append('uat_finding_id', String(findingId))
     return data(apiClient.postForm<ApiResponse<TicketAttachmentRecord>>(`/pic/tickets/${id}/uat-evidence`, body))
+  },
+  releaseApprovalQueue: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/it-lead/approval-request-queue?${query(filters)}`),
+  requestReleaseApproval: (
+    id: number,
+    payload: { summary: string; business_impact?: string; release_risk_level: string; proposed_release_at?: string },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<ApprovalRequestRecord>>(`/it-lead/tickets/${id}/request-release-approval`, payload),
+    ),
+  technicalApprovalQueue: () =>
+    data(apiClient.get<ApiResponse<ApprovalRequestRecord[]>>('/it-lead/technical-approval-queue')),
+  businessApprovalQueue: () =>
+    data(apiClient.get<ApiResponse<ApprovalRequestRecord[]>>('/manager/business-approval-queue')),
+  businessApproval: (
+    id: number,
+    decision: 'approve' | 'reject',
+    payload: { notes?: string; expected_version: number },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<ApprovalRequestRecord>>(
+        `/manager/tickets/${id}/business-approval/${decision}`,
+        payload,
+      ),
+    ),
+  technicalApproval: (
+    id: number,
+    decision: 'approve' | 'reject',
+    payload: { notes?: string; expected_version: number },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<ApprovalRequestRecord>>(
+        `/it-lead/tickets/${id}/technical-approval/${decision}`,
+        payload,
+      ),
+    ),
+  releasePreparation: (id: number) =>
+    data(apiClient.get<ApiResponse<ReleasePreparationRecord>>(`/it-lead/tickets/${id}/release-preparation`)),
+  picReleasePreparation: (id: number) =>
+    data(apiClient.get<ApiResponse<ReleasePreparationRecord>>(`/pic/tickets/${id}/release-preparation`)),
+  createReleasePlan: (id: number, payload: Record<string, unknown>) =>
+    data(apiClient.post<ApiResponse<ReleasePlanRecord>>(`/it-lead/tickets/${id}/release-plan`, payload)),
+  createPicReleasePlan: (id: number, payload: Record<string, unknown>) =>
+    data(apiClient.post<ApiResponse<ReleasePlanRecord>>(`/pic/tickets/${id}/release-plan`, payload)),
+  submitReleasePlan: (ticketId: number, planId: number) =>
+    data(
+      apiClient.post<ApiResponse<ReleasePlanRecord>>(`/it-lead/tickets/${ticketId}/release-plan/${planId}/submit`, {}),
+    ),
+  reviewReleasePlan: (ticketId: number, planId: number, decision: 'approve' | 'request-revision') =>
+    data(
+      apiClient.post<ApiResponse<ReleasePlanRecord>>(
+        `/it-lead/tickets/${ticketId}/release-plan/${planId}/${decision}`,
+        { decision },
+      ),
+    ),
+  createRollbackPlan: (id: number, payload: Record<string, unknown>) =>
+    data(apiClient.post<ApiResponse<RollbackPlanRecord>>(`/it-lead/tickets/${id}/rollback-plan`, payload)),
+  createPicRollbackPlan: (id: number, payload: Record<string, unknown>) =>
+    data(apiClient.post<ApiResponse<RollbackPlanRecord>>(`/pic/tickets/${id}/rollback-plan`, payload)),
+  reviewRollbackPlan: (ticketId: number, planId: number, decision: 'approve' | 'request-revision') =>
+    data(
+      apiClient.post<ApiResponse<RollbackPlanRecord>>(
+        `/it-lead/tickets/${ticketId}/rollback-plan/${planId}/${decision}`,
+        { decision },
+      ),
+    ),
+  releaseChecklist: (id: number) =>
+    data(apiClient.get<ApiResponse<ReleaseChecklistItemRecord[]>>(`/it-lead/tickets/${id}/release-checklist`)),
+  updateReleaseChecklist: (
+    ticketId: number,
+    itemId: number,
+    payload: { status: string; notes?: string; expected_version: number },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<ReleaseChecklistItemRecord>>(
+        `/it-lead/tickets/${ticketId}/release-checklist/${itemId}/decision`,
+        payload,
+      ),
+    ),
+  confirmReleaseReady: (id: number) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/it-lead/tickets/${id}/confirm-release-ready`, {})),
+  uploadReleaseEvidence: (id: number, file: File, category: string) => {
+    const body = new FormData()
+    body.append('file', file)
+    body.append('category', category)
+    return data(apiClient.postForm<ApiResponse<unknown>>(`/pic/tickets/${id}/release-evidence`, body))
   },
 }

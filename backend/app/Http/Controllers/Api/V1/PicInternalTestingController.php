@@ -70,6 +70,6 @@ final class PicInternalTestingController extends Controller
 
     public function complete(CompleteInternalTestRunRequest $request, Ticket $ticket, TicketInternalTestRun $run, TicketInternalTestingService $service): JsonResponse
     {
-        return ApiResponse::success($request,'Internal test run completed',(new TicketInternalTestRunResource($service->complete($ticket,$run,$request->user(),$request->input('summary'))))->resolve($request));
+        return ApiResponse::success($request, 'Internal test run completed', (new TicketInternalTestRunResource($service->complete($ticket, $run, $request->user(), $request->input('summary'))))->resolve($request));
     }
 }

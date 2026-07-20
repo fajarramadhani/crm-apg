@@ -113,6 +113,12 @@ Executive sengaja tidak menerima `ticket.technical.view`. Endpoint dan route bis
 | Resolve assigned UAT finding         |               — |             — |          G | A if assigned |           — |          — |           — |              — |
 | Verify/reopen UAT finding            | O when assigned |             — |          G |               — |           — |          — |           — |              — |
 | Submit UAT retest                    |               — |             — |          G | A if assigned |           — |          — |           — |              — |
+| Request release approval             |               — |             — |          A |               — |           — |       View |        View |              — |
+| Business approval                    |               — |             — |       View |               — |        View | A assigned |   Aggregate |              — |
+| Technical readiness                  |               — |             — | A assigned |         Support |        View |       View |   Aggregate |              — |
+| Prepare release/rollback plan        |    Status only |   Status only |          A | A if assigned |        View |   Summary |        None |              — |
+| Complete release checklist           |               — |             — |          A | A if assigned | View subset |       View |   Aggregate | Templates only |
+| Confirm release ready                |               — |             — |          A |               — |           — |       View |   Aggregate |              — |
 | Approve/reject deployment            |               — |             — |  Recommend |               — |     Recommend | A/assigned |           — |              — |
 | Prepare deployment                   |               — |             — |          G |               A |      Verify A |    Approve |           — |              — |
 | Execute/confirm deployment           |               — |             — |          G | A if authorized |        Verify |       View |           — |              — |

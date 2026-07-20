@@ -1,14 +1,18 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AdminMasterDataController;
+use App\Http\Controllers\Api\V1\AdminReleaseChecklistTemplateController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ItLeadQaController;
+use App\Http\Controllers\Api\V1\ItLeadReleaseController;
 use App\Http\Controllers\Api\V1\ItLeadTicketController;
 use App\Http\Controllers\Api\V1\ItLeadUatController;
+use App\Http\Controllers\Api\V1\ManagerApprovalController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PicDevelopmentController;
 use App\Http\Controllers\Api\V1\PicInternalTestingController;
+use App\Http\Controllers\Api\V1\PicReleaseController;
 use App\Http\Controllers\Api\V1\PicReworkController;
 use App\Http\Controllers\Api\V1\PicTicketController;
 use App\Http\Controllers\Api\V1\PicUatReworkController;
@@ -81,6 +85,23 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/uat-assignment-queue', [ItLeadUatController::class, 'queue'])->middleware('permission:ticket.uat_assignment_queue.view');
             Route::post('/tickets/{ticket}/assign-uat', [ItLeadUatController::class, 'assignUat'])->middleware('permission:ticket.uat.assign');
             Route::get('/tickets/{ticket}/uat', [ItLeadUatController::class, 'show'])->middleware('permission:ticket.uat_assignment_queue.view');
+            Route::get('/approval-request-queue', [ItLeadReleaseController::class, 'approvalQueue'])->middleware('permission:ticket.approval_request.view');
+            Route::post('/tickets/{ticket}/request-release-approval', [ItLeadReleaseController::class, 'requestApproval'])->middleware('permission:ticket.approval_request.create');
+            Route::get('/technical-approval-queue', [ItLeadReleaseController::class, 'technicalQueue'])->middleware('permission:ticket.technical_approval_queue.view');
+            Route::post('/tickets/{ticket}/technical-approval/{decision}', [ItLeadReleaseController::class, 'technicalDecision'])->whereIn('decision', ['approve', 'reject'])->middleware('permission:ticket.technical_approval.approve');
+            Route::get('/tickets/{ticket}/release-preparation', [ItLeadReleaseController::class, 'preparation'])->middleware('permission:ticket.release_plan.view');
+            Route::get('/tickets/{ticket}/release-plan', [ItLeadReleaseController::class, 'preparation'])->middleware('permission:ticket.release_plan.view');
+            Route::post('/tickets/{ticket}/release-plan', [ItLeadReleaseController::class, 'storePlan'])->middleware('permission:ticket.release_plan.manage');
+            Route::put('/tickets/{ticket}/release-plan/{plan}', [ItLeadReleaseController::class, 'updatePlan'])->middleware('permission:ticket.release_plan.manage');
+            Route::post('/tickets/{ticket}/release-plan/{plan}/submit', [ItLeadReleaseController::class, 'submitPlan'])->middleware('permission:ticket.release_plan.manage');
+            Route::post('/tickets/{ticket}/release-plan/{plan}/{decision}', [ItLeadReleaseController::class, 'reviewPlan'])->whereIn('decision', ['approve', 'request-revision'])->middleware('permission:ticket.release_plan.review');
+            Route::get('/tickets/{ticket}/rollback-plan', [ItLeadReleaseController::class, 'preparation'])->middleware('permission:ticket.rollback_plan.view');
+            Route::post('/tickets/{ticket}/rollback-plan', [ItLeadReleaseController::class, 'storeRollback'])->middleware('permission:ticket.rollback_plan.manage');
+            Route::post('/tickets/{ticket}/rollback-plan/{plan}/submit', [ItLeadReleaseController::class, 'submitRollback'])->middleware('permission:ticket.rollback_plan.manage');
+            Route::post('/tickets/{ticket}/rollback-plan/{plan}/{decision}', [ItLeadReleaseController::class, 'reviewRollback'])->whereIn('decision', ['approve', 'request-revision'])->middleware('permission:ticket.rollback_plan.review');
+            Route::get('/tickets/{ticket}/release-checklist', [ItLeadReleaseController::class, 'checklist'])->middleware('permission:ticket.release_checklist.view');
+            Route::post('/tickets/{ticket}/release-checklist/{item}/decision', [ItLeadReleaseController::class, 'checklistDecision'])->middleware('permission:ticket.release_checklist.manage');
+            Route::post('/tickets/{ticket}/confirm-release-ready', [ItLeadReleaseController::class, 'confirmReady'])->middleware('permission:ticket.release_readiness.confirm');
         });
 
         Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {
@@ -123,6 +144,17 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/uat-findings/{finding}/resolve', [PicUatReworkController::class, 'resolveFinding'])->middleware('permission:ticket.uat_finding.resolve');
             Route::post('/tickets/{ticket}/submit-uat-retest', [PicUatReworkController::class, 'submitRetest'])->middleware('permission:ticket.uat_retest.submit');
             Route::post('/tickets/{ticket}/uat-evidence', [PicUatReworkController::class, 'uploadEvidence'])->middleware('permission:ticket.uat_rework.view');
+            Route::get('/tickets/{ticket}/release-preparation', [PicReleaseController::class, 'preparation'])->middleware('permission:ticket.release_plan.view');
+            Route::post('/tickets/{ticket}/release-plan', [PicReleaseController::class, 'storePlan'])->middleware('permission:ticket.release_plan.manage');
+            Route::post('/tickets/{ticket}/rollback-plan', [PicReleaseController::class, 'storeRollback'])->middleware('permission:ticket.rollback_plan.manage');
+            Route::post('/tickets/{ticket}/release-checklist/{item}/complete', [PicReleaseController::class, 'checklistDecision'])->middleware('permission:ticket.release_checklist.complete');
+            Route::post('/tickets/{ticket}/release-evidence', [PicReleaseController::class, 'uploadEvidence'])->middleware('permission:ticket.release_evidence.manage');
+        });
+
+        Route::prefix('manager')->middleware('permission:ticket.business_approval_queue.view')->name('api.v1.manager.')->group(function (): void {
+            Route::get('/business-approval-queue', [ManagerApprovalController::class, 'queue']);
+            Route::get('/tickets/{ticket}/approval', [ManagerApprovalController::class, 'show']);
+            Route::post('/tickets/{ticket}/business-approval/{decision}', [ManagerApprovalController::class, 'decide'])->whereIn('decision', ['approve', 'reject'])->middleware('permission:ticket.business_approval.approve');
         });
 
         Route::prefix('qa')->middleware('permission:ticket.assigned.view')->name('api.v1.qa.')->group(function (): void {
@@ -187,6 +219,10 @@ Route::prefix('v1')->group(function (): void {
         });
 
         Route::prefix('admin')->middleware('permission:master_data.manage')->name('api.v1.admin.')->group(function (): void {
+            Route::get('/release-checklist-templates', [AdminReleaseChecklistTemplateController::class, 'index'])->middleware('permission:ticket.release_checklist_template.manage');
+            Route::post('/release-checklist-templates', [AdminReleaseChecklistTemplateController::class, 'store'])->middleware('permission:ticket.release_checklist_template.manage');
+            Route::put('/release-checklist-templates/{template}', [AdminReleaseChecklistTemplateController::class, 'update'])->middleware('permission:ticket.release_checklist_template.manage');
+            Route::delete('/release-checklist-templates/{template}', [AdminReleaseChecklistTemplateController::class, 'destroy'])->middleware('permission:ticket.release_checklist_template.manage');
             Route::get('divisions', [AdminMasterDataController::class, 'divisions']);
             Route::post('divisions', [AdminMasterDataController::class, 'storeDivision']);
             Route::get('divisions/{division}', [AdminMasterDataController::class, 'showDivision']);

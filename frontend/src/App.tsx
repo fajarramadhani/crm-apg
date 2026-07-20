@@ -20,9 +20,11 @@ import PriorityAssignment from './pages/itlead/PriorityAssignment'
 import PlanReview from './pages/itlead/PlanReview'
 import DevelopmentMonitoring from './pages/itlead/DevelopmentMonitoring'
 import UatAssignmentQueue from './pages/itlead/UatAssignmentQueue'
+import ReleasePreparation from './pages/itlead/ReleasePreparation'
 import PICDashboard from './pages/pic/PICDashboard'
 import Workspace from './pages/pic/Workspace'
 import InternalTestingPIC from './pages/pic/InternalTesting'
+import ReleasePreparationPIC from './pages/pic/ReleasePreparation'
 import QADashboard from './pages/qa/QADashboard'
 import TestingForm from './pages/qa/TestingForm'
 import ManagerApproval from './pages/manager/ManagerApproval'
@@ -43,7 +45,7 @@ export const DEFAULT_ROUTES: Record<Role, string> = {
   it_lead: '/itlead/dashboard',
   pic: '/pic/dashboard',
   qa: '/qa/dashboard',
-  manager: '/manager/approval',
+  manager: '/manager/approvals',
   executive: '/executive/dashboard',
   admin: '/admin/console',
 }
@@ -120,10 +122,12 @@ function AppRoutes() {
         <Route path="/itlead/plan-review" element={guard(['it_lead'], <PlanReview />)} />
         <Route path="/itlead/development" element={guard(['it_lead'], <DevelopmentMonitoring />)} />
         <Route path="/itlead/uat-assignment" element={guard(['it_lead'], <UatAssignmentQueue />)} />
+        <Route path="/itlead/release-preparation" element={guard(['it_lead'], <ReleasePreparation />)} />
         <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
         <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
         <Route path="/pic/rca" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />
         <Route path="/pic/testing" element={guard(['pic'], <InternalTestingPIC />)} />
+        <Route path="/pic/release-preparation" element={guard(['pic'], <ReleasePreparationPIC />)} />
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
         <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />
         <Route path="/manager/approval" element={guard(['manager'], <ManagerApproval />)} />

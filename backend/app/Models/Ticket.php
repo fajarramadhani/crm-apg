@@ -17,7 +17,7 @@ class Ticket extends Model
 
     protected function casts(): array
     {
-        return ['status' => TicketStatus::class, 'incident_occurred_at' => 'datetime', 'target_needed_at' => 'datetime', 'submitted_at' => 'datetime', 'validated_at' => 'datetime', 'rejected_at' => 'datetime', 'triage_started_at' => 'datetime', 'assigned_at' => 'datetime', 'response_due_at' => 'datetime', 'resolution_due_at' => 'datetime', 'analysis_started_at' => 'datetime', 'analysis_completed_at' => 'datetime', 'plan_submitted_at' => 'datetime', 'plan_approved_at' => 'datetime', 'development_started_at' => 'datetime', 'development_completed_at' => 'datetime', 'internal_testing_started_at' => 'datetime', 'internal_testing_completed_at' => 'datetime', 'ready_for_qa_at' => 'datetime', 'latest_progress_at' => 'datetime', 'closed_at' => 'datetime', 'qa_assigned_at' => 'datetime', 'qa_started_at' => 'datetime', 'qa_completed_at' => 'datetime', 'ready_for_uat_at' => 'datetime', 'uat_assigned_at' => 'datetime', 'uat_started_at' => 'datetime', 'uat_completed_at' => 'datetime', 'uat_approved_at' => 'datetime'];
+        return ['status' => TicketStatus::class, 'incident_occurred_at' => 'datetime', 'target_needed_at' => 'datetime', 'submitted_at' => 'datetime', 'validated_at' => 'datetime', 'rejected_at' => 'datetime', 'triage_started_at' => 'datetime', 'assigned_at' => 'datetime', 'response_due_at' => 'datetime', 'resolution_due_at' => 'datetime', 'analysis_started_at' => 'datetime', 'analysis_completed_at' => 'datetime', 'plan_submitted_at' => 'datetime', 'plan_approved_at' => 'datetime', 'development_started_at' => 'datetime', 'development_completed_at' => 'datetime', 'internal_testing_started_at' => 'datetime', 'internal_testing_completed_at' => 'datetime', 'ready_for_qa_at' => 'datetime', 'latest_progress_at' => 'datetime', 'closed_at' => 'datetime', 'qa_assigned_at' => 'datetime', 'qa_started_at' => 'datetime', 'qa_completed_at' => 'datetime', 'ready_for_uat_at' => 'datetime', 'uat_assigned_at' => 'datetime', 'uat_started_at' => 'datetime', 'uat_completed_at' => 'datetime', 'uat_approved_at' => 'datetime', 'approval_requested_at' => 'datetime', 'approval_completed_at' => 'datetime', 'approved_for_release_at' => 'datetime', 'release_preparation_started_at' => 'datetime', 'release_ready_at' => 'datetime'];
     }
 
     public function requester(): BelongsTo
@@ -203,5 +203,30 @@ class Ticket extends Model
     public function uatFindings(): HasMany
     {
         return $this->hasMany(TicketUatFinding::class);
+    }
+
+    public function approvalRequests(): HasMany
+    {
+        return $this->hasMany(TicketApprovalRequest::class)->latest('cycle_number');
+    }
+
+    public function releasePlans(): HasMany
+    {
+        return $this->hasMany(TicketReleasePlan::class)->latest('version');
+    }
+
+    public function rollbackPlans(): HasMany
+    {
+        return $this->hasMany(TicketRollbackPlan::class)->latest('version');
+    }
+
+    public function releaseChecklistItems(): HasMany
+    {
+        return $this->hasMany(TicketReleaseChecklistItem::class);
+    }
+
+    public function releaseOwner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'release_owner_id');
     }
 }

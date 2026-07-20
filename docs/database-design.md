@@ -148,6 +148,10 @@ Phase 10 uses ticket-specific UAT records rather than shared mutable test data:
 | `ticket_uat_finding_sequences` | Row-locked per-ticket sequence for concurrency-safe finding numbers. |
 
 UAT evidence is linked through `ticket_attachments.uat_finding_id`; cross-ticket finding references are rejected. Internal PIC evidence remains hidden from requester and executive projections.
+
+### Phase 11 approval and release preparation
+
+Phase 11 adds ticket-level approval/release timestamps, release owner/risk, latest approval result, and cycle counters. Approval requests retain per-cycle business and technical steps with append-only action histories. Release and rollback plans use per-ticket versions plus optimistic lock versions. Checklist items are generated from active database templates and maintain append-only histories. These tables represent preparation only; no deployment execution table or transition is introduced in Phase 11.
 | `monitoring_records`     | id, ticket_id, deployment_id, owner_id, started_at, planned_end_at, ended_at, result, metrics_summary, incident_found, notes, timestamps                                                        | Post-deploy monitoring                           |
 | `closure_records`        | id, ticket_id unique, resolution_code, resolution_summary, closed_by, requester_confirmed_by nullable, requester_confirmed_at nullable, knowledge_article_id nullable, closed_at                | Closing evidence                                 |
 

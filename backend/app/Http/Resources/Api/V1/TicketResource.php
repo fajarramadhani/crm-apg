@@ -49,7 +49,7 @@ class TicketResource extends JsonResource
                 TicketStatus::InternalTesting => 'in_progress', TicketStatus::ReadyForQa => 'passed', default => null
             },
             'analysis_summary' => ['status' => $this->analysis_completed_at ? 'completed' : ($this->analysis_started_at ? 'in_progress' : 'not_started'), 'completed_at' => $this->analysis_completed_at?->toISOString()],
-            'solution_plan_summary' => ['status' => in_array($this->status, [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa, TicketStatus::QaAssignment, TicketStatus::QaInProgress, TicketStatus::QaFailed, TicketStatus::QaRetest, TicketStatus::ReadyForUat, TicketStatus::UatAssignment, TicketStatus::UatInProgress, TicketStatus::UatFailed, TicketStatus::UatRetest, TicketStatus::UatApproved], true) ? 'approved' : ($this->status === TicketStatus::PlanReview ? 'submitted' : ($this->current_solution_plan_id ? 'draft' : 'not_started')), 'submitted_at' => $this->plan_submitted_at?->toISOString(), 'approved_at' => $this->plan_approved_at?->toISOString()],
+            'solution_plan_summary' => ['status' => in_array($this->status, [TicketStatus::ReadyForDevelopment, TicketStatus::DevelopmentInProgress, TicketStatus::InternalTesting, TicketStatus::ReadyForQa, TicketStatus::QaAssignment, TicketStatus::QaInProgress, TicketStatus::QaFailed, TicketStatus::QaRetest, TicketStatus::ReadyForUat, TicketStatus::UatAssignment, TicketStatus::UatInProgress, TicketStatus::UatFailed, TicketStatus::UatRetest, TicketStatus::UatApproved, TicketStatus::ApprovalPending, TicketStatus::ApprovalRevision, TicketStatus::ReleasePreparation, TicketStatus::ReleaseReady], true) ? 'approved' : ($this->status === TicketStatus::PlanReview ? 'submitted' : ($this->current_solution_plan_id ? 'draft' : 'not_started')), 'submitted_at' => $this->plan_submitted_at?->toISOString(), 'approved_at' => $this->plan_approved_at?->toISOString()],
             'submitted_at' => $this->submitted_at?->toISOString(), 'validated_at' => $this->validated_at?->toISOString(), 'rejected_at' => $this->rejected_at?->toISOString(), 'created_at' => $this->created_at?->toISOString(), 'updated_at' => $this->updated_at?->toISOString(),
             'allowed_actions' => $this->allowedActions($request, $own),
             'attachments' => $safeAttachments === null ? [] : TicketAttachmentResource::collection($safeAttachments)->resolve($request),
@@ -83,6 +83,30 @@ class TicketResource extends JsonResource
             'uat_approved_at' => $this->uat_approved_at?->toISOString(),
             'uat_finding_count' => (int) $uatFindingCount,
             'uat_finding_open_count' => (int) $uatFindingOpenCount,
+
+            // Phase 11 release preparation summary. Technical plan contents stay in dedicated resources.
+            'approval_summary' => $this->when($this->relationLoaded('approvalRequests'), function () use ($technical): array {
+                $approval = $this->approvalRequests->sortByDesc('cycle_number')->first();
+                $steps = $approval?->relationLoaded('steps') ? $approval->steps : collect();
+
+                return [
+                    'status' => $approval?->status,
+                    'cycle_number' => $approval?->cycle_number,
+                    'business_approval' => $steps->firstWhere('step_type', 'business_approval')?->status,
+                    'technical_readiness' => $steps->firstWhere('step_type', 'technical_readiness')?->status,
+                    'release_risk_level' => $approval?->release_risk_level,
+                    'proposed_release_at' => $approval?->proposed_release_at?->toISOString(),
+                    'revision_reason' => $approval?->revision_reason,
+                    'technical_details_available' => $technical,
+                ];
+            }),
+            'release_owner' => $this->whenLoaded('releaseOwner', fn () => ['id' => $this->releaseOwner->id, 'name' => $this->releaseOwner->name]),
+            'release_preparation' => $this->when($technical && $this->relationLoaded('releasePlans'), function (): array {
+                $plan = $this->releasePlans->sortByDesc('version')->first();
+                $items = $plan?->relationLoaded('checklistItems') ? $plan->checklistItems : collect();
+
+                return ['plan_status' => $plan?->status, 'rollback_status' => $plan?->rollbackPlan?->status, 'checklist_total' => $items->count(), 'checklist_completed' => $items->where('status', 'completed')->count(), 'checklist_blocked' => $items->where('status', 'blocked')->count(), 'release_ready_at' => $this->release_ready_at?->toISOString()];
+            }),
         ];
     }
 

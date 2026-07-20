@@ -85,6 +85,21 @@ class User extends Authenticatable
         return $this->hasMany(TicketUatFinding::class, 'assigned_to');
     }
 
+    public function approvalRequests(): HasMany
+    {
+        return $this->hasMany(TicketApprovalRequest::class, 'requested_by');
+    }
+
+    public function approvalSteps(): HasMany
+    {
+        return $this->hasMany(TicketApprovalStep::class, 'approver_id');
+    }
+
+    public function releasePlans(): HasMany
+    {
+        return $this->hasMany(TicketReleasePlan::class, 'created_by');
+    }
+
     public function hasRole(string|array $roles): bool
     {
         return in_array($this->role?->key, (array) $roles, true);

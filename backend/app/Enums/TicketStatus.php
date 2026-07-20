@@ -26,6 +26,10 @@ enum TicketStatus: string
     case UatFailed = 'uat_failed';
     case UatRetest = 'uat_retest';
     case UatApproved = 'uat_approved';
+    case ApprovalPending = 'approval_pending';
+    case ApprovalRevision = 'approval_revision';
+    case ReleasePreparation = 'release_preparation';
+    case ReleaseReady = 'release_ready';
     case ReadyForUat = 'ready_for_uat';
     case Rejected = 'rejected';
     case Transferred = 'transferred';

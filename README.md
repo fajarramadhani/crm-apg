@@ -4,6 +4,8 @@ Phase 8 implements `ready_for_development -> development_in_progress -> internal
 
 Phase 10 implements UAT execution, requester revision and sign-off: IT Lead requester assignment, ticket-specific scenarios, UAT runs/results, finding history, PIC rework gates, retest cycles, evidence authorization, and requester-driven `uat_approved`. See `docs/phase-10-uat-requester-signoff.md`.
 
+Phase 11 implements two-step release approval, versioned release/rollback preparation, checklist gates, internal evidence, and `release_ready` without deployment execution. See `docs/phase-11-approval-release-preparation.md`.
+
 Phase 7 extends the production workflow from assignment through PIC analysis/RCA, versioned solution planning, IT Lead revision or approval, and `ready_for_development`. The PIC workspace and IT Lead Plan Review queue now use the Laravel API, preserve prior plan versions, enforce optimistic locking and ownership, and keep requester history free of internal technical detail. See `docs/phase-7-analysis-solution-planning.md`.
 
 Phase 6 introduced IT Lead triage, final priority, calendar-aware SLA initialization, transactional primary PIC assignment, and the initial PIC workspace. Requester and Supervisor Phase 5 behavior remains intact. See `docs/phase-6-triage-sla-assignment.md`.
@@ -123,4 +125,4 @@ vendor/bin/pint --test
 - Phase 8: Development execution, worklogs, progress updates, and internal test runs.
 - Phase 9: IT Lead QA assignment queue, QA dashboard & testing workspace, case/run/result execution, defect reporting, immutable defect history logs, PIC defect fixes, internal test validation gates, QA retests, and role-based data redaction.
 - Phase 10: UAT assignment, requester execution/sign-off, rejected UAT rework, PIC finding lifecycle, retest cycles, evidence authorization, and UAT-specific responsive UI.
-- Phase 11: Not started. Notifications and audit operations remain out of scope for the current delivery.
+- Phase 11: Business approval, technical readiness, release and rollback plans, release checklist, readiness validation, and `release_ready`.
