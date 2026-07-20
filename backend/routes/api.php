@@ -21,7 +21,10 @@ use App\Http\Controllers\Api\V1\QaController;
 use App\Http\Controllers\Api\V1\RequesterUatController;
 use App\Http\Controllers\Api\V1\SupervisorTicketController;
 use App\Http\Controllers\Api\V1\TicketAttachmentController;
+use App\Http\Controllers\Api\V1\TicketClosureController;
 use App\Http\Controllers\Api\V1\TicketController;
+use App\Http\Controllers\Api\V1\TicketDeploymentController;
+use App\Http\Controllers\Api\V1\TicketMonitoringController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -50,6 +53,26 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{ticket}/attachments', [TicketAttachmentController::class, 'store'])->name('attachments.store');
             Route::get('/{ticket}/attachments/{attachment}/download', [TicketAttachmentController::class, 'download'])->name('attachments.download');
             Route::delete('/{ticket}/attachments/{attachment}', [TicketAttachmentController::class, 'destroy'])->name('attachments.destroy');
+
+            // Phase 12: Deployment & Rollback
+            Route::post('/{ticket}/deployments/schedule', [TicketDeploymentController::class, 'schedule'])->middleware('permission:ticket.deployment.schedule');
+            Route::post('/{ticket}/deployments/start', [TicketDeploymentController::class, 'start'])->middleware('permission:ticket.deployment.start');
+            Route::post('/{ticket}/deployments/step', [TicketDeploymentController::class, 'manageStep'])->middleware('permission:ticket.deployment.step.manage');
+            Route::post('/{ticket}/deployments/complete', [TicketDeploymentController::class, 'complete'])->middleware('permission:ticket.deployment.complete');
+            Route::post('/{ticket}/deployments/fail', [TicketDeploymentController::class, 'fail'])->middleware('permission:ticket.deployment.fail');
+
+            Route::post('/{ticket}/rollbacks/start', [TicketDeploymentController::class, 'startRollback'])->middleware('permission:ticket.rollback.start');
+            Route::post('/{ticket}/rollbacks/complete', [TicketDeploymentController::class, 'completeRollback'])->middleware('permission:ticket.rollback.complete');
+
+            // Phase 12: Monitoring
+            Route::post('/{ticket}/monitoring/start', [TicketMonitoringController::class, 'start'])->middleware('permission:ticket.monitoring.start');
+            Route::post('/{ticket}/monitoring/check', [TicketMonitoringController::class, 'recordCheck'])->middleware('permission:ticket.monitoring.check.manage');
+            Route::post('/{ticket}/monitoring/incident', [TicketMonitoringController::class, 'recordIncident'])->middleware('permission:ticket.monitoring.incident.manage');
+            Route::post('/{ticket}/monitoring/complete', [TicketMonitoringController::class, 'complete'])->middleware('permission:ticket.monitoring.complete');
+
+            // Phase 12: Confirmation & Closure
+            Route::post('/{ticket}/confirmation', [TicketClosureController::class, 'respondToConfirmation'])->middleware('permission:ticket.requester_confirmation.respond');
+            Route::post('/{ticket}/close', [TicketClosureController::class, 'close'])->middleware('permission:ticket.closure.confirm');
         });
 
         Route::prefix('supervisor')->middleware('permission:ticket.validation_queue.view')->name('api.v1.supervisor.')->group(function (): void {
@@ -102,6 +125,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/tickets/{ticket}/release-checklist', [ItLeadReleaseController::class, 'checklist'])->middleware('permission:ticket.release_checklist.view');
             Route::post('/tickets/{ticket}/release-checklist/{item}/decision', [ItLeadReleaseController::class, 'checklistDecision'])->middleware('permission:ticket.release_checklist.manage');
             Route::post('/tickets/{ticket}/confirm-release-ready', [ItLeadReleaseController::class, 'confirmReady'])->middleware('permission:ticket.release_readiness.confirm');
+
         });
 
         Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {

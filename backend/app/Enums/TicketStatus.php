@@ -30,6 +30,17 @@ enum TicketStatus: string
     case ApprovalRevision = 'approval_revision';
     case ReleasePreparation = 'release_preparation';
     case ReleaseReady = 'release_ready';
+    case DeploymentScheduled = 'deployment_scheduled';
+    case DeploymentInProgress = 'deployment_in_progress';
+    case DeploymentFailed = 'deployment_failed';
+    case RollbackInProgress = 'rollback_in_progress';
+    case RolledBack = 'rolled_back';
+    case Deployed = 'deployed';
+    case Monitoring = 'monitoring';
+    case PostReleaseIssue = 'post_release_issue';
+    case AwaitingRequesterConfirmation = 'awaiting_requester_confirmation';
+    case Reopened = 'reopened';
+    case Closed = 'closed';
     case ReadyForUat = 'ready_for_uat';
     case Rejected = 'rejected';
     case Transferred = 'transferred';

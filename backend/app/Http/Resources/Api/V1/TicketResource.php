@@ -107,6 +107,70 @@ class TicketResource extends JsonResource
 
                 return ['plan_status' => $plan?->status, 'rollback_status' => $plan?->rollbackPlan?->status, 'checklist_total' => $items->count(), 'checklist_completed' => $items->where('status', 'completed')->count(), 'checklist_blocked' => $items->where('status', 'blocked')->count(), 'release_ready_at' => $this->release_ready_at?->toISOString()];
             }),
+
+            // Phase 12 Deployment fields
+            'current_deployment_id' => $this->current_deployment_id,
+            'latest_deployment_result' => $this->latest_deployment_result,
+            'deployment_cycle_number' => (int) $this->deployment_cycle_number,
+            'monitoring_completed_at' => $this->monitoring_completed_at?->toISOString(),
+            'requester_confirmation_requested_at' => $this->requester_confirmation_requested_at?->toISOString(),
+            'requester_confirmed_at' => $this->requester_confirmed_at?->toISOString(),
+
+            'latest_deployment' => $this->when($this->relationLoaded('deployments'), function (): ?array {
+                $deployment = $this->deployments->sortByDesc('id')->first();
+                if (! $deployment) {
+                    return null;
+                }
+
+                return [
+                    'id' => $deployment->id,
+                    'status' => $deployment->status,
+                    'environment' => $deployment->environment,
+                    'scheduled_start_at' => $deployment->scheduled_start_at?->toISOString(),
+                    'actual_start_at' => $deployment->actual_start_at?->toISOString(),
+                    'actual_end_at' => $deployment->actual_end_at?->toISOString(),
+                    'result_summary' => $deployment->result_summary,
+                    'steps_count' => $deployment->relationLoaded('steps') ? $deployment->steps->count() : 0,
+                    'completed_steps' => $deployment->relationLoaded('steps') ? $deployment->steps->where('status', 'completed')->count() : 0,
+                ];
+            }),
+
+            'active_monitoring' => $this->when($this->relationLoaded('deployments'), function (): ?array {
+                $deployment = $this->deployments->sortByDesc('id')->first();
+                if (! $deployment || ! $deployment->relationLoaded('monitoringSessions')) {
+                    return null;
+                }
+
+                $session = $deployment->monitoringSessions->sortByDesc('cycle_number')->first();
+                if (! $session) {
+                    return null;
+                }
+
+                return [
+                    'id' => $session->id,
+                    'status' => $session->status,
+                    'started_at' => $session->started_at?->toISOString(),
+                    'planned_end_at' => $session->planned_end_at?->toISOString(),
+                    'checks_count' => $session->relationLoaded('checks') ? $session->checks->count() : 0,
+                    'incidents_count' => $session->relationLoaded('incidents') ? $session->incidents->count() : 0,
+                    'open_incidents_count' => $session->relationLoaded('incidents') ? $session->incidents->whereIn('status', ['open', 'in_progress'])->count() : 0,
+                ];
+            }),
+
+            'closure' => $this->when($this->relationLoaded('closures'), function (): ?array {
+                $closure = $this->closures->sortByDesc('id')->first();
+                if (! $closure) {
+                    return null;
+                }
+
+                return [
+                    'id' => $closure->id,
+                    'closed_at' => $closure->closed_at?->toISOString(),
+                    'closure_summary' => $closure->closure_summary,
+                    'business_outcome' => $closure->business_outcome,
+                    'final_sla_result' => $closure->final_sla_result,
+                ];
+            }),
         ];
     }
 
@@ -192,6 +256,35 @@ class TicketResource extends JsonResource
         }
         if ($request->user()?->hasPermission('ticket.uat_run.manage') && $this->status === TicketStatus::UatInProgress && $this->uat_assignee_id === $request->user()?->id) {
             return ['manage_uat', 'start_uat_run', 'record_uat_result', 'complete_uat_run', 'create_uat_finding'];
+        }
+
+        // Phase 12 actions
+        if ($request->user()?->hasPermission('ticket.deployment.schedule') && $this->status === TicketStatus::ReleaseReady) {
+            return ['schedule_deployment'];
+        }
+        if ($request->user()?->hasPermission('ticket.deployment.start') && $this->status === TicketStatus::DeploymentScheduled) {
+            return ['start_deployment'];
+        }
+        if ($request->user()?->hasPermission('ticket.deployment.step.manage') && $this->status === TicketStatus::DeploymentInProgress) {
+            return ['manage_deployment_step', 'complete_deployment', 'fail_deployment'];
+        }
+        if ($request->user()?->hasPermission('ticket.rollback.start') && $this->status === TicketStatus::DeploymentFailed) {
+            return ['start_rollback']; // Or back to development
+        }
+        if ($request->user()?->hasPermission('ticket.rollback.complete') && $this->status === TicketStatus::RollbackInProgress) {
+            return ['complete_rollback'];
+        }
+        if ($request->user()?->hasPermission('ticket.monitoring.start') && $this->status === TicketStatus::Deployed) {
+            return ['start_monitoring'];
+        }
+        if ($request->user()?->hasPermission('ticket.monitoring.check.manage') && $this->status === TicketStatus::Monitoring) {
+            return ['record_monitoring_check', 'record_incident', 'complete_monitoring'];
+        }
+        if ($request->user()?->hasPermission('ticket.requester_confirmation.respond') && $this->status === TicketStatus::AwaitingRequesterConfirmation && $this->requester_id === $request->user()?->id) {
+            return ['respond_confirmation'];
+        }
+        if ($request->user()?->hasPermission('ticket.closure.confirm') && in_array($this->status, [TicketStatus::AwaitingRequesterConfirmation, TicketStatus::Monitoring])) {
+            return ['close_ticket'];
         }
 
         if (! $own) {
