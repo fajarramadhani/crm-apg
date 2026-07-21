@@ -34,6 +34,7 @@ import SLAMonitoring from './pages/shared/SLAMonitoring'
 import NotificationCenter from './pages/shared/NotificationCenter'
 import ExecutiveDashboard from './pages/executive/ExecutiveDashboard'
 import Statistics from './pages/executive/Statistics'
+import AnalyticsDashboard from './pages/shared/AnalyticsDashboard'
 import AdminConsole from './pages/admin/AdminConsole'
 import UserManagement from './pages/admin/UserManagement'
 import DivisionManagement from './pages/admin/DivisionManagement'
@@ -119,6 +120,7 @@ function AppRoutes() {
         <Route path="/user/uat" element={guard(['requester'], <UAT />)} />
         <Route path="/supervisor/dashboard" element={guard(['supervisor'], <SupervisorDashboard />)} />
         <Route path="/supervisor/validation-queue" element={guard(['supervisor'], <ValidationQueue />)} />
+        <Route path="/supervisor/reports" element={guard(['supervisor'], <AnalyticsDashboard role="supervisor" />)} />
         <Route path="/itlead/dashboard" element={guard(['it_lead'], <ITLeadDashboard />)} />
         <Route path="/itlead/triage" element={guard(['it_lead'], <TriageQueue />)} />
         <Route path="/itlead/priority" element={guard(['it_lead'], <PriorityAssignment />)} />
@@ -127,14 +129,17 @@ function AppRoutes() {
         <Route path="/itlead/uat-assignment" element={guard(['it_lead'], <UatAssignmentQueue />)} />
         <Route path="/itlead/release-preparation" element={guard(['it_lead'], <ReleasePreparation />)} />
         <Route path="/itlead/deployment" element={guard(['it_lead'], <DeploymentQueue />)} />
+        <Route path="/itlead/reports" element={guard(['it_lead'], <AnalyticsDashboard role="it-lead" />)} />
         <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
         <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
         <Route path="/pic/rca" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />
         <Route path="/pic/testing" element={guard(['pic'], <InternalTestingPIC />)} />
         <Route path="/pic/release-preparation" element={guard(['pic'], <ReleasePreparationPIC />)} />
+        <Route path="/pic/reports" element={guard(['pic'], <AnalyticsDashboard role="pic" />)} />
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
         <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />
         <Route path="/manager/approval" element={guard(['manager'], <ManagerApproval />)} />
+        <Route path="/manager/reports" element={guard(['manager'], <AnalyticsDashboard role="manager" />)} />
         <Route path="/sla-monitoring" element={guard(['it_lead', 'manager', 'executive'], <SLAMonitoring />)} />
         <Route
           path="/notifications"
@@ -142,6 +147,7 @@ function AppRoutes() {
         />
         <Route path="/executive/dashboard" element={guard(['executive'], <ExecutiveDashboard />)} />
         <Route path="/executive/statistics" element={guard(['executive'], <Statistics />)} />
+        <Route path="/executive/reports" element={guard(['executive'], <AnalyticsDashboard role="executive" />)} />
         <Route path="/admin/console" element={guard(['admin'], <AdminConsole />)} />
         <Route path="/admin/users" element={guard(['admin'], <UserManagement />)} />
         <Route path="/admin/divisions" element={guard(['admin'], <DivisionManagement />)} />

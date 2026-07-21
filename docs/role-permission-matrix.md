@@ -201,3 +201,5 @@ knowledge.view, knowledge.create, knowledge.review, knowledge.publish, knowledge
 | View generic Phase 7 progress on own ticket | Allow | Existing scope | Allow | Allow | Existing scope | Existing scope | Aggregate only | Existing scope |
 
 Concrete permission codes are `ticket.analysis.start`, `ticket.analysis.view`, `ticket.analysis.manage`, `ticket.solution_plan.view`, `ticket.solution_plan.manage`, `ticket.solution_plan.submit`, `ticket.plan_review_queue.view`, `ticket.solution_plan.request_revision`, and `ticket.solution_plan.approve`. Ownership is rechecked under row lock during mutations; a permission alone never grants a PIC access to another PIC's assignment.
+\ n -   P h a s e   1 3   R e p o r t i n g   v i e w   p e r m i s s i o n s   m a p p e d  
+ 

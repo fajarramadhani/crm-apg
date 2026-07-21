@@ -58,5 +58,11 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($email.'|'.$request->ip());
         });
+
+        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
+            if ($user->hasPermission($ability)) {
+                return true;
+            }
+        });
     }
 }

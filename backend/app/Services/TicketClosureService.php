@@ -2,7 +2,11 @@
 
 namespace App\Services;
 
+use App\Enums\DeploymentStatus;
+use App\Enums\IncidentStatus;
+use App\Enums\MonitoringStatus;
 use App\Enums\RequesterConfirmationStatus;
+use App\Enums\RollbackStatus;
 use App\Enums\TicketStatus;
 use App\Events\TicketClosed;
 use App\Models\Ticket;
@@ -32,11 +36,11 @@ class TicketClosureService
             throw new InvalidArgumentException('Ticket cannot be closed before requester confirmation is accepted.');
         }
 
-        if ($ticket->postReleaseIncidents()->whereNotIn('status', [\App\Enums\IncidentStatus::Closed, \App\Enums\IncidentStatus::Resolved])->exists()) {
+        if ($ticket->postReleaseIncidents()->whereNotIn('status', [IncidentStatus::Closed, IncidentStatus::Resolved])->exists()) {
             throw new InvalidArgumentException('Cannot close ticket with open incidents.');
         }
 
-        if ($ticket->rollbackExecutions()->whereNotIn('status', [\App\Enums\RollbackStatus::Succeeded, \App\Enums\RollbackStatus::Failed, \App\Enums\RollbackStatus::Cancelled])->exists()) {
+        if ($ticket->rollbackExecutions()->whereNotIn('status', [RollbackStatus::Succeeded, RollbackStatus::Failed, RollbackStatus::Cancelled])->exists()) {
             throw new InvalidArgumentException('Cannot close ticket with an active rollback.');
         }
 
@@ -48,11 +52,11 @@ class TicketClosureService
             throw new InvalidArgumentException('Cannot close ticket with open UAT findings.');
         }
 
-        if ($ticket->deployments()->where('status', \App\Enums\DeploymentStatus::InProgress)->exists()) {
+        if ($ticket->deployments()->where('status', DeploymentStatus::InProgress)->exists()) {
             throw new InvalidArgumentException('Cannot close ticket with an active deployment run.');
         }
 
-        if ($ticket->monitoringSessions()->where('status', \App\Enums\MonitoringStatus::Active)->exists()) {
+        if ($ticket->monitoringSessions()->where('status', MonitoringStatus::Active)->exists()) {
             throw new InvalidArgumentException('Cannot close ticket with an active monitoring run.');
         }
 

@@ -221,3 +221,5 @@ The implemented Phase 9 tables introduce QA assignment, test case definition, te
 - `ticket_qa_defect_histories`: immutable audit history logging every status change and action for defects.
 - `tickets`: status fields updated to include `qa_assignment`, `qa_in_progress`, `qa_failed`, `qa_retest`, `ready_for_uat`, `qa_cycle_number`, and `latest_qa_result`.
 - `ticket_attachments`/`ticket_comments`: updated with nullable `defect_id` foreign keys to track defect-related evidence and internal discussion.
+\ n -   P h a s e   1 3   R e p o r t i n g   i n d e x e s   a d d e d   t o   t i c k e t s   a n d   t i c k e t _ s t a t u s _ h i s t o r i e s  
+ 

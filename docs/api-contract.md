@@ -344,3 +344,5 @@ All routes are under `/api/v1`, require a Sanctum session, use policy plus permi
 | IT Lead | POST | `/it-lead/tickets/{ticket}/solution-plan/{plan}/approve` | Approve and move to ready for development |
 
 Requester ticket resources expose only generic workflow progress for these phases. RCA, solution text, risk, rollback, testing, technical history notes, and internal event metadata are omitted.
+\ n -   P h a s e   1 3   R e p o r t   E n d p o i n t s   a d d e d   u n d e r   / a p i / v 1 / r e p o r t s / *  
+ 

@@ -3,15 +3,19 @@
 use App\Http\Controllers\Api\V1\AdminMasterDataController;
 use App\Http\Controllers\Api\V1\AdminReleaseChecklistTemplateController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ExecutiveAnalyticsController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\ItLeadQaController;
 use App\Http\Controllers\Api\V1\ItLeadReleaseController;
+use App\Http\Controllers\Api\V1\ItLeadReportController;
 use App\Http\Controllers\Api\V1\ItLeadTicketController;
 use App\Http\Controllers\Api\V1\ItLeadUatController;
 use App\Http\Controllers\Api\V1\ManagerApprovalController;
+use App\Http\Controllers\Api\V1\ManagerReportController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PicDevelopmentController;
 use App\Http\Controllers\Api\V1\PicInternalTestingController;
+use App\Http\Controllers\Api\V1\PicPerformanceController;
 use App\Http\Controllers\Api\V1\PicReleaseController;
 use App\Http\Controllers\Api\V1\PicReworkController;
 use App\Http\Controllers\Api\V1\PicTicketController;
@@ -19,6 +23,7 @@ use App\Http\Controllers\Api\V1\PicUatReworkController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
 use App\Http\Controllers\Api\V1\QaController;
 use App\Http\Controllers\Api\V1\RequesterUatController;
+use App\Http\Controllers\Api\V1\SupervisorReportController;
 use App\Http\Controllers\Api\V1\SupervisorTicketController;
 use App\Http\Controllers\Api\V1\TicketAttachmentController;
 use App\Http\Controllers\Api\V1\TicketClosureController;
@@ -286,6 +291,47 @@ Route::prefix('v1')->group(function (): void {
             Route::post('working-calendars/{calendar}/holidays', [AdminMasterDataController::class, 'storeHoliday']);
             Route::put('holidays/{holiday}', [AdminMasterDataController::class, 'updateHoliday']);
             Route::delete('holidays/{holiday}', [AdminMasterDataController::class, 'deleteHoliday']);
+        });
+
+        // Phase 13: Reports
+        Route::prefix('reports')->name('api.v1.reports.')->group(function (): void {
+            Route::prefix('manager')->group(function (): void {
+                Route::get('summary', [ManagerReportController::class, 'getSummary']);
+                Route::get('ticket-volume', [ManagerReportController::class, 'ticketVolume']);
+                Route::get('sla', [ManagerReportController::class, 'sla']);
+                Route::get('workflow-duration', [ManagerReportController::class, 'workflowDuration']);
+                Route::get('quality', [ManagerReportController::class, 'quality']);
+                Route::get('deployment', [ManagerReportController::class, 'deployment']);
+                Route::get('pic-performance', [ManagerReportController::class, 'picPerformance']);
+                Route::get('aging-tickets', [ManagerReportController::class, 'agingTickets']);
+                Route::get('export', [ManagerReportController::class, 'export']);
+            });
+
+            Route::prefix('it-lead')->group(function (): void {
+                Route::get('summary', [ItLeadReportController::class, 'getSummary']);
+                Route::get('ticket-volume', [ItLeadReportController::class, 'ticketVolume']);
+                Route::get('sla', [ItLeadReportController::class, 'sla']);
+                Route::get('workflow-duration', [ItLeadReportController::class, 'workflowDuration']);
+                Route::get('quality', [ItLeadReportController::class, 'quality']);
+                Route::get('deployment', [ItLeadReportController::class, 'deployment']);
+                Route::get('pic-performance', [ItLeadReportController::class, 'picPerformance']);
+                Route::get('aging-tickets', [ItLeadReportController::class, 'agingTickets']);
+                Route::get('export', [ItLeadReportController::class, 'export']);
+            });
+
+            Route::prefix('supervisor')->group(function (): void {
+                Route::get('summary', [SupervisorReportController::class, 'summary']);
+            });
+
+            Route::prefix('pic')->group(function (): void {
+                Route::get('performance', [PicPerformanceController::class, 'summary']);
+                Route::get('export', [PicPerformanceController::class, 'export']);
+            });
+
+            Route::prefix('executive')->group(function (): void {
+                Route::get('summary', [ExecutiveAnalyticsController::class, 'summary']);
+                Route::get('export', [ExecutiveAnalyticsController::class, 'export']);
+            });
         });
     });
 

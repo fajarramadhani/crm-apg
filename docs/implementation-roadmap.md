@@ -102,7 +102,7 @@ Konfirmasi business decisions: identity topology, multi-role, approval path, wor
 
 **Acceptance:** author/reviewer/publisher policy tests, published-only reader view, version history immutable, ticket-to-article link and search E2E.
 
-## Phase 13 — Reporting, hardening, and production readiness
+## Phase 13 — Reporting, hardening, and production readiness (✅ Completed)
 
 **Scope:** accurate role dashboards/exports, performance/index review, accessibility audit, security test, dependency scan, observability, backup/restore drill, retention, runbooks, load test, staging UAT, rollout/rollback plan.
 

@@ -167,6 +167,6 @@ class DevelopmentInternalTestingTest extends TestCase
 
     private function user(string $role): User
     {
-        return User::factory()->create(['role_id' => Role::where('key',$role)->firstOrFail()->id, 'division_id' => $this->division->id, 'is_active' => true]);
+        return User::factory()->create(['role_id' => Role::where('key', $role)->firstOrFail()->id, 'division_id' => $this->division->id, 'is_active' => true]);
     }
 }
