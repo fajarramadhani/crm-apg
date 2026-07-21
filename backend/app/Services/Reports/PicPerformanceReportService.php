@@ -34,7 +34,7 @@ class PicPerformanceReportService extends BaseReportService
         $worklogs = TicketWorklog::query()
             ->where('user_id', $picId)
             ->whereBetween('work_date', [$dateFrom, $dateTo])
-            ->sum('duration_minutes');
+            ->sum('minutes_spent');
 
         $totalWorklogHours = round($worklogs / 60, 2);
 

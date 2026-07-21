@@ -15,7 +15,7 @@ class DeploymentReportService extends BaseReportService
                 $this->applyFilters($q, $filters, 'created_at', null, null);
             });
 
-        $deployments = $query->get(['id', 'status', 'started_at', 'ended_at']);
+        $deployments = $query->get(['id', 'status', 'actual_start_at', 'actual_end_at']);
 
         $total = $deployments->count();
         $scheduled = $deployments->where('status', 'scheduled')->count();
@@ -26,8 +26,8 @@ class DeploymentReportService extends BaseReportService
 
         $durations = [];
         foreach ($deployments as $deployment) {
-            if ($deployment->started_at && $deployment->ended_at) {
-                $durations[] = $deployment->started_at->diffInMinutes($deployment->ended_at);
+            if ($deployment->actual_start_at && $deployment->actual_end_at) {
+                $durations[] = $deployment->actual_start_at->diffInMinutes($deployment->actual_end_at);
             }
         }
 
