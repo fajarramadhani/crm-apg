@@ -21,6 +21,7 @@ use App\Events\TicketValidated;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
@@ -59,10 +60,12 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(5)->by($email.'|'.$request->ip());
         });
 
-        \Illuminate\Support\Facades\Gate::before(function ($user, $ability) {
-            if ($user->hasPermission($ability)) {
+        Gate::before(function ($user, $ability) {
+            if (Str::startsWith($ability, 'report.') && $user->hasPermission($ability)) {
                 return true;
             }
+
+            return null;
         });
     }
 }
