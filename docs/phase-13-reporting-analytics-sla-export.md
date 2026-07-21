@@ -15,9 +15,28 @@ Phase 13 delivers comprehensive analytics and operational reporting for the APG 
 9. **Universal Frontend Dashboard**: `AnalyticsDashboard.tsx` serves as a dynamic, reusable frontend component adapted to the active role's scopes and abilities.
 
 ## Testing & Verification
-- **Unit and Feature Testing**: Added `ReportAuthorizationTest` alongside existing extensive test suites.
-- **Frontend Verification**: Clean build with `pnpm build`, 0 typecheck errors.
-- **Browser UX Verification**: Ensures date range validations and dynamic role rendering exist gracefully.
+### Runtime Verification (E2E & UI)
+- **Commit Runtime Fix**: `2a579702e973f019bd0dc5d23c111777751b769c` applied bugfixes found during runtime.
+- **Database Column Bugfixes**: Corrected mismatch in `DeploymentReportService` (`actual_start_at`/`actual_end_at` instead of `started_at`/`ended_at`) and `PicPerformanceReportService` (`minutes_spent` instead of `duration_minutes`).
+- **HTTP E2E Matrix**:
+  - Manager: `summary` (200), `SLA` (200), `PIC performance` (200), `CSV export` (200)
+  - IT Lead: `operational reports` (200)
+  - Executive: `aggregate analytics` (200), `technical report` (403)
+  - PIC: `own performance` (200), `other PIC data` (403/422)
+  - Supervisor: `own division` (200), `other division` (403/422)
+  - Requester: `reporting endpoint` (403)
+  - Invalid date range: `report endpoint` (422)
+  - XLSX/PDF unsupported: `export` (422)
+- **Browser Verification**:
+  - Validated across all roles (Manager, IT Lead, Executive, PIC, Supervisor) on **Desktop (1440x900)** and **Mobile (390x844)** using standard React/Vite stack without Vue inconsistencies.
+  - Successfully verified loading states, empty states, chart responsiveness, text summaries, filter scrolling, table overflows, and UI interactions.
+  - Zero console errors and zero CORS issues encountered during HTTP requests.
+
+### Final Regression Suite
+- **API Route Count**: 225 active routes mapped.
+- **PHPUnit Tests**: `139 tests`, `939 assertions`, `0 failures`.
+- **Pint & Typecheck**: Fully compliant with `vendor/bin/pint --test` and frontend `pnpm typecheck` and `pnpm format:check` with `0 failures`.
+- **Frontend Build**: Vite production build succeeded cleanly.
 
 ## Scope Limits
 As dictated by Phase 13 requirements, no new SLA engines or database polling tasks were introduced; all metrics depend on the established Phase 1-12 workflows and recorded timelines. PDF and XLSX exports return a 422 standard format rejection. 
