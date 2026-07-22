@@ -138,7 +138,7 @@ class TicketSlaEscalationService
         }
 
         // Create deduplication key for this alert
-        $dedupKey = "sla_{$alertLevel}:{$slaType}:ticket-{$ticket->id}:pct-{$percentage}";
+        $dedupKey = "sla_{$alertLevel}:{$slaType}:ticket-{$ticket->id}";
 
         // Ensure we don't alert the same level/threshold twice
         if (TicketSlaAlert::where('deduplication_key', $dedupKey)->exists()) {

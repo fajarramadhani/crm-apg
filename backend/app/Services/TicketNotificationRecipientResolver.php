@@ -75,9 +75,21 @@ class TicketNotificationRecipientResolver
             case 'development_started':
             case 'internal_testing_required':
             case 'release_preparation_required':
-            case 'ticket_inactive':
                 if ($ticket->current_assignee_id) {
                     $recipients->push(User::find($ticket->current_assignee_id));
+                }
+                break;
+
+            case 'ticket_inactive':
+                $awaitingRequester = in_array($ticket->status->value, ['need_revision', 'awaiting_requester_confirmation', 'waiting_user']);
+                if ($awaitingRequester) {
+                    if ($ticket->requester_id) {
+                        $recipients->push(User::find($ticket->requester_id));
+                    }
+                } else {
+                    if ($ticket->current_assignee_id) {
+                        $recipients->push(User::find($ticket->current_assignee_id));
+                    }
                 }
                 break;
 
