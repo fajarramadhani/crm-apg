@@ -126,3 +126,4 @@ vendor/bin/pint --test
 - Phase 9: IT Lead QA assignment queue, QA dashboard & testing workspace, case/run/result execution, defect reporting, immutable defect history logs, PIC defect fixes, internal test validation gates, QA retests, and role-based data redaction.
 - Phase 10: UAT assignment, requester execution/sign-off, rejected UAT rework, PIC finding lifecycle, retest cycles, evidence authorization, and UAT-specific responsive UI.
 - Phase 11: Business approval, technical readiness, release and rollback plans, release checklist, readiness validation, and `release_ready`.
+- Phase 14: Notification center, SLA escalation, and operational alerts. In-app notifications, delivery logs, preferences authorization, SLA warning/breach scanning, inactivity tracking, role-specific alert APIs, and fully responsive layouts.

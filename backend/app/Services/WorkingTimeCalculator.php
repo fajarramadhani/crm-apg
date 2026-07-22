@@ -26,6 +26,34 @@ final class WorkingTimeCalculator
         return $cursor;
     }
 
+    public function diffInWorkingMinutes(WorkingCalendar $calendar, CarbonImmutable $start, CarbonImmutable $end): int
+    {
+        $timezone = $calendar->timezone;
+        $start = $start->setTimezone($timezone);
+        $end = $end->setTimezone($timezone);
+
+        if ($start->greaterThanOrEqualTo($end)) {
+            return 0;
+        }
+
+        $minutes = 0;
+        $cursor = $this->nextWorkingInstant($calendar, $start);
+
+        while ($cursor->lessThan($end)) {
+            $workdayEnd = $cursor->setTimeFromTimeString($calendar->workday_end);
+
+            // If the target end time is within the same workday
+            if ($end->lessThan($workdayEnd)) {
+                return $minutes + (int) $cursor->diffInMinutes($end, true);
+            }
+
+            $minutes += (int) $cursor->diffInMinutes($workdayEnd, true);
+            $cursor = $this->nextWorkingInstant($calendar, $cursor->addDay()->startOfDay());
+        }
+
+        return $minutes;
+    }
+
     public function nextWorkingInstant(WorkingCalendar $calendar, CarbonImmutable $instant): CarbonImmutable
     {
         $cursor = $instant->setTimezone($calendar->timezone);

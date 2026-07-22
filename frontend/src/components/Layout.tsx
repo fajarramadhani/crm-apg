@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom'
 import type { AuthenticatedUser, Role } from '../types'
 import { ROLE_LABELS } from '../data'
 import { Avatar } from './ui'
+import { NotificationBell } from './notifications/NotificationBell'
 
 const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> = {
   requester: [
@@ -25,6 +26,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/itlead/development', label: 'Development', icon: '⚙' },
     { path: '/itlead/uat-assignment', label: 'Penugasan UAT', icon: '🧪' },
     { path: '/itlead/release-preparation', label: 'Approval & Release', icon: '🚦' },
+    { path: '/itlead/alerts', label: 'Operational Alerts', icon: '🚨' },
     { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
@@ -42,6 +44,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
   ],
   manager: [
     { path: '/manager/approvals', label: 'Business Approval', icon: '✅' },
+    { path: '/manager/alerts', label: 'Critical Alerts', icon: '🚨' },
     { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
@@ -176,21 +179,7 @@ export function Layout({
           </div>
 
           <div className="flex items-center gap-3">
-            <NavLink
-              to="/notifications"
-              aria-label="Buka notifikasi"
-              className="relative p-2 hover:bg-gray-100 rounded-lg transition-colors text-gray-500"
-            >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-                />
-              </svg>
-              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full" />
-            </NavLink>
+            <NotificationBell />
 
             <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-1.5 border border-gray-200">
               <Avatar initials={initials} size="sm" />

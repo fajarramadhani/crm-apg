@@ -221,5 +221,17 @@ The implemented Phase 9 tables introduce QA assignment, test case definition, te
 - `ticket_qa_defect_histories`: immutable audit history logging every status change and action for defects.
 - `tickets`: status fields updated to include `qa_assignment`, `qa_in_progress`, `qa_failed`, `qa_retest`, `ready_for_uat`, `qa_cycle_number`, and `latest_qa_result`.
 - `ticket_attachments`/`ticket_comments`: updated with nullable `defect_id` foreign keys to track defect-related evidence and internal discussion.
+
+- Phase 13: Reporting indexes added to tickets and ticket_status_histories.
+
+## Phase 14 implemented notification and SLA escalation schema
+
+The implemented Phase 14 tables introduce notification management, delivery logs, user preferences, SLA policies, and ticket alerts:
+
+- `notifications`: stores database notifications (id, type, notifiable morphs, data JSON, read_at, archived_at).
+- `notification_preferences`: stores user notification settings (user_id, notification_type, in_app_enabled, muted_until). Unique on `(user_id, notification_type)`.
+- `notification_delivery_logs`: logs notification deliveries (notification_id, user_id, notification_type, status, delivery_channel, deduplication_key, delivered_at, failure_reason).
+- `sla_escalation_policies`: manages SLA policies (name, priority, sla_type, warning_threshold_percent, critical_threshold_percent, inactivity_threshold_minutes, escalate_to_it_lead, escalate_to_manager, escalate_to_supervisor, is_active).
+- `ticket_sla_alerts`: logs triggered alerts (ticket_id, ticket_sla_id, sla_type, alert_level, threshold_percent, elapsed_minutes, target_minutes, remaining_minutes, recipient_scope, triggered_at, resolved_at, deduplication_key). Unique on `deduplication_key`.
 \ n -   P h a s e   1 3   R e p o r t i n g   i n d e x e s   a d d e d   t o   t i c k e t s   a n d   t i c k e t _ s t a t u s _ h i s t o r i e s  
  

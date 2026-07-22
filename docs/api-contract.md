@@ -1,5 +1,33 @@
 # API Contract Plan
 
+## Phase 14 endpoints
+
+Notification, Preferences, and Alert endpoints:
+
+- Notifications:
+  - `GET /api/v1/notifications` (List notifications, status/type/severity filter, paginated)
+  - `GET /api/v1/notifications/unread-count` (Unread notifications count)
+  - `GET /api/v1/notifications/{notification}` (Show specific notification details)
+  - `POST /api/v1/notifications/{notification}/read` (Mark notification as read)
+  - `POST /api/v1/notifications/{notification}/unread` (Mark notification as unread)
+  - `POST /api/v1/notifications/read-all` (Mark all notifications as read)
+  - `POST /api/v1/notifications/{notification}/archive` (Archive specific notification)
+  - `POST /api/v1/notifications/archive-read` (Archive all read notifications)
+- Preferences:
+  - `GET /api/v1/notification-preferences` (List user notification preferences)
+  - `PUT /api/v1/notification-preferences/{notificationType}` (Update notification preference: in_app_enabled, muted_until)
+- SLA Escalation Alerts:
+  - `GET /api/v1/it-lead/alerts` (List SLA alerts for IT Lead)
+  - `GET /api/v1/it-lead/alerts/sla` (List SLA alerts for IT Lead)
+  - `GET /api/v1/it-lead/alerts/inactivity` (List inactivity alerts/notifications for IT Lead)
+  - `GET /api/v1/manager/alerts` (List critical SLA alerts scoped to Manager's division)
+  - `GET /api/v1/reports/executive/alerts/summary` (Get aggregate SLA alert summary for Executive)
+  - Admin SLA Policies:
+    - `GET /api/v1/admin/sla-escalation-policies` (List policies)
+    - `POST /api/v1/admin/sla-escalation-policies` (Create policy)
+    - `PUT /api/v1/admin/sla-escalation-policies/{policy}` (Update policy)
+    - `DELETE /api/v1/admin/sla-escalation-policies/{policy}` (Deactivate policy by setting `is_active=false`)
+
 ## Phase 9 endpoints
 
 QA assignment, test execution, defect tracking, and PIC rework endpoints:

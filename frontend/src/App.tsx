@@ -31,7 +31,10 @@ import QADashboard from './pages/qa/QADashboard'
 import TestingForm from './pages/qa/TestingForm'
 import ManagerApproval from './pages/manager/ManagerApproval'
 import SLAMonitoring from './pages/shared/SLAMonitoring'
-import NotificationCenter from './pages/shared/NotificationCenter'
+import { NotificationCenter } from './pages/notifications/NotificationCenter'
+import { NotificationPreferences } from './pages/settings/NotificationPreferences'
+import { ItLeadAlerts } from './pages/itlead/ItLeadAlerts'
+import { ManagerAlerts } from './pages/manager/ManagerAlerts'
 import ExecutiveDashboard from './pages/executive/ExecutiveDashboard'
 import Statistics from './pages/executive/Statistics'
 import AnalyticsDashboard from './pages/shared/AnalyticsDashboard'
@@ -129,6 +132,7 @@ function AppRoutes() {
         <Route path="/itlead/uat-assignment" element={guard(['it_lead'], <UatAssignmentQueue />)} />
         <Route path="/itlead/release-preparation" element={guard(['it_lead'], <ReleasePreparation />)} />
         <Route path="/itlead/deployment" element={guard(['it_lead'], <DeploymentQueue />)} />
+        <Route path="/itlead/alerts" element={guard(['it_lead'], <ItLeadAlerts />)} />
         <Route path="/itlead/reports" element={guard(['it_lead'], <AnalyticsDashboard role="it-lead" />)} />
         <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
         <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
@@ -139,12 +143,11 @@ function AppRoutes() {
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
         <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />
         <Route path="/manager/approval" element={guard(['manager'], <ManagerApproval />)} />
+        <Route path="/manager/alerts" element={guard(['manager'], <ManagerAlerts />)} />
         <Route path="/manager/reports" element={guard(['manager'], <AnalyticsDashboard role="manager" />)} />
         <Route path="/sla-monitoring" element={guard(['it_lead', 'manager', 'executive'], <SLAMonitoring />)} />
-        <Route
-          path="/notifications"
-          element={guard(allRoles, <NotificationCenter role={user?.role.key ?? 'requester'} />)}
-        />
+        <Route path="/notifications" element={guard(allRoles, <NotificationCenter />)} />
+        <Route path="/settings/notifications" element={guard(allRoles, <NotificationPreferences />)} />
         <Route path="/executive/dashboard" element={guard(['executive'], <ExecutiveDashboard />)} />
         <Route path="/executive/statistics" element={guard(['executive'], <Statistics />)} />
         <Route path="/executive/reports" element={guard(['executive'], <AnalyticsDashboard role="executive" />)} />

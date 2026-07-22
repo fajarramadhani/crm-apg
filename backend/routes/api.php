@@ -2,17 +2,23 @@
 
 use App\Http\Controllers\Api\V1\AdminMasterDataController;
 use App\Http\Controllers\Api\V1\AdminReleaseChecklistTemplateController;
+use App\Http\Controllers\Api\V1\AdminSlaEscalationPolicyController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\ExecutiveAlertController;
 use App\Http\Controllers\Api\V1\ExecutiveAnalyticsController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\ItLeadAlertController;
 use App\Http\Controllers\Api\V1\ItLeadQaController;
 use App\Http\Controllers\Api\V1\ItLeadReleaseController;
 use App\Http\Controllers\Api\V1\ItLeadReportController;
 use App\Http\Controllers\Api\V1\ItLeadTicketController;
 use App\Http\Controllers\Api\V1\ItLeadUatController;
+use App\Http\Controllers\Api\V1\ManagerAlertController;
 use App\Http\Controllers\Api\V1\ManagerApprovalController;
 use App\Http\Controllers\Api\V1\ManagerReportController;
 use App\Http\Controllers\Api\V1\MasterDataController;
+use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\NotificationPreferenceController;
 use App\Http\Controllers\Api\V1\PicDevelopmentController;
 use App\Http\Controllers\Api\V1\PicInternalTestingController;
 use App\Http\Controllers\Api\V1\PicPerformanceController;
@@ -80,6 +86,23 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{ticket}/close', [TicketClosureController::class, 'close'])->middleware('permission:ticket.closure.confirm');
         });
 
+        // Phase 14: Notifications
+        Route::prefix('notifications')->name('api.v1.notifications.')->group(function (): void {
+            Route::get('/', [NotificationController::class, 'index']);
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+            Route::post('/read-all', [NotificationController::class, 'markAllAsRead']);
+            Route::post('/archive-read', [NotificationController::class, 'archiveRead']);
+            Route::get('/{notification}', [NotificationController::class, 'show']);
+            Route::post('/{notification}/read', [NotificationController::class, 'markAsRead']);
+            Route::post('/{notification}/unread', [NotificationController::class, 'markAsUnread']);
+            Route::post('/{notification}/archive', [NotificationController::class, 'archive']);
+        });
+
+        Route::prefix('notification-preferences')->name('api.v1.notification_preferences.')->group(function (): void {
+            Route::get('/', [NotificationPreferenceController::class, 'index']);
+            Route::put('/{notificationType}', [NotificationPreferenceController::class, 'update']);
+        });
+
         Route::prefix('supervisor')->middleware('permission:ticket.validation_queue.view')->name('api.v1.supervisor.')->group(function (): void {
             Route::get('/validation-queue', [SupervisorTicketController::class, 'queue']);
             Route::get('/tickets/{ticket}', [SupervisorTicketController::class, 'show']);
@@ -90,6 +113,10 @@ Route::prefix('v1')->group(function (): void {
         });
 
         Route::prefix('it-lead')->name('api.v1.it-lead.')->group(function (): void {
+            Route::get('/alerts', [ItLeadAlertController::class, 'index']);
+            Route::get('/alerts/sla', [ItLeadAlertController::class, 'sla']);
+            Route::get('/alerts/inactivity', [ItLeadAlertController::class, 'inactivity']);
+
             Route::get('/triage-queue', [ItLeadTicketController::class, 'queue'])->middleware('permission:ticket.triage_queue.view');
             Route::get('/tickets/{ticket}', [ItLeadTicketController::class, 'show'])->middleware('permission:ticket.triage_queue.view');
             Route::post('/tickets/{ticket}/start-triage', [ItLeadTicketController::class, 'startTriage'])->middleware('permission:ticket.triage.start');
@@ -181,6 +208,8 @@ Route::prefix('v1')->group(function (): void {
         });
 
         Route::prefix('manager')->middleware('permission:ticket.business_approval_queue.view')->name('api.v1.manager.')->group(function (): void {
+            Route::get('/alerts', [ManagerAlertController::class, 'index']);
+
             Route::get('/business-approval-queue', [ManagerApprovalController::class, 'queue']);
             Route::get('/tickets/{ticket}/approval', [ManagerApprovalController::class, 'show']);
             Route::post('/tickets/{ticket}/business-approval/{decision}', [ManagerApprovalController::class, 'decide'])->whereIn('decision', ['approve', 'reject'])->middleware('permission:ticket.business_approval.approve');
@@ -248,6 +277,11 @@ Route::prefix('v1')->group(function (): void {
         });
 
         Route::prefix('admin')->middleware('permission:master_data.manage')->name('api.v1.admin.')->group(function (): void {
+            Route::get('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'index']);
+            Route::post('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'store']);
+            Route::put('/sla-escalation-policies/{policy}', [AdminSlaEscalationPolicyController::class, 'update']);
+            Route::delete('/sla-escalation-policies/{policy}', [AdminSlaEscalationPolicyController::class, 'destroy']);
+
             Route::get('/release-checklist-templates', [AdminReleaseChecklistTemplateController::class, 'index'])->middleware('permission:ticket.release_checklist_template.manage');
             Route::post('/release-checklist-templates', [AdminReleaseChecklistTemplateController::class, 'store'])->middleware('permission:ticket.release_checklist_template.manage');
             Route::put('/release-checklist-templates/{template}', [AdminReleaseChecklistTemplateController::class, 'update'])->middleware('permission:ticket.release_checklist_template.manage');
@@ -329,6 +363,7 @@ Route::prefix('v1')->group(function (): void {
             });
 
             Route::prefix('executive')->group(function (): void {
+                Route::get('/alerts/summary', [ExecutiveAlertController::class, 'summary']);
                 Route::get('summary', [ExecutiveAnalyticsController::class, 'summary']);
                 Route::get('export', [ExecutiveAnalyticsController::class, 'export']);
             });

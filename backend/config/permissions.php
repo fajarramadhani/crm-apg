@@ -25,6 +25,9 @@ return [
             'ticket.monitoring.view',
             'ticket.requester_confirmation.view',
             'ticket.requester_confirmation.respond',
+            'notification.view_own',
+            'notification.manage_own',
+            'notification.preference.manage_own',
         ],
         'supervisor' => [
             'dashboard.supervisor.view',
@@ -42,6 +45,9 @@ return [
             'report.ticket_volume.view',
             'report.sla.view',
             'report.aging.view',
+            'notification.view_own',
+            'notification.manage_own',
+            'notification.preference.manage_own',
         ],
         'it_lead' => [
             'dashboard.it_lead.view',
@@ -125,6 +131,10 @@ return [
             'report.deployment.view',
             'report.pic_performance.view',
             'report.aging.view',
+            'notification.view_own',
+            'notification.manage_own',
+            'notification.preference.manage_own',
+            'alert.itlead.view',
         ],
         'pic' => [
             'dashboard.pic.view',
@@ -177,6 +187,9 @@ return [
             'report.pic.view_own',
             'report.pic.export_own',
             'report.pic_performance.view',
+            'notification.view_own',
+            'notification.manage_own',
+            'notification.preference.manage_own',
         ],
         'qa' => [
             'dashboard.qa.view',
@@ -198,6 +211,9 @@ return [
             'ticket.uat_assignment.view',
             'ticket.deployment.view',
             'ticket.monitoring.view',
+            'notification.view_own',
+            'notification.manage_own',
+            'notification.preference.manage_own',
         ],
         'manager' => [
             'dashboard.manager.view',
@@ -219,6 +235,10 @@ return [
             'report.deployment.view',
             'report.pic_performance.view',
             'report.aging.view',
+            'notification.view_own',
+            'notification.manage_own',
+            'notification.preference.manage_own',
+            'alert.manager.view',
         ],
         'executive' => [
             'dashboard.executive.view',
@@ -226,6 +246,10 @@ return [
             'master_data.view',
             'report.executive.view',
             'report.executive.export',
+            'notification.view_own',
+            'notification.manage_own',
+            'notification.preference.manage_own',
+            'alert.executive.view_summary',
         ],
         'admin' => [
             'dashboard.admin.view',
@@ -235,6 +259,8 @@ return [
             'master_data.view',
             'master_data.manage',
             'ticket.release_checklist_template.manage',
+            'sla_escalation_policy.view',
+            'sla_escalation_policy.manage',
         ],
     ],
 ];

@@ -1,5 +1,18 @@
 # Role Permission Matrix
 
+## Phase 14 permissions
+
+| Permission | Requester | Supervisor | IT Lead | PIC | QA | Manager | Executive | Admin |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| `notification.view_own` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| `notification.manage_own` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| `notification.preference.manage_own` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
+| `alert.itlead.view` | No | No | Yes | No | No | No | No | No |
+| `alert.manager.view` | No | No | No | No | No | Yes | No | No |
+| `alert.executive.view_summary` | No | No | No | No | No | No | Yes | No |
+| `sla_escalation_policy.view` | No | No | No | No | No | No | No | Yes |
+| `sla_escalation_policy.manage` | No | No | No | No | No | No | No | Yes |
+
 ## Phase 9 permissions
 
 | Capability | QA | PIC | IT Lead | Requester/Executive |
