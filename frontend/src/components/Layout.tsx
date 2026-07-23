@@ -190,7 +190,7 @@ export function Layout({
           </div>
 
           <div className="flex items-center gap-3">
-            <NotificationBell />
+            {user.permissions.includes('notification.view_own') && <NotificationBell />}
 
             <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-1.5 border border-gray-200">
               <Avatar initials={initials} size="sm" />

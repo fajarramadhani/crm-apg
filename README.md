@@ -129,7 +129,8 @@ Current Phase 15 verification baseline:
 - API inventory: **25 Knowledge Base routes** and **268 API routes total**.
 - Frontend: TypeScript check, Prettier check, and production build pass.
 - Build warning: the main minified JavaScript chunk is 945.85 kB (254.53 kB gzip), above Vite's 500 kB warning threshold; code splitting remains a follow-up.
-- HTTP server E2E and interactive desktop/mobile browser verification have **not** been run for Phase 15 and remain pending runtime verification.
+- HTTP server E2E passed 12 Knowledge Base lifecycle, authorization, sanitization, feedback, audit, and request-ID checks against a disposable SQLite runtime.
+- Chrome browser verification passed for desktop PIC (1440x900), mobile Requester (390x844), and desktop Admin (1440x900), including login/logout, Knowledge Base navigation, role-specific management, console/page errors, HTTP 500 responses, and horizontal overflow.
 
 ## Status implementasi
 

@@ -130,11 +130,13 @@ Executed for this documentation update:
 - `corepack pnpm format:check`: passed.
 - `corepack pnpm build`: passed; 648 modules transformed.
 - Production output included a 945.85 kB minified main JavaScript chunk (254.53 kB gzip), so Vite emitted its chunk-over-500-kB warning. Code splitting remains a performance follow-up.
+- Stateful Sanctum HTTP E2E: **12 checks passed** against an actual Laravel server and disposable SQLite database. Coverage included unauthenticated access, role denial, draft creation, unpublished visibility, review submission, duplicate-transition conflict, publication, published search/detail, feedback, Executive denial, activity access, stored-XSS sanitization, cookies, and request IDs.
+- Chrome browser verification: **3 tests passed in 5.7 seconds**. Desktop PIC at 1440x900 covered login, published Knowledge Base, author management, overflow, console/page errors, HTTP 500 detection, and logout. Mobile Requester at 390x844 covered login, mobile navigation, published Knowledge Base, overflow, runtime errors, and logout. Desktop Admin at 1440x900 covered login and tag management without unauthorized notification requests.
 
 Laravel feature tests cover role visibility, ownership, lifecycle conflicts, self-approval/rejection, numbering/slugs, immutable versions/restore, search/filter/sort/pagination, tag deactivation, stored-XSS sanitization, ticket links and draft redaction, deterministic recommendations, feedback counts, notifications/deduplication, activity authorization, and request IDs.
 
-HTTP server E2E has **not** been run for Phase 15. Interactive desktop/mobile browser verification has **not** been run for Phase 15. Both remain pending runtime verification; passing Laravel feature tests, TypeScript checks, formatting, and production build must not be represented as those runtime checks.
+The browser run identified and fixed one frontend authorization-noise regression: the notification bell previously requested unread data for Admin even though Admin does not have `notification.view_own`. The layout now renders the bell only when that backend-issued permission is present. Runtime scripts, SQLite data, logs, and Playwright artifacts were temporary and removed after verification.
 
 ## Out of scope
 
-Phase 16 and any Phase 16 capabilities are explicitly out of scope. Phase 15 also makes no claim of public/anonymous knowledge access, external search indexing, attachment support for articles, HTTP server E2E completion, browser/device sign-off, or resolution of the frontend chunk-size warning.
+Phase 16 and any Phase 16 capabilities are explicitly out of scope. Phase 15 also makes no claim of public/anonymous knowledge access, external search indexing, article attachment support, exhaustive browser sign-off for every role/page combination, or resolution of the frontend chunk-size warning.
