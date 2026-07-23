@@ -1,33 +1,31 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import type { AuthenticatedUser, Role } from '../types'
-import { ROLE_LABELS } from '../data'
+import { ROLE_LABELS } from '../presentation'
 import { Avatar } from './ui'
 import { NotificationBell } from './notifications/NotificationBell'
 
 const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> = {
   requester: [
-    { path: '/user/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/user/create-ticket', label: 'Buat Request / Tiket', icon: '➕' },
     { path: '/user/tickets', label: 'Riwayat Tiket', icon: '📋' },
     { path: '/user/uat', label: 'UAT', icon: '🧪' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   supervisor: [
-    { path: '/supervisor/dashboard', label: 'Dashboard', icon: '🏠' },
     { path: '/supervisor/validation-queue', label: 'Antrean Validasi', icon: '✅' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   it_lead: [
-    { path: '/itlead/dashboard', label: 'Dashboard', icon: '🏠' },
+    { path: '/user/tickets', label: 'Daftar Tiket', icon: '📋' },
     { path: '/itlead/triage', label: 'Antrean Triage', icon: '🎯' },
-    { path: '/itlead/priority', label: 'Prioritas & SLA', icon: '⚡' },
     { path: '/itlead/plan-review', label: 'Plan Review', icon: '✓' },
     { path: '/itlead/development', label: 'Development', icon: '⚙' },
     { path: '/itlead/uat-assignment', label: 'Penugasan UAT', icon: '🧪' },
     { path: '/itlead/release-preparation', label: 'Approval & Release', icon: '🚦' },
+    { path: '/itlead/deployment', label: 'Deployment & Rilis', icon: '🚀' },
     { path: '/itlead/alerts', label: 'Operational Alerts', icon: '🚨' },
-    { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
+    { path: '/itlead/reports', label: 'Laporan Operasional', icon: '📊' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   pic: [
@@ -45,21 +43,17 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
   manager: [
     { path: '/manager/approvals', label: 'Business Approval', icon: '✅' },
     { path: '/manager/alerts', label: 'Critical Alerts', icon: '🚨' },
-    { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
+    { path: '/manager/reports', label: 'Laporan', icon: '📊' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   executive: [
-    { path: '/executive/dashboard', label: 'Executive Dashboard', icon: '📊' },
-    { path: '/executive/statistics', label: 'Statistik & Analitik', icon: '📈' },
-    { path: '/sla-monitoring', label: 'Monitoring SLA', icon: '⏱️' },
+    { path: '/executive/reports', label: 'Executive Dashboard', icon: '📊' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   admin: [
-    { path: '/admin/console', label: 'Admin Console', icon: '⚙️' },
-    { path: '/admin/users', label: 'Manajemen User', icon: '👥' },
     { path: '/admin/divisions', label: 'Divisi & Aplikasi', icon: '🏢' },
     { path: '/admin/sla-rules', label: 'Aturan SLA', icon: '📏' },
-    { path: '/admin/escalation', label: 'Matrix Eskalasi', icon: '🔺' },
-    { path: '/admin/audit-log', label: 'Audit Log', icon: '📜' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
 }
 

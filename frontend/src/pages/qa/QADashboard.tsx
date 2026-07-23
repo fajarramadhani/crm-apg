@@ -28,7 +28,7 @@ export default function QADashboard() {
   const load = () => {
     setLoading(true)
     ticketService
-      .listMyTickets({ per_page: 100 })
+      .qaAssignments({ per_page: 100 })
       .then((res) => {
         setTickets(res.data)
       })
@@ -59,8 +59,8 @@ export default function QADashboard() {
       })
   }
 
-  // Filter tickets that belong to the current QA assignee
-  const qaTickets = tickets.filter((t) => t.qa_assignee?.id === user?.id)
+  // Filter tickets that belong to the current QA assignee (or all returned by qaAssignments)
+  const qaTickets = tickets.filter((t) => !t.qa_assignee?.id || t.qa_assignee?.id === user?.id)
 
   // testingQueue: Tickets in qa_assignment, qa_in_progress, or qa_retest
   const testingQueue = qaTickets.filter((t) => ['qa_assignment', 'qa_in_progress', 'qa_retest'].includes(t.status))

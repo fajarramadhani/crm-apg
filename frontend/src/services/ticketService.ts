@@ -766,6 +766,8 @@ export const ticketService = {
   qaWorkloads: () => data(apiClient.get<ApiResponse<QaUserWorkload[]>>('/it-lead/qa-workloads')),
 
   // QA pengujian & eksekusi
+  qaAssignments: (filters: Record<string, string | number | undefined> = {}) =>
+    apiClient.get<TicketPage>(`/qa/assignments?${query(filters)}`),
   qaStart: (id: number) => data(apiClient.post<ApiResponse<TicketRecord>>(`/qa/tickets/${id}/start`, {})),
   qaTestCases: (id: number) => data(apiClient.get<ApiResponse<QaTestCaseRecord[]>>(`/qa/tickets/${id}/test-cases`)),
   createQaTestCase: (

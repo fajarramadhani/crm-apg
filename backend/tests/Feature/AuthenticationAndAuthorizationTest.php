@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Role;
 use App\Models\User;
-use Database\Seeders\DevelopmentUserSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -174,31 +173,33 @@ class AuthenticationAndAuthorizationTest extends TestCase
         $this->assertCount(8, config('permissions.roles'));
     }
 
-    public function test_development_seeder_creates_one_hashed_account_per_role(): void
+    public function test_testing_user_command_provisions_one_named_account_without_overwriting_it(): void
     {
-        $this->seed(DevelopmentUserSeeder::class);
+        $password = 'Temporary-Testing-Password-42';
+        putenv("TIC_HUB_BOOTSTRAP_PASSWORD={$password}");
 
-        $expectedEmails = [
-            'requester@tichub.local',
-            'supervisor@tichub.local',
-            'itlead@tichub.local',
-            'pic@tichub.local',
-            'qa@tichub.local',
-            'manager@tichub.local',
-            'executive@tichub.local',
-            'admin@tichub.local',
-        ];
+        try {
+            $this->artisan('users:provision-testing', [
+                '--name' => 'Testing Operator',
+                '--email' => 'operator@testing.invalid',
+                '--role' => 'admin',
+            ])->assertSuccessful();
 
-        foreach ($expectedEmails as $email) {
-            $user = User::query()->where('email', $email)->firstOrFail();
+            $user = User::query()->where('email', 'operator@testing.invalid')->firstOrFail();
+            $this->assertSame('Testing Operator', $user->name);
+            $this->assertSame('admin', $user->role->key);
+            $this->assertTrue(Hash::check($password, $user->password));
 
-            $this->assertTrue($user->is_active);
-            $this->assertTrue(Hash::check('password', $user->password));
-            $this->assertNotSame('password', $user->password);
-            $this->assertNotNull($user->role);
+            $this->artisan('users:provision-testing', [
+                '--name' => 'Replacement Operator',
+                '--email' => 'operator@testing.invalid',
+                '--role' => 'requester',
+            ])->assertFailed();
+
+            $this->assertSame('admin', $user->fresh()->role->key);
+        } finally {
+            putenv('TIC_HUB_BOOTSTRAP_PASSWORD');
         }
-
-        $this->assertSame($expectedEmails, User::query()->whereIn('email', $expectedEmails)->orderBy('id')->pluck('email')->all());
     }
 
     private function createUser(string $roleKey, bool $isActive = true): User

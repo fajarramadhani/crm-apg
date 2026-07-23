@@ -18,6 +18,9 @@ use App\Services\TicketRollbackService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Gate;
 
+use App\Support\ApiResponse;
+use Illuminate\Http\Request;
+
 class TicketDeploymentController extends Controller
 {
     public function __construct(
@@ -25,6 +28,36 @@ class TicketDeploymentController extends Controller
         private TicketDeploymentExecutionService $executionService,
         private TicketRollbackService $rollbackService
     ) {}
+
+    public function queue(Request $request): JsonResponse
+    {
+        $items = Ticket::query()
+            ->whereIn('status', [
+                'release_ready',
+                'deployment_scheduled',
+                'deployment_in_progress',
+                'deployed',
+                'monitoring',
+                'post_release_issue',
+            ])
+            ->with(['requester.division', 'division', 'application', 'category', 'currentAssignee'])
+            ->latest('updated_at')
+            ->paginate($request->integer('per_page', 20));
+
+        return ApiResponse::success(
+            $request,
+            'Deployment queue retrieved',
+            TicketResource::collection($items->items())->resolve($request),
+            meta: [
+                'pagination' => [
+                    'current_page' => $items->currentPage(),
+                    'per_page' => $items->perPage(),
+                    'total' => $items->total(),
+                    'last_page' => $items->lastPage(),
+                ],
+            ]
+        );
+    }
 
     public function schedule(ScheduleDeploymentRequest $request, Ticket $ticket): JsonResponse
     {
@@ -45,7 +78,14 @@ class TicketDeploymentController extends Controller
         Gate::authorize('view', $ticket);
         Gate::authorize('manageReleasePreparation', $ticket);
 
-        $deployment = $ticket->deployments()->latest('version')->firstOrFail();
+        $deployment = $ticket->deployments()->latest('version')->first();
+        if (! $deployment) {
+            $deployment = $this->schedulingService->schedule(
+                $ticket,
+                ['scheduled_start_at' => now()->toDateTimeString(), 'title' => 'Deployment for ' . $ticket->ticket_number],
+                $request->user()
+            );
+        }
 
         $this->executionService->start($deployment, $request->user(), $request->validated('notes'));
 

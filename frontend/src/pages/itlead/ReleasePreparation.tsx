@@ -70,12 +70,21 @@ export default function ReleasePreparation() {
 
   const act = (work: () => Promise<unknown>, message: string) => {
     setBusy(true)
+    setError('')
     work()
       .then(() => {
         setSuccess(message)
         load()
       })
-      .catch((cause) => setError((cause as ApiRequestError).message))
+      .catch((cause) => {
+        const apiErr = cause as ApiRequestError
+        if (apiErr.errors) {
+          const detailed = Object.values(apiErr.errors).flat().join(' | ')
+          setError(`Validasi Gagal: ${detailed}`)
+        } else {
+          setError(apiErr.message || 'Gagal menyimpan data.')
+        }
+      })
       .finally(() => setBusy(false))
   }
   const requestApproval = () =>
@@ -114,6 +123,13 @@ export default function ReleasePreparation() {
       'Rollback plan dibuat.',
     )
 
+  const confirmReady = () =>
+    selected &&
+    act(
+      () => ticketService.confirmReleaseReady(selected.id),
+      'Rilis berhasil dikonfirmasi SIAP (Release Ready). Tiket berpindah ke antrean Deployment.',
+    )
+
   return (
     <div>
       {error && <Toast type="error" message={error} onClose={() => setError('')} />}
@@ -126,10 +142,10 @@ export default function ReleasePreparation() {
         <p className="py-16 text-center text-sm text-gray-500">Memuat release queue...</p>
       ) : (
         <div className="space-y-5">
-          <SectionCard title="Approval Request Queue">
+          <SectionCard title="Release Queue & Approval">
             <div className="grid gap-3 md:grid-cols-2">
               {tickets.length === 0 ? (
-                <EmptyState title="Queue kosong" message="Belum ada tiket UAT Approved." />
+                <EmptyState title="Queue kosong" message="Belum ada tiket dalam proses rilis." />
               ) : (
                 tickets.map((ticket) => (
                   <button
@@ -202,68 +218,75 @@ export default function ReleasePreparation() {
             </div>
           </SectionCard>
           {detail?.ticket.status === 'release_preparation' && (
-            <div className="grid gap-5 lg:grid-cols-2">
-              <SectionCard title="Release Plan">
-                <div className="space-y-3">
-                  <Input
-                    label="Change summary"
-                    value={String(plan.change_summary)}
-                    onChange={(e) => setPlan({ ...plan, change_summary: e.target.value })}
-                  />
-                  <Textarea
-                    label="Technical summary"
-                    rows={3}
-                    value={String(plan.technical_summary)}
-                    onChange={(e) => setPlan({ ...plan, technical_summary: e.target.value })}
-                  />
-                  <Input
-                    label="Affected component"
-                    value={String((plan.affected_components as string[])[0] || '')}
-                    onChange={(e) => setPlan({ ...plan, affected_components: [e.target.value] })}
-                  />
-                  <Textarea
-                    label="Validation step"
-                    rows={2}
-                    value={String((plan.validation_steps as string[])[0] || '')}
-                    onChange={(e) => setPlan({ ...plan, validation_steps: [e.target.value] })}
-                  />
-                  <Textarea
-                    label="Monitoring plan"
-                    rows={2}
-                    value={String((plan.monitoring_plan as string[])[0] || '')}
-                    onChange={(e) => setPlan({ ...plan, monitoring_plan: [e.target.value] })}
-                  />
-                  <Button loading={busy} onClick={savePlan}>
-                    Simpan Release Plan
-                  </Button>
-                </div>
-              </SectionCard>
-              <SectionCard title="Rollback Plan">
-                <div className="space-y-3">
-                  <Textarea
-                    label="Rollback trigger"
-                    rows={2}
-                    value={rollback.rollback_trigger}
-                    onChange={(e) => setRollback({ ...rollback, rollback_trigger: e.target.value })}
-                  />
-                  <Textarea
-                    label="Rollback steps"
-                    rows={3}
-                    value={rollback.rollback_steps[0]}
-                    onChange={(e) => setRollback({ ...rollback, rollback_steps: [e.target.value] })}
-                  />
-                  <Textarea
-                    label="Validation after rollback"
-                    rows={2}
-                    value={rollback.validation_after_rollback[0]}
-                    onChange={(e) => setRollback({ ...rollback, validation_after_rollback: [e.target.value] })}
-                  />
-                  <Button loading={busy} onClick={saveRollback}>
-                    Simpan Rollback Plan
-                  </Button>
-                </div>
-              </SectionCard>
-            </div>
+            <>
+              <div className="grid gap-5 lg:grid-cols-2">
+                <SectionCard title="Release Plan">
+                  <div className="space-y-3">
+                    <Input
+                      label="Change summary"
+                      value={String(plan.change_summary)}
+                      onChange={(e) => setPlan({ ...plan, change_summary: e.target.value })}
+                    />
+                    <Textarea
+                      label="Technical summary"
+                      rows={3}
+                      value={String(plan.technical_summary)}
+                      onChange={(e) => setPlan({ ...plan, technical_summary: e.target.value })}
+                    />
+                    <Input
+                      label="Affected component"
+                      value={String((plan.affected_components as string[])[0] || '')}
+                      onChange={(e) => setPlan({ ...plan, affected_components: [e.target.value] })}
+                    />
+                    <Textarea
+                      label="Validation step"
+                      rows={2}
+                      value={String((plan.validation_steps as string[])[0] || '')}
+                      onChange={(e) => setPlan({ ...plan, validation_steps: [e.target.value] })}
+                    />
+                    <Textarea
+                      label="Monitoring plan"
+                      rows={2}
+                      value={String((plan.monitoring_plan as string[])[0] || '')}
+                      onChange={(e) => setPlan({ ...plan, monitoring_plan: [e.target.value] })}
+                    />
+                    <Button loading={busy} onClick={savePlan}>
+                      Simpan Release Plan
+                    </Button>
+                  </div>
+                </SectionCard>
+                <SectionCard title="Rollback Plan">
+                  <div className="space-y-3">
+                    <Textarea
+                      label="Rollback trigger"
+                      rows={2}
+                      value={rollback.rollback_trigger}
+                      onChange={(e) => setRollback({ ...rollback, rollback_trigger: e.target.value })}
+                    />
+                    <Textarea
+                      label="Rollback steps"
+                      rows={3}
+                      value={rollback.rollback_steps[0]}
+                      onChange={(e) => setRollback({ ...rollback, rollback_steps: [e.target.value] })}
+                    />
+                    <Textarea
+                      label="Validation after rollback"
+                      rows={2}
+                      value={rollback.validation_after_rollback[0]}
+                      onChange={(e) => setRollback({ ...rollback, validation_after_rollback: [e.target.value] })}
+                    />
+                    <Button loading={busy} onClick={saveRollback}>
+                      Simpan Rollback Plan
+                    </Button>
+                  </div>
+                </SectionCard>
+              </div>
+              <div className="flex justify-end p-2 bg-blue-50 border border-blue-200 rounded-xl">
+                <Button variant="success" size="lg" loading={busy} onClick={confirmReady}>
+                  ✓ Konfirmasi Rilis Siap (Confirm Release Ready)
+                </Button>
+              </div>
+            </>
           )}
         </div>
       )}

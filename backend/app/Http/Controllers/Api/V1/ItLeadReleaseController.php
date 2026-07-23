@@ -33,7 +33,7 @@ final class ItLeadReleaseController extends Controller
 
     public function approvalQueue(Request $request): JsonResponse
     {
-        $items = Ticket::query()->where('status', 'uat_approved')->with(self::RELATIONS)->latest('uat_approved_at')->paginate($request->integer('per_page', 20));
+        $items = Ticket::query()->whereIn('status', ['uat_approved', 'approval_pending', 'release_preparation'])->with(self::RELATIONS)->latest('updated_at')->paginate($request->integer('per_page', 20));
 
         return ApiResponse::success($request, 'Release approval request queue retrieved', TicketResource::collection($items->items())->resolve($request), meta: ['pagination' => ['current_page' => $items->currentPage(), 'per_page' => $items->perPage(), 'total' => $items->total(), 'last_page' => $items->lastPage()]]);
     }

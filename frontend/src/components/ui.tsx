@@ -1,5 +1,5 @@
 import React from 'react'
-import { getStatusColor, getPriorityColor, STATUS_LABELS, PRIORITY_LABELS, getSlaLabel } from '../data'
+import { getStatusColor, getPriorityColor, STATUS_LABELS, PRIORITY_LABELS, getSlaLabel } from '../presentation'
 import type { TicketStatus, Priority } from '../types'
 
 // ── Badge ─────────────────────────────────────────────────────────────────────

@@ -35,9 +35,18 @@ export default function ReleasePreparationPIC() {
   }, [selected])
   const act = (work: () => Promise<unknown>, message: string) => {
     setBusy(true)
+    setError('')
     work()
       .then(() => setSuccess(message))
-      .catch((cause) => setError((cause as ApiRequestError).message))
+      .catch((cause) => {
+        const apiErr = cause as ApiRequestError
+        if (apiErr.errors) {
+          const detailed = Object.values(apiErr.errors).flat().join(' | ')
+          setError(`Validasi Gagal: ${detailed}`)
+        } else {
+          setError(apiErr.message || 'Gagal menyimpan data.')
+        }
+      })
       .finally(() => setBusy(false))
   }
   return (

@@ -4,12 +4,14 @@ import {
   PageHeader,
   Button,
   StatusBadge,
+  PriorityBadge,
   SectionCard,
   Textarea,
   Toast,
   Modal,
   Input,
   Select,
+  EmptyState,
 } from '../../components/ui'
 import { ticketService, type TicketRecord } from '../../services/ticketService'
 import { ApiRequestError } from '../../api/client'
@@ -19,6 +21,7 @@ export default function UAT() {
   const ticketId = Number(new URLSearchParams(window.location.search).get('ticket_id'))
 
   const [ticket, setTicket] = useState<TicketRecord | null>(null)
+  const [assignedTickets, setAssignedTickets] = useState<TicketRecord[]>([])
   const [scenarios, setScenarios] = useState<any[]>([])
   const [findings, setFindings] = useState<any[]>([])
 
@@ -56,8 +59,19 @@ export default function UAT() {
 
   const loadData = () => {
     if (!ticketId) {
-      setError('Ticket ID tidak ditemukan.')
-      setLoading(false)
+      setLoading(true)
+      ticketService
+        .requesterUatAssignments()
+        .then((list) => {
+          setAssignedTickets(list)
+          if (list.length === 1) {
+            navigate(`/user/uat?ticket_id=${list[0].id}`, { replace: true })
+          }
+        })
+        .catch((cause) => {
+          setError((cause as ApiRequestError).message || 'Gagal memuat antrian UAT.')
+        })
+        .finally(() => setLoading(false))
       return
     }
     setLoading(true)
@@ -295,6 +309,54 @@ export default function UAT() {
     return (
       <div className="py-20 text-center text-sm text-gray-500" role="status">
         Memuat data UAT...
+      </div>
+    )
+  }
+
+  if (!ticketId) {
+    return (
+      <div className="max-w-4xl mx-auto pb-10">
+        {error && <Toast message={error} type="error" onClose={() => setError('')} />}
+        <PageHeader
+          title="Antrean UAT Requester"
+          subtitle="Daftar tiket yang membutuhkan pengujian dan persetujuan (sign-off) UAT dari Anda"
+        />
+        <SectionCard title={`Tiket Perlu UAT (${assignedTickets.length})`}>
+          {assignedTickets.length === 0 ? (
+            <EmptyState
+              title="Belum ada tiket UAT"
+              message="Tidak ada tiket yang membutuhkan persetujuan UAT saat ini."
+            />
+          ) : (
+            <div className="space-y-3">
+              {assignedTickets.map((t) => (
+                <div
+                  key={t.id}
+                  className="flex flex-wrap items-center justify-between gap-4 border rounded-xl p-4 hover:border-blue-400 bg-white"
+                >
+                  <div>
+                    <span className="font-mono text-xs text-gray-500">{t.ticket_number}</span>
+                    <p className="font-semibold text-sm text-gray-900">{t.title}</p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ditugaskan untuk UAT: {t.uat_assigned_at ? new Date(t.uat_assigned_at).toLocaleString('id-ID') : '—'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {t.final_priority && <PriorityBadge priority={t.final_priority.key} />}
+                    <StatusBadge status={t.status} />
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => navigate(`/user/uat?ticket_id=${t.id}`)}
+                    >
+                      Jalankan UAT →
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </SectionCard>
       </div>
     )
   }

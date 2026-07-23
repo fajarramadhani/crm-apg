@@ -34,12 +34,17 @@ export default function DeploymentQueue() {
 
   const act = async (fn: () => Promise<any>, msg: string) => {
     setBusy(true)
+    setError('')
     try {
       await fn()
       setSuccess(msg)
       await load()
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Aksi gagal')
+      if (err.errors) {
+        setError(Object.values(err.errors).flat().join(' | '))
+      } else {
+        setError(err.message || 'Aksi gagal')
+      }
     } finally {
       setBusy(false)
     }
@@ -105,93 +110,109 @@ export default function DeploymentQueue() {
 
           {selected && (
             <div className="space-y-5 lg:col-span-2">
-              <SectionCard title="Deployment Controls">
-                {selected.status === 'release_ready' && (
-                  <div className="space-y-3">
-                    <Input
-                      type="datetime-local"
-                      label="Jadwal Deployment"
-                      value={scheduleData.scheduled_start_at}
-                      onChange={(e: any) => setScheduleData({ scheduled_start_at: e.target.value })}
-                    />
-                    <Button loading={busy} onClick={handleSchedule} disabled={!scheduleData.scheduled_start_at}>
-                      Jadwalkan Deployment
-                    </Button>
-                  </div>
-                )}
-
-                {selected.status === 'deployment_scheduled' && (
-                  <Button loading={busy} onClick={handleStart}>
-                    Mulai Deployment
-                  </Button>
-                )}
-
-                {selected.status === 'deployment_in_progress' && selected.current_deployment && (
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600">
-                      Eksekusi step deployment (Tugas PIC akan ditangani di workspace PIC, namun IT Lead dapat mengambil
-                      alih):
-                    </p>
-                    {selected.current_deployment.steps?.map((step: any) => (
-                      <div key={step.id} className="rounded border p-3 text-sm flex items-center justify-between">
-                        <div>
-                          <b>
-                            Step {step.step_number}: {step.title}
-                          </b>{' '}
-                          ({step.step_type})<p className="text-xs text-gray-500">Status: {step.status}</p>
-                        </div>
-                        {step.status !== 'completed' && (
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="success" onClick={() => handleStep(step, 'completed')}>
-                              Selesai
-                            </Button>
-                            <Button size="sm" variant="danger" onClick={() => handleStep(step, 'failed')}>
-                              Gagal
-                            </Button>
-                          </div>
-                        )}
+              <SectionCard title={`Deployment Controls — ${selected.ticket_number}`}>
+                <div className="space-y-5">
+                  {/* Fitur Atur Tanggal & Waktu Deployment */}
+                  <div className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-800">📅 Atur Tanggal & Waktu Deployment</h4>
+                    <div className="flex flex-wrap items-end gap-3">
+                      <div className="flex-1 min-w-[200px]">
+                        <Input
+                          type="datetime-local"
+                          label="Pilih Tanggal & Jam Rilis"
+                          value={scheduleData.scheduled_start_at}
+                          onChange={(e: any) => setScheduleData({ scheduled_start_at: e.target.value })}
+                        />
                       </div>
-                    ))}
-
-                    <div className="flex gap-3 pt-4 border-t">
-                      <Button variant="primary" loading={busy} onClick={handleComplete}>
-                        Selesaikan Deployment
-                      </Button>
-                      <Button variant="danger" loading={busy} onClick={handleFail}>
-                        Gagalkan Deployment
+                      <Button
+                        loading={busy}
+                        onClick={handleSchedule}
+                        disabled={!scheduleData.scheduled_start_at}
+                      >
+                        Jadwalkan Deployment
                       </Button>
                     </div>
                   </div>
-                )}
 
-                {selected.status === 'deployed' && (
-                  <Button variant="primary" loading={busy} onClick={handleStartMonitoring}>
-                    Mulai Masa Monitoring
-                  </Button>
-                )}
-              </SectionCard>
+                  {/* Status & Action Control Buttons */}
+                  <div className="pt-2">
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3">⚡ Eksekusi Deployment</h4>
 
-              {['monitoring', 'post_release_issue', 'awaiting_requester_confirmation'].includes(selected.status) && (
-                <SectionCard title="Monitoring & Closure">
-                  <div className="space-y-3">
-                    <p className="text-sm">
-                      Status saat ini: <b>{selected.status.replace(/_/g, ' ').toUpperCase()}</b>
-                    </p>
-
-                    {selected.status === 'awaiting_requester_confirmation' && (
-                      <div className="rounded bg-yellow-50 p-3 text-sm text-yellow-800 border border-yellow-200">
-                        Menunggu konfirmasi final dari Requester sebelum dapat ditutup. Jika requester menerima, tiket
-                        dapat ditutup. Jika menolak, tiket akan dikembalikan ke Development.
+                    {['release_ready', 'deployment_scheduled'].includes(selected.status) && (
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-600">
+                          Tiket siap untuk dirilis. Klik tombol di bawah untuk memulai proses deployment ke lingkungan produksi.
+                        </p>
+                        <Button variant="success" size="lg" loading={busy} onClick={handleStart}>
+                          ▶ Mulai Deployment Sekarang
+                        </Button>
                       </div>
                     )}
 
-                    {/* IT Lead can close if condition met. Closure gate checks if confirmation exists and is accepted */}
-                    <Button variant="success" loading={busy} onClick={handleClose}>
-                      Close Ticket (Selesai)
-                    </Button>
+                    {selected.status === 'deployment_in_progress' && (
+                      <div className="space-y-4">
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 font-medium">
+                          ⚙️ Deployment sedang berjalan (Deployment In Progress)
+                        </div>
+
+                        {selected.current_deployment?.steps && selected.current_deployment.steps.length > 0 && (
+                          <div className="space-y-2">
+                            {selected.current_deployment.steps.map((step: any) => (
+                              <div key={step.id} className="rounded-xl border p-3 text-sm flex items-center justify-between bg-white shadow-sm">
+                                <div>
+                                  <b>Step {step.step_number}: {step.title}</b> ({step.step_type})
+                                  <p className="text-xs text-gray-500">Status: {step.status}</p>
+                                </div>
+                                {step.status !== 'completed' && (
+                                  <div className="flex gap-2">
+                                    <Button size="sm" variant="success" onClick={() => handleStep(step, 'completed')}>
+                                      Selesai
+                                    </Button>
+                                    <Button size="sm" variant="danger" onClick={() => handleStep(step, 'failed')}>
+                                      Gagal
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex flex-wrap gap-3 pt-3 border-t">
+                          <Button variant="success" size="lg" loading={busy} onClick={handleComplete}>
+                            ✓ Selesaikan Deployment
+                          </Button>
+                          <Button variant="danger" loading={busy} onClick={handleFail}>
+                            ✕ Gagalkan Deployment
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+
+                    {selected.status === 'deployed' && (
+                      <div className="space-y-3">
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 font-medium">
+                          ✅ Deployment telah berhasil dilakukan!
+                        </div>
+                        <Button variant="primary" size="lg" loading={busy} onClick={handleStartMonitoring}>
+                          Mulai Masa Monitoring
+                        </Button>
+                      </div>
+                    )}
+
+                    {['monitoring', 'post_release_issue', 'awaiting_requester_confirmation', 'closed'].includes(selected.status) && (
+                      <div className="space-y-4">
+                        <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900 font-medium">
+                          🔍 Status: {selected.status.replace(/_/g, ' ').toUpperCase()}
+                        </div>
+                        <Button variant="success" size="lg" loading={busy} onClick={handleClose}>
+                          ✓ Close Ticket (Selesai Penanganan)
+                        </Button>
+                      </div>
+                    )}
                   </div>
-                </SectionCard>
-              )}
+                </div>
+              </SectionCard>
             </div>
           )}
         </div>

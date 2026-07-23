@@ -61,7 +61,7 @@ Route::prefix('v1')->group(function (): void {
 
     Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
         Route::prefix('tickets')->name('api.v1.tickets.')->group(function (): void {
-            Route::get('/', [TicketController::class, 'index'])->middleware('permission:ticket.own.view')->name('index');
+            Route::get('/', [TicketController::class, 'index'])->name('index');
             Route::post('/', [TicketController::class, 'store'])->middleware('permission:ticket.create')->name('store');
             Route::get('/{ticket}', [TicketController::class, 'show'])->name('show');
             Route::put('/{ticket}', [TicketController::class, 'update'])->name('update');
@@ -198,6 +198,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('/tickets/{ticket}/release-checklist', [ItLeadReleaseController::class, 'checklist'])->middleware('permission:ticket.release_checklist.view');
             Route::post('/tickets/{ticket}/release-checklist/{item}/decision', [ItLeadReleaseController::class, 'checklistDecision'])->middleware('permission:ticket.release_checklist.manage');
             Route::post('/tickets/{ticket}/confirm-release-ready', [ItLeadReleaseController::class, 'confirmReady'])->middleware('permission:ticket.release_readiness.confirm');
+            Route::get('/deployment-queue', [TicketDeploymentController::class, 'queue'])->middleware('permission:ticket.release_readiness.confirm');
 
         });
 

@@ -52,7 +52,8 @@ cd backend
 cp .env.example .env
 composer install
 php artisan key:generate
-php artisan migrate --seed
+php artisan migrate
+php artisan db:seed --class=RoleSeeder
 ```
 
 Sesuaikan kredensial MySQL hanya di `backend/.env`. File `.env` dan credential tidak boleh dicommit. Buat database development bernama `apg_crm`, atau ubah `DB_DATABASE` sesuai environment lokal.
@@ -75,11 +76,11 @@ php artisan serve
 
 Health check API tersedia di `GET http://localhost:8000/api/v1/health`. Frontend dan backend harus memakai hostname yang konsisten (`localhost` pada contoh) agar cookie first-party Sanctum bekerja.
 
-## Authentication lokal
+## Authentication dan provisioning
 
 Frontend mengambil CSRF cookie dari `/sanctum/csrf-cookie`, lalu memakai session cookie HttpOnly untuk `POST /api/v1/auth/login`, `GET /api/v1/auth/me`, dan `POST /api/v1/auth/logout`. Tidak ada bearer token yang disimpan di `localStorage`.
 
-Seeder menyediakan delapan akun khusus environment `local`/`testing`: `requester`, `supervisor`, `itlead`, `pic`, `qa`, `manager`, `executive`, dan `admin`, masing-masing pada domain `@tichub.local` dengan password lokal `password`. `DevelopmentUserSeeder` menolak membuat akun tersebut di production. Credential ini hanya untuk development/testing dan tidak ditampilkan pada UI Login.
+Repository tidak menyediakan akun bersama atau password default. Default seeding hanya membuat delapan role otorisasi. Untuk environment testing/staging, provision satu identitas bernama menggunakan password dari environment terlindungi melalui `php artisan users:provision-testing`; lihat `docs/testing-environment-setup.md`. Command tersebut menolak production dan tidak pernah menimpa user yang sudah ada.
 
 ## Database
 
@@ -123,14 +124,23 @@ php artisan test
 vendor/bin/pint --test
 ```
 
+CI mempertahankan suite SQLite untuk feedback cepat dan menjalankan suite backend yang sama pada service MySQL 8.4 disposable. Job MySQL juga memverifikasi `migrate:fresh --seed`, rollback migration terakhir, reapply, dan migration status; hasilnya baru menjadi release evidence setelah workflow GitHub Actions terkait lulus.
+
 Current Phase 15 verification baseline:
 
 - Backend automated suite: **182 tests, 1,145 assertions**, all passing.
 - API inventory: **25 Knowledge Base routes** and **268 API routes total**.
 - Frontend: TypeScript check, Prettier check, and production build pass.
-- Build warning: the main minified JavaScript chunk is 945.85 kB (254.53 kB gzip), above Vite's 500 kB warning threshold; code splitting remains a follow-up.
+- Frontend routes are lazy-loaded. The entry chunk is 288.88 kB (90.05 kB gzip) and the largest generated chunk is 303.42 kB (90.49 kB gzip), both below Vite's 500 kB warning threshold.
 - HTTP server E2E passed 12 Knowledge Base lifecycle, authorization, sanitization, feedback, audit, and request-ID checks against a disposable SQLite runtime.
 - Chrome browser verification passed for desktop PIC (1440x900), mobile Requester (390x844), and desktop Admin (1440x900), including login/logout, Knowledge Base navigation, role-specific management, console/page errors, HTTP 500 responses, and horizontal overflow.
+
+Current testing-readiness follow-up:
+
+- Runtime frontend fixture datasets and simulated Admin/Executive/SLA pages have been removed; legacy URLs redirect to API-backed queues, reports, or master-data pages.
+- Default database seeding creates canonical roles only and is covered by a regression test that asserts zero users and zero organization master records.
+- Named non-production users are provisioned explicitly with protected credentials; no shared account or default password is shipped.
+- Backend validation passes **187 tests / 1,156 assertions**. Frontend typecheck, formatting, and production build pass with a 277.49 kB entry chunk (86.31 kB gzip).
 
 ## Status implementasi
 

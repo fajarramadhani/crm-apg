@@ -15,6 +15,8 @@ import {
 import { ticketService, type TicketRecord } from '../../services/ticketService'
 import type { Priority, TicketStatus } from '../../types'
 
+import { useAuth } from '../../context/AuthContext'
+
 const statuses = [
   ['pending_validation', 'Pending Validation'],
   ['need_revision', 'Need Revision'],
@@ -24,6 +26,7 @@ const statuses = [
 ]
 
 export default function TicketHistory() {
+  const { user } = useAuth()
   const navigate = useNavigate()
   const [tickets, setTickets] = useState<TicketRecord[]>([])
   const [search, setSearch] = useState('')
@@ -45,21 +48,25 @@ export default function TicketHistory() {
           setTotal(response.meta.pagination.total)
           setPages(response.meta.pagination.last_page)
         })
-        .catch(() => setError('Riwayat tiket tidak dapat dimuat.'))
+        .catch(() => setError('Daftar tiket tidak dapat dimuat.'))
         .finally(() => setLoading(false))
     }, 250)
     return () => window.clearTimeout(timeout)
   }, [search, status, page])
 
+  const isRequester = user?.role?.key === 'requester'
+
   return (
     <div>
       <PageHeader
-        title="Riwayat Tiket Saya"
+        title={isRequester ? 'Riwayat Tiket Saya' : 'Daftar Tiket System'}
         subtitle={`${total} tiket ditemukan`}
         actions={
-          <Button variant="primary" onClick={() => navigate('/user/create-ticket')}>
-            ＋ Buat Tiket
-          </Button>
+          isRequester ? (
+            <Button variant="primary" onClick={() => navigate('/user/create-ticket')}>
+              ＋ Buat Tiket
+            </Button>
+          ) : null
         }
       />
       <FilterBar>

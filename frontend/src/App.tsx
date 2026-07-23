@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AuthProvider, useAuth } from './context/AuthContext'
@@ -7,58 +7,56 @@ import type { Role } from './types'
 import Login from './pages/Login'
 import Unauthorized from './pages/Unauthorized'
 import NotFound from './pages/NotFound'
-import UserDashboard from './pages/user/UserDashboard'
-import CreateTicket from './pages/user/CreateTicket'
-import TicketHistory from './pages/user/TicketHistory'
-import TicketDetail from './pages/user/TicketDetail'
-import Confirmations from './pages/user/Confirmations'
-import UAT from './pages/user/UAT'
-import SupervisorDashboard from './pages/supervisor/SupervisorDashboard'
-import ValidationQueue from './pages/supervisor/ValidationQueue'
-import ITLeadDashboard from './pages/itlead/ITLeadDashboard'
-import TriageQueue from './pages/itlead/TriageQueue'
-import PriorityAssignment from './pages/itlead/PriorityAssignment'
-import PlanReview from './pages/itlead/PlanReview'
-import DevelopmentMonitoring from './pages/itlead/DevelopmentMonitoring'
-import DeploymentQueue from './pages/itlead/DeploymentQueue'
-import UatAssignmentQueue from './pages/itlead/UatAssignmentQueue'
-import ReleasePreparation from './pages/itlead/ReleasePreparation'
-import PICDashboard from './pages/pic/PICDashboard'
-import Workspace from './pages/pic/Workspace'
-import InternalTestingPIC from './pages/pic/InternalTesting'
-import ReleasePreparationPIC from './pages/pic/ReleasePreparation'
-import QADashboard from './pages/qa/QADashboard'
-import TestingForm from './pages/qa/TestingForm'
-import ManagerApproval from './pages/manager/ManagerApproval'
-import SLAMonitoring from './pages/shared/SLAMonitoring'
-import { NotificationCenter } from './pages/notifications/NotificationCenter'
-import { NotificationPreferences } from './pages/settings/NotificationPreferences'
-import { ItLeadAlerts } from './pages/itlead/ItLeadAlerts'
-import { ManagerAlerts } from './pages/manager/ManagerAlerts'
-import ExecutiveDashboard from './pages/executive/ExecutiveDashboard'
-import Statistics from './pages/executive/Statistics'
-import AnalyticsDashboard from './pages/shared/AnalyticsDashboard'
-import AdminConsole from './pages/admin/AdminConsole'
-import UserManagement from './pages/admin/UserManagement'
-import DivisionManagement from './pages/admin/DivisionManagement'
-import SLARules from './pages/admin/SLARules'
-import EscalationMatrix from './pages/admin/EscalationMatrix'
-import AuditLog from './pages/admin/AuditLog'
-import KnowledgeBaseList from './pages/knowledgeBase/KnowledgeBaseList'
-import KnowledgeBaseDetail from './pages/knowledgeBase/KnowledgeBaseDetail'
-import KnowledgeBaseForm from './pages/knowledgeBase/KnowledgeBaseForm'
-import KnowledgeBaseReview from './pages/knowledgeBase/KnowledgeBaseReview'
-import KnowledgeBaseTags from './pages/settings/KnowledgeBaseTags'
+
+const CreateTicket = lazy(() => import('./pages/user/CreateTicket'))
+const TicketHistory = lazy(() => import('./pages/user/TicketHistory'))
+const TicketDetail = lazy(() => import('./pages/user/TicketDetail'))
+const Confirmations = lazy(() => import('./pages/user/Confirmations'))
+const UAT = lazy(() => import('./pages/user/UAT'))
+const ValidationQueue = lazy(() => import('./pages/supervisor/ValidationQueue'))
+const TriageQueue = lazy(() => import('./pages/itlead/TriageQueue'))
+const PlanReview = lazy(() => import('./pages/itlead/PlanReview'))
+const DevelopmentMonitoring = lazy(() => import('./pages/itlead/DevelopmentMonitoring'))
+const DeploymentQueue = lazy(() => import('./pages/itlead/DeploymentQueue'))
+const UatAssignmentQueue = lazy(() => import('./pages/itlead/UatAssignmentQueue'))
+const ReleasePreparation = lazy(() => import('./pages/itlead/ReleasePreparation'))
+const PICDashboard = lazy(() => import('./pages/pic/PICDashboard'))
+const Workspace = lazy(() => import('./pages/pic/Workspace'))
+const InternalTestingPIC = lazy(() => import('./pages/pic/InternalTesting'))
+const ReleasePreparationPIC = lazy(() => import('./pages/pic/ReleasePreparation'))
+const QADashboard = lazy(() => import('./pages/qa/QADashboard'))
+const TestingForm = lazy(() => import('./pages/qa/TestingForm'))
+const ManagerApproval = lazy(() => import('./pages/manager/ManagerApproval'))
+const NotificationCenter = lazy(() =>
+  import('./pages/notifications/NotificationCenter').then((module) => ({ default: module.NotificationCenter })),
+)
+const NotificationPreferences = lazy(() =>
+  import('./pages/settings/NotificationPreferences').then((module) => ({ default: module.NotificationPreferences })),
+)
+const ItLeadAlerts = lazy(() =>
+  import('./pages/itlead/ItLeadAlerts').then((module) => ({ default: module.ItLeadAlerts })),
+)
+const ManagerAlerts = lazy(() =>
+  import('./pages/manager/ManagerAlerts').then((module) => ({ default: module.ManagerAlerts })),
+)
+const AnalyticsDashboard = lazy(() => import('./pages/shared/AnalyticsDashboard'))
+const DivisionManagement = lazy(() => import('./pages/admin/DivisionManagement'))
+const SLARules = lazy(() => import('./pages/admin/SLARules'))
+const KnowledgeBaseList = lazy(() => import('./pages/knowledgeBase/KnowledgeBaseList'))
+const KnowledgeBaseDetail = lazy(() => import('./pages/knowledgeBase/KnowledgeBaseDetail'))
+const KnowledgeBaseForm = lazy(() => import('./pages/knowledgeBase/KnowledgeBaseForm'))
+const KnowledgeBaseReview = lazy(() => import('./pages/knowledgeBase/KnowledgeBaseReview'))
+const KnowledgeBaseTags = lazy(() => import('./pages/settings/KnowledgeBaseTags'))
 
 export const DEFAULT_ROUTES: Record<Role, string> = {
-  requester: '/user/dashboard',
-  supervisor: '/supervisor/dashboard',
-  it_lead: '/itlead/dashboard',
+  requester: '/user/tickets',
+  supervisor: '/supervisor/validation-queue',
+  it_lead: '/itlead/triage',
   pic: '/pic/dashboard',
   qa: '/qa/dashboard',
   manager: '/manager/approvals',
-  executive: '/executive/dashboard',
-  admin: '/admin/console',
+  executive: '/executive/reports',
+  admin: '/admin/divisions',
 }
 
 function LoadingSession() {
@@ -67,6 +65,17 @@ function LoadingSession() {
       <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
         <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#1E3A8A]/30 border-t-[#1E3A8A]" />
         Memeriksa sesi...
+      </div>
+    </div>
+  )
+}
+
+function LoadingPage() {
+  return (
+    <div className="flex min-h-64 items-center justify-center" role="status">
+      <div className="flex items-center gap-3 text-sm font-medium text-gray-600">
+        <span className="h-5 w-5 animate-spin rounded-full border-2 border-[#1E3A8A]/30 border-t-[#1E3A8A]" />
+        Memuat halaman...
       </div>
     </div>
   )
@@ -93,7 +102,9 @@ function AuthenticatedLayout() {
   if (!user) return null
   return (
     <Layout role={user.role.key} user={user} onLogout={logout}>
-      <Outlet />
+      <Suspense fallback={<LoadingPage />}>
+        <Outlet />
+      </Suspense>
     </Layout>
   )
 }
@@ -128,18 +139,32 @@ function AppRoutes() {
         }
       >
         <Route index element={<HomeRedirect />} />
-        <Route path="/user/dashboard" element={guard(['requester'], <UserDashboard />)} />
+        <Route path="/user/dashboard" element={guard(['requester'], <Navigate to="/user/tickets" replace />)} />
         <Route path="/user/create-ticket" element={guard(['requester'], <CreateTicket />)} />
-        <Route path="/user/tickets" element={guard(['requester'], <TicketHistory />)} />
-        <Route path="/user/tickets/:id" element={guard(['requester'], <TicketDetail />)} />
+        <Route path="/user/tickets" element={guard(allRoles, <TicketHistory />)} />
+        <Route path="/user/tickets/:id" element={guard(allRoles, <TicketDetail />)} />
+        <Route path="/tickets/:id" element={guard(allRoles, <TicketDetail />)} />
         <Route path="/user/confirmations" element={guard(['requester'], <Confirmations />)} />
         <Route path="/user/uat" element={guard(['requester'], <UAT />)} />
-        <Route path="/supervisor/dashboard" element={guard(['supervisor'], <SupervisorDashboard />)} />
+        <Route path="/requester/uat" element={<Navigate to="/user/uat" replace />} />
+        <Route path="/requester/uat-assignments" element={<Navigate to="/user/uat" replace />} />
+        <Route path="/requester/tickets" element={<Navigate to="/user/tickets" replace />} />
+        <Route path="/requester/tickets/:id" element={guard(allRoles, <TicketDetail />)} />
+        <Route path="/requester/create-ticket" element={<Navigate to="/user/create-ticket" replace />} />
+        <Route path="/requester/confirmations" element={<Navigate to="/user/confirmations" replace />} />
+        <Route path="/requester/dashboard" element={<Navigate to="/user/tickets" replace />} />
+
+        <Route
+          path="/supervisor/dashboard"
+          element={guard(['supervisor'], <Navigate to="/supervisor/validation-queue" replace />)}
+        />
         <Route path="/supervisor/validation-queue" element={guard(['supervisor'], <ValidationQueue />)} />
         <Route path="/supervisor/reports" element={guard(['supervisor'], <AnalyticsDashboard role="supervisor" />)} />
-        <Route path="/itlead/dashboard" element={guard(['it_lead'], <ITLeadDashboard />)} />
+        <Route path="/supervisor/queue" element={guard(['supervisor'], <Navigate to="/supervisor/validation-queue" replace />)} />
+
+        <Route path="/itlead/dashboard" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
         <Route path="/itlead/triage" element={guard(['it_lead'], <TriageQueue />)} />
-        <Route path="/itlead/priority" element={guard(['it_lead'], <PriorityAssignment />)} />
+        <Route path="/itlead/priority" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
         <Route path="/itlead/plan-review" element={guard(['it_lead'], <PlanReview />)} />
         <Route path="/itlead/development" element={guard(['it_lead'], <DevelopmentMonitoring />)} />
         <Route path="/itlead/uat-assignment" element={guard(['it_lead'], <UatAssignmentQueue />)} />
@@ -147,18 +172,58 @@ function AppRoutes() {
         <Route path="/itlead/deployment" element={guard(['it_lead'], <DeploymentQueue />)} />
         <Route path="/itlead/alerts" element={guard(['it_lead'], <ItLeadAlerts />)} />
         <Route path="/itlead/reports" element={guard(['it_lead'], <AnalyticsDashboard role="it-lead" />)} />
+
+        {/* IT Lead Aliases with hyphen and queue names */}
+        <Route path="/it-lead/dashboard" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
+        <Route path="/it-lead/triage" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
+        <Route path="/it-lead/triage-queue" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
+        <Route path="/itlead/triage-queue" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
+        <Route path="/it-lead/priority" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
+        <Route path="/it-lead/plan-review" element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)} />
+        <Route path="/it-lead/plan-review-queue" element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)} />
+        <Route path="/itlead/plan-review-queue" element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)} />
+        <Route path="/it-lead/development" element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)} />
+        <Route path="/it-lead/development-queue" element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)} />
+        <Route path="/itlead/development-queue" element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)} />
+        <Route path="/it-lead/uat-assignment" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
+        <Route path="/it-lead/uat-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
+        <Route path="/itlead/uat-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
+        <Route path="/it-lead/qa-assignment" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
+        <Route path="/it-lead/qa-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
+        <Route path="/itlead/qa-assignment" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
+        <Route path="/itlead/qa-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
+        <Route path="/it-lead/release-preparation" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route path="/it-lead/approval-request-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route path="/it-lead/technical-approval-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route path="/itlead/approval-request-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route path="/itlead/technical-approval-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route path="/it-lead/approvals" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route path="/itlead/approvals" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route path="/it-lead/deployment" element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)} />
+        <Route path="/it-lead/deployment-queue" element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)} />
+        <Route path="/itlead/deployment-queue" element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)} />
+        <Route path="/it-lead/alerts" element={guard(['it_lead'], <Navigate to="/itlead/alerts" replace />)} />
+        <Route path="/it-lead/reports" element={guard(['it_lead'], <Navigate to="/itlead/reports" replace />)} />
+
         <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
         <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
         <Route path="/pic/rca" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />
+        <Route path="/pic/assignments" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />
         <Route path="/pic/testing" element={guard(['pic'], <InternalTestingPIC />)} />
         <Route path="/pic/release-preparation" element={guard(['pic'], <ReleasePreparationPIC />)} />
         <Route path="/pic/reports" element={guard(['pic'], <AnalyticsDashboard role="pic" />)} />
+
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
         <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />
+        <Route path="/qa/assignments" element={guard(['qa'], <Navigate to="/qa/dashboard" replace />)} />
+
         <Route path="/manager/approvals" element={guard(['manager'], <ManagerApproval />)} />
+        <Route path="/manager/business-approval-queue" element={guard(['manager'], <Navigate to="/manager/approvals" replace />)} />
+        <Route path="/manager/dashboard" element={guard(['manager'], <Navigate to="/manager/approvals" replace />)} />
         <Route path="/manager/alerts" element={guard(['manager'], <ManagerAlerts />)} />
         <Route path="/manager/reports" element={guard(['manager'], <AnalyticsDashboard role="manager" />)} />
-        <Route path="/sla-monitoring" element={guard(['it_lead', 'manager', 'executive'], <SLAMonitoring />)} />
+
+        <Route path="/sla-monitoring" element={<HomeRedirect />} />
         <Route path="/notifications" element={guard(allRoles, <NotificationCenter />)} />
         <Route path="/settings/notifications" element={guard(allRoles, <NotificationPreferences />)} />
         <Route path="/knowledge-base" element={permit(['knowledge_base.view'], <KnowledgeBaseList />)} />
@@ -177,15 +242,22 @@ function AppRoutes() {
           path="/settings/knowledge-base/tags"
           element={permit(['knowledge_base.manage_tags'], <KnowledgeBaseTags />)}
         />
-        <Route path="/executive/dashboard" element={guard(['executive'], <ExecutiveDashboard />)} />
-        <Route path="/executive/statistics" element={guard(['executive'], <Statistics />)} />
+        <Route
+          path="/executive/dashboard"
+          element={guard(['executive'], <Navigate to="/executive/reports" replace />)}
+        />
+        <Route
+          path="/executive/statistics"
+          element={guard(['executive'], <Navigate to="/executive/reports" replace />)}
+        />
         <Route path="/executive/reports" element={guard(['executive'], <AnalyticsDashboard role="executive" />)} />
-        <Route path="/admin/console" element={guard(['admin'], <AdminConsole />)} />
-        <Route path="/admin/users" element={guard(['admin'], <UserManagement />)} />
+        <Route path="/admin/dashboard" element={guard(['admin'], <Navigate to="/admin/divisions" replace />)} />
+        <Route path="/admin/console" element={guard(['admin'], <Navigate to="/admin/divisions" replace />)} />
+        <Route path="/admin/users" element={guard(['admin'], <Navigate to="/admin/divisions" replace />)} />
         <Route path="/admin/divisions" element={guard(['admin'], <DivisionManagement />)} />
         <Route path="/admin/sla-rules" element={guard(['admin'], <SLARules />)} />
-        <Route path="/admin/escalation" element={guard(['admin'], <EscalationMatrix />)} />
-        <Route path="/admin/audit-log" element={guard(['admin'], <AuditLog />)} />
+        <Route path="/admin/escalation" element={guard(['admin'], <Navigate to="/admin/sla-rules" replace />)} />
+        <Route path="/admin/audit-log" element={guard(['admin'], <Navigate to="/admin/divisions" replace />)} />
         <Route
           path="/unauthorized"
           element={<Unauthorized dashboardPath={user ? DEFAULT_ROUTES[user.role.key] : '/login'} />}

@@ -17,8 +17,19 @@ class TicketDeploymentSchedulingService
 {
     public function schedule(Ticket $ticket, array $data, User $actor): TicketDeployment
     {
-        if ($ticket->status !== TicketStatus::ReleaseReady) {
-            throw new InvalidArgumentException("Ticket must be in release_ready status. Current status: {$ticket->status->value}");
+        $allowedStatuses = [TicketStatus::ReleaseReady, TicketStatus::DeploymentScheduled, TicketStatus::DeploymentInProgress];
+        if (! in_array($ticket->status, $allowedStatuses, true)) {
+            throw new InvalidArgumentException("Ticket status cannot be scheduled. Current status: {$ticket->status->value}");
+        }
+
+        $existing = $ticket->deployments()->latest('version')->first();
+        if ($existing) {
+            $existing->update([
+                'scheduled_start_at' => $data['scheduled_start_at'],
+                'scheduled_end_at' => $data['scheduled_end_at'] ?? $existing->scheduled_end_at,
+            ]);
+
+            return $existing;
         }
 
         $releasePlan = $ticket->releasePlans()->latest('version')->first();
@@ -108,12 +119,14 @@ class TicketDeploymentSchedulingService
 
             foreach ($steps as $stepData) {
                 $hasSteps = true;
+                $title = is_array($stepData) ? ($stepData['title'] ?? 'Step '.$stepNumber) : (string) $stepData;
+                $description = is_array($stepData) ? ($stepData['description'] ?? $stepData['title'] ?? $title) : (string) $stepData;
                 $deployment->steps()->create([
                     'step_number' => $stepNumber++,
-                    'title' => $stepData['title'] ?? 'Step '.$stepNumber,
-                    'description' => $stepData['description'] ?? null,
+                    'title' => $title,
+                    'description' => $description,
                     'step_type' => $stepType,
-                    'is_required' => $stepData['is_required'] ?? true,
+                    'is_required' => is_array($stepData) ? ($stepData['is_required'] ?? true) : true,
                     'status' => DeploymentStepStatus::Pending,
                     'executed_by' => null,
                 ]);

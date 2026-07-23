@@ -4,7 +4,7 @@
 
 Knowledge Base and resolution reuse are implemented: article search/read, five-state author/reviewer lifecycle, three visibility levels, immutable versions and restore-as-new-version, sanitization/redaction, tag management, ticket links and ticket-derived drafts, deterministic recommendations, feedback, activity audit, deduplicated notifications, and responsive permission-gated frontend workflows. See `docs/phase-15-knowledge-base-resolution-reuse.md`.
 
-Automated verification currently passes at **182 backend tests / 1,145 assertions**, with **25 Knowledge Base routes / 268 API routes total**. Frontend typecheck, Prettier check, and production build pass; the build retains a chunk-size warning. HTTP server E2E and interactive desktop/mobile browser verification have not run and remain pending runtime verification.
+The Phase 15 baseline passed **182 backend tests / 1,145 assertions**, with **25 Knowledge Base routes / 268 API routes total**. Its HTTP server E2E and targeted desktop/mobile browser verification were subsequently completed. Phase 16 raised the backend baseline to 186 tests / 1,175 assertions and introduced route-level lazy loading; the entry chunk is now 288.88 kB and the largest generated chunk is 303.42 kB, both below Vite's 500 kB warning threshold.
 
 ## Phase 11 delivered scope
 
@@ -118,11 +118,13 @@ Konfirmasi business decisions: identity topology, multi-role, approval path, wor
 
 **Scope:** the delivered implementation described at the top of this document and in `docs/phase-15-knowledge-base-resolution-reuse.md`.
 
-**Verification:** 22 migrations; 25 KB routes among 268 API routes; 182 tests/1,145 assertions passing; frontend typecheck, format check, and build passing with a main-chunk warning. HTTP E2E and desktop/mobile browser verification remain pending.
+**Verification:** the initial Phase 15 baseline covered 22 migrations, 25 KB routes among 268 API routes, and 182 tests/1,145 assertions. HTTP E2E and targeted desktop/mobile browser verification were completed during runtime closure. Phase 16 follow-up results are recorded in `docs/phase-16-production-hardening.md`.
 
-## Phase 16 — Out of scope
+## Phase 16 — Production hardening and deployment readiness (implemented)
 
-Phase 16 has not been started and is explicitly outside the completed Phase 15 Knowledge Base delivery. No Phase 16 feature, integration, verification, or production-readiness claim is made here.
+**Scope:** authorization and runtime hardening, rate limits, security headers, production startup guards, dependency remediation, accessibility/runtime fixes, operational runbooks, CI validation, and frontend route-level code splitting. No new business workflow was added.
+
+**Status:** conditionally ready for IT review and disposable staging preparation, but not ready for production. Hosting and owner decisions, MySQL/staging verification, malware scanning, restore drill, business-endpoint performance tests, full-role human UAT, and release approvals remain open. See `docs/phase-16-production-hardening.md` and `docs/release-readiness-checklist.md`.
 
 ## Recommended first implementation sequence
 

@@ -17,6 +17,7 @@
 - [Scheduler and queue](scheduler-queue-runbook.md)
 - [Logging and monitoring](logging-monitoring-runbook.md)
 - [Release readiness checklist](release-readiness-checklist.md)
+- [Testing environment setup](testing-environment-setup.md)
 - [Final UAT sign-off](final-uat-signoff.md)
 - [Operational handover](operational-handover.md)
 - [Known issues and risks](known-issues-and-risks.md)

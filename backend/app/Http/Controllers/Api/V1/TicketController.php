@@ -28,7 +28,10 @@ class TicketController extends Controller
     public function index(TicketListRequest $request): JsonResponse
     {
         $user = $request->user();
-        $query = Ticket::query()->where('requester_id', $user->id)->with(self::RELATIONS);
+        $query = Ticket::query()->with(self::RELATIONS);
+        if ($user->role?->key === 'requester') {
+            $query->where('requester_id', $user->id);
+        }
         $this->filters($query, $request);
         $items = $query->latest()->paginate($request->integer('per_page', 20));
 
