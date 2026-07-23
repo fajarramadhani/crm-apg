@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\KnowledgeBaseArticleStatus;
 use App\Enums\KnowledgeBaseVisibility;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\KnowledgeBaseSearchRequest;
 use App\Http\Resources\Api\V1\KnowledgeBaseActivityResource;
 use App\Http\Resources\Api\V1\KnowledgeBaseArticleDetailResource;
 use App\Http\Resources\Api\V1\KnowledgeBaseArticleResource;
@@ -28,11 +29,11 @@ class KnowledgeBaseArticleController extends Controller
         private KnowledgeBaseReviewService $reviewService
     ) {}
 
-    public function index(Request $request)
+    public function index(KnowledgeBaseSearchRequest $request)
     {
         Gate::authorize('knowledge_base.view');
 
-        $articles = $this->searchService->search($request->user(), $request->all());
+        $articles = $this->searchService->search($request->user(), $request->validated());
 
         return KnowledgeBaseArticleResource::collection($articles);
     }

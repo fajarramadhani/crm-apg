@@ -2,6 +2,7 @@
 
 use App\Exceptions\InvalidTicketTransition;
 use App\Exceptions\KnowledgeBaseConflict;
+use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -31,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(AssignRequestId::class);
+        $middleware->append(AddSecurityHeaders::class);
         $middleware->statefulApi();
         $middleware->alias([
             'active' => EnsureUserIsActive::class,
@@ -116,7 +118,14 @@ return Application::configure(basePath: dirname(__DIR__))
                 return ApiResponse::error($request, 'CSRF token mismatch.', 'CSRF_TOKEN_MISMATCH', 419);
             }
 
-            return ApiResponse::error($request, $exception->getMessage(), 'ERROR', $exception->getStatusCode());
+            $messages = [
+                400 => 'Bad request',
+                409 => 'Request conflicts with the current resource state',
+                422 => 'Request could not be processed',
+                503 => 'Service unavailable',
+            ];
+
+            return ApiResponse::error($request, $messages[$exception->getStatusCode()] ?? 'Request failed', 'HTTP_ERROR', $exception->getStatusCode());
         });
 
         $exceptions->render(function (MethodNotAllowedHttpException $exception, Request $request) {

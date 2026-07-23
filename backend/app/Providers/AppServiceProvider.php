@@ -44,6 +44,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (app()->environment('production')) {
+            $unsafe = config('app.debug')
+                || blank(config('app.key'))
+                || ! config('session.secure')
+                || Str::contains((string) config('app.url'), ['localhost', '127.0.0.1']);
+
+            if ($unsafe) {
+                throw new \RuntimeException('Unsafe production environment configuration.');
+            }
+        }
+
         Event::listen([
             TicketSubmitted::class, TicketRevisionRequested::class,
             TicketResubmitted::class, TicketValidated::class,
@@ -60,11 +71,20 @@ class AppServiceProvider extends ServiceProvider
         Event::subscribe(TicketNotificationSubscriber::class);
         Event::subscribe(KnowledgeBaseNotificationSubscriber::class);
 
-        RateLimiter::for('login', function (Request $request): Limit {
-            $email = Str::lower((string) $request->input('email'));
+        RateLimiter::for('login', function (Request $request): array {
+            $email = Str::lower(trim((string) $request->input('email')));
 
-            return Limit::perMinute(5)->by($email.'|'.$request->ip());
+            return [
+                Limit::perMinute(20)->by('ip:'.$request->ip()),
+                Limit::perMinute(5)->by('account:'.$email),
+                Limit::perMinute(5)->by('pair:'.$email.'|'.$request->ip()),
+            ];
         });
+
+        RateLimiter::for('search', fn (Request $request): Limit => Limit::perMinute(60)->by($request->user()?->id ?? $request->ip()));
+        RateLimiter::for('export', fn (Request $request): Limit => Limit::perMinute(5)->by($request->user()?->id ?? $request->ip()));
+        RateLimiter::for('admin-mutation', fn (Request $request): Limit => Limit::perMinute(30)->by($request->user()?->id ?? $request->ip()));
+        RateLimiter::for('mutation', fn (Request $request): Limit => Limit::perMinute(120)->by($request->user()?->id ?? $request->ip()));
 
         Gate::before(function ($user, $ability) {
             if ((Str::startsWith($ability, 'report.') || Str::startsWith($ability, 'notification.') || Str::startsWith($ability, 'alert.') || Str::startsWith($ability, 'sla_escalation_policy.') || Str::startsWith($ability, 'knowledge_base.')) && $user->hasPermission($ability)) {

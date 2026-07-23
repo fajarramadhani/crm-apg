@@ -19,7 +19,6 @@ class HealthController extends Controller
         } catch (Throwable $exception) {
             Log::error('Database health check failed', [
                 'exception' => $exception::class,
-                'message' => $exception->getMessage(),
             ]);
 
             return ApiResponse::error(
@@ -36,6 +35,8 @@ class HealthController extends Controller
             'Tic Hub API is healthy',
             [
                 'status' => 'ok',
+                'app' => 'tic-hub',
+                'environment' => app()->environment(),
                 'database' => 'connected',
             ],
             meta: ['timestamp' => now()->toIso8601String()],

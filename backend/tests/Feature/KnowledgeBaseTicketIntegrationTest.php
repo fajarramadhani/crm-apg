@@ -24,7 +24,7 @@ class KnowledgeBaseTicketIntegrationTest extends TestCase
 
     public function test_pic_can_link_idempotently_list_and_unlink_article(): void
     {
-        $ticket = Ticket::factory()->create();
+        $ticket = $this->accessibleTicket();
         $article = $this->createKbArticle(['status' => 'published']);
         $payload = ['article_id' => $article->id, 'relation_type' => 'used_as_solution'];
 
@@ -39,7 +39,7 @@ class KnowledgeBaseTicketIntegrationTest extends TestCase
 
     public function test_ticket_links_obey_article_visibility(): void
     {
-        $ticket = Ticket::factory()->create();
+        $ticket = $this->accessibleTicket();
         $internal = $this->createKbArticle(['visibility' => 'it_internal', 'status' => 'published']);
         $this->actingAs($this->kbUser('pic'))->postJson("/api/v1/tickets/{$ticket->id}/knowledge-base/link", [
             'article_id' => $internal->id,
@@ -55,7 +55,7 @@ class KnowledgeBaseTicketIntegrationTest extends TestCase
 
     public function test_create_draft_requires_resolution(): void
     {
-        $ticket = Ticket::factory()->create([
+        $ticket = $this->accessibleTicket([
             'title' => 'Customer VPN Failure',
             'description' => 'Contact jane@example.com or +1 415 555 1234. password=supersecret',
         ]);
@@ -65,7 +65,7 @@ class KnowledgeBaseTicketIntegrationTest extends TestCase
 
     public function test_create_draft_redacts_ticket_secrets_and_pii_and_links_source(): void
     {
-        $ticket = Ticket::factory()->create([
+        $ticket = $this->accessibleTicket([
             'title' => 'Customer VPN Failure',
             'description' => 'Contact jane@example.com or +1 415 555 1234. password=supersecret',
             'closed_at' => now(),
@@ -88,7 +88,7 @@ class KnowledgeBaseTicketIntegrationTest extends TestCase
         $category = TicketCategory::where('code', 'INCIDENT')->firstOrFail();
         $application = Application::where('code', 'TIC_HUB')->firstOrFail();
         $tag = KnowledgeBaseTag::create(['name' => 'vpn', 'slug' => 'vpn', 'is_active' => true]);
-        $ticket = Ticket::factory()->create([
+        $ticket = $this->accessibleTicket([
             'title' => 'VPN timeout failure',
             'ticket_category_id' => $category->id,
             'application_id' => $application->id,
@@ -112,5 +112,29 @@ class KnowledgeBaseTicketIntegrationTest extends TestCase
 
         $picIds = array_column($this->actingAs($this->kbUser('pic'))->getJson($url)->assertOk()->json('data'), 'id');
         $this->assertContains($internal->id, $picIds);
+    }
+
+    public function test_ticket_knowledge_base_actions_require_ticket_access(): void
+    {
+        $ticket = Ticket::factory()->create();
+        $article = $this->createKbArticle(['status' => 'published']);
+        $pic = $this->kbUser('pic');
+
+        $this->actingAs($pic)->getJson("/api/v1/tickets/{$ticket->id}/knowledge-base")->assertForbidden();
+        $this->actingAs($pic)->getJson("/api/v1/tickets/{$ticket->id}/knowledge-base/recommendations")->assertForbidden();
+        $this->actingAs($pic)->postJson("/api/v1/tickets/{$ticket->id}/knowledge-base/link", [
+            'article_id' => $article->id,
+            'relation_type' => 'related',
+        ])->assertForbidden();
+        $this->actingAs($pic)->deleteJson("/api/v1/tickets/{$ticket->id}/knowledge-base/{$article->id}")->assertForbidden();
+        $this->actingAs($pic)->postJson("/api/v1/tickets/{$ticket->id}/knowledge-base/create-draft")->assertForbidden();
+    }
+
+    private function accessibleTicket(array $attributes = []): Ticket
+    {
+        return Ticket::factory()->create(array_merge([
+            'requester_id' => $this->kbUser('requester')->id,
+            'current_assignee_id' => $this->kbUser('pic')->id,
+        ], $attributes));
     }
 }

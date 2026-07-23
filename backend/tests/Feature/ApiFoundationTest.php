@@ -38,6 +38,20 @@ class ApiFoundationTest extends TestCase
         );
     }
 
+    public function test_deployment_health_alias_is_safe_and_security_headers_are_present(): void
+    {
+        $this->getJson('/api/health')
+            ->assertOk()
+            ->assertJsonPath('data.status', 'ok')
+            ->assertJsonPath('data.app', 'tic-hub')
+            ->assertJsonPath('data.environment', 'testing')
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('X-Frame-Options', 'DENY')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+            ->assertHeader('Content-Security-Policy');
+    }
+
     public function test_valid_client_request_id_is_preserved(): void
     {
         $requestId = (string) Str::uuid();

@@ -12,7 +12,7 @@ class TicketSlaReportService extends BaseReportService
         $query = Ticket::query()->whereNotNull('sla_policy_id');
         $query = $this->applyFilters($query, $filters, 'submitted_at', $dateFrom, $dateTo);
 
-        $tickets = $query->get(['id', 'response_due_at', 'resolution_due_at', 'triage_started_at', 'closed_at']);
+        $tickets = $query->get(['id', 'submitted_at', 'response_due_at', 'resolution_due_at', 'triage_started_at', 'closed_at']);
 
         $totalSlaTickets = $tickets->count();
         $responseEligible = 0;

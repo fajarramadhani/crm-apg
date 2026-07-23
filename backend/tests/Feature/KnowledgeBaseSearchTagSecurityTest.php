@@ -20,6 +20,18 @@ class KnowledgeBaseSearchTagSecurityTest extends TestCase
         $this->setUpKnowledgeBase();
     }
 
+    public function test_search_rejects_unbounded_pagination_and_invalid_sort(): void
+    {
+        $requester = $this->kbUser('requester');
+
+        $this->actingAs($requester)->getJson('/api/v1/knowledge-base?per_page=101')
+            ->assertUnprocessable()->assertJsonValidationErrors('per_page');
+        $this->actingAs($requester)->getJson('/api/v1/knowledge-base?sort_by=raw_sql')
+            ->assertUnprocessable()->assertJsonValidationErrors('sort_by');
+        $this->actingAs($requester)->getJson('/api/v1/knowledge-base?published_from=not-a-date')
+            ->assertUnprocessable()->assertJsonValidationErrors('published_from');
+    }
+
     public function test_search_filters_sorting_and_pagination(): void
     {
         $category = TicketCategory::where('code', 'INCIDENT')->firstOrFail();
@@ -63,13 +75,13 @@ class KnowledgeBaseSearchTagSecurityTest extends TestCase
             ->assertOk()->assertJsonFragment(['id' => $own->id])->assertJsonFragment(['id' => $other->id]);
     }
 
-    public function test_invalid_sort_is_rejected_and_page_size_is_capped(): void
+    public function test_invalid_sort_and_oversized_page_are_rejected(): void
     {
         $this->createKbArticle(['status' => 'published']);
         $this->actingAs($this->kbUser('requester'))->getJson('/api/v1/knowledge-base?sort_by=author_id')
             ->assertUnprocessable();
         $this->actingAs($this->kbUser('requester'))->getJson('/api/v1/knowledge-base?per_page=999')
-            ->assertOk()->assertJsonPath('meta.per_page', 100);
+            ->assertUnprocessable()->assertJsonValidationErrors('per_page');
     }
 
     public function test_admin_manages_tags_and_deactivation_hides_them_without_deleting_relations(): void

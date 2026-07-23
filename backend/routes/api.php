@@ -43,8 +43,10 @@ use App\Http\Controllers\Api\V1\TicketKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\TicketMonitoringController;
 use Illuminate\Support\Facades\Route;
 
+Route::get('/health', HealthController::class)->middleware('throttle:60,1')->name('api.health');
+
 Route::prefix('v1')->group(function (): void {
-    Route::get('/health', HealthController::class)->name('api.v1.health');
+    Route::get('/health', HealthController::class)->middleware('throttle:60,1')->name('api.v1.health');
 
     Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         Route::post('/login', [AuthController::class, 'login'])
@@ -66,7 +68,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{ticket}/resubmit', [TicketController::class, 'resubmit'])->name('resubmit');
             Route::post('/{ticket}/cancel', [TicketController::class, 'cancel'])->name('cancel');
             Route::get('/{ticket}/history', [TicketController::class, 'history'])->name('history');
-            Route::post('/{ticket}/attachments', [TicketAttachmentController::class, 'store'])->name('attachments.store');
+            Route::post('/{ticket}/attachments', [TicketAttachmentController::class, 'store'])->middleware('throttle:mutation')->name('attachments.store');
             Route::get('/{ticket}/attachments/{attachment}/download', [TicketAttachmentController::class, 'download'])->name('attachments.download');
             Route::delete('/{ticket}/attachments/{attachment}', [TicketAttachmentController::class, 'destroy'])->name('attachments.destroy');
 
@@ -110,8 +112,8 @@ Route::prefix('v1')->group(function (): void {
 
         // Phase 15: Knowledge Base
         Route::prefix('knowledge-base')->name('api.v1.knowledge_base.')->group(function (): void {
-            Route::get('/', [KnowledgeBaseArticleController::class, 'index']);
-            Route::post('/', [KnowledgeBaseArticleController::class, 'store']);
+            Route::get('/', [KnowledgeBaseArticleController::class, 'index'])->middleware('throttle:search');
+            Route::post('/', [KnowledgeBaseArticleController::class, 'store'])->middleware('throttle:mutation');
             Route::get('/{article}', [KnowledgeBaseArticleController::class, 'show']);
             Route::put('/{article}', [KnowledgeBaseArticleController::class, 'update']);
             Route::get('/{article}/related', [KnowledgeBaseArticleController::class, 'related']);
@@ -129,9 +131,9 @@ Route::prefix('v1')->group(function (): void {
 
         Route::prefix('knowledge-base-tags')->name('api.v1.knowledge_base_tags.')->group(function (): void {
             Route::get('/', [KnowledgeBaseTagController::class, 'index']);
-            Route::post('/', [KnowledgeBaseTagController::class, 'store']);
-            Route::put('/{tag}', [KnowledgeBaseTagController::class, 'update']);
-            Route::delete('/{tag}', [KnowledgeBaseTagController::class, 'destroy']);
+            Route::post('/', [KnowledgeBaseTagController::class, 'store'])->middleware('throttle:admin-mutation');
+            Route::put('/{tag}', [KnowledgeBaseTagController::class, 'update'])->middleware('throttle:admin-mutation');
+            Route::delete('/{tag}', [KnowledgeBaseTagController::class, 'destroy'])->middleware('throttle:admin-mutation');
         });
 
         Route::prefix('tickets/{ticket}/knowledge-base')->name('api.v1.tickets.kb.')->group(function (): void {
@@ -216,7 +218,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/worklogs', [PicDevelopmentController::class, 'addWorklog'])->middleware('permission:ticket.worklog.manage');
             Route::get('/tickets/{ticket}/development-updates', [PicDevelopmentController::class, 'updates'])->middleware('permission:ticket.development.view');
             Route::post('/tickets/{ticket}/development-updates', [PicDevelopmentController::class, 'addUpdate'])->middleware('permission:ticket.development.update');
-            Route::post('/tickets/{ticket}/development-evidence', [PicDevelopmentController::class, 'evidence'])->middleware('permission:ticket.development_evidence.manage');
+            Route::post('/tickets/{ticket}/development-evidence', [PicDevelopmentController::class, 'evidence'])->middleware(['permission:ticket.development_evidence.manage', 'throttle:mutation']);
             Route::get('/tickets/{ticket}/internal-test-cases', [PicInternalTestingController::class, 'cases'])->middleware('permission:ticket.internal_test_case.view');
             Route::post('/tickets/{ticket}/internal-test-cases', [PicInternalTestingController::class, 'storeCase'])->middleware('permission:ticket.internal_test_case.manage');
             Route::put('/tickets/{ticket}/internal-test-cases/{case}', [PicInternalTestingController::class, 'updateCase'])->middleware('permission:ticket.internal_test_case.manage');
@@ -238,12 +240,12 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/uat-findings/{finding}/start', [PicUatReworkController::class, 'startFinding'])->middleware('permission:ticket.uat_finding.resolve');
             Route::post('/tickets/{ticket}/uat-findings/{finding}/resolve', [PicUatReworkController::class, 'resolveFinding'])->middleware('permission:ticket.uat_finding.resolve');
             Route::post('/tickets/{ticket}/submit-uat-retest', [PicUatReworkController::class, 'submitRetest'])->middleware('permission:ticket.uat_retest.submit');
-            Route::post('/tickets/{ticket}/uat-evidence', [PicUatReworkController::class, 'uploadEvidence'])->middleware('permission:ticket.uat_rework.view');
+            Route::post('/tickets/{ticket}/uat-evidence', [PicUatReworkController::class, 'uploadEvidence'])->middleware(['permission:ticket.uat_rework.view', 'throttle:mutation']);
             Route::get('/tickets/{ticket}/release-preparation', [PicReleaseController::class, 'preparation'])->middleware('permission:ticket.release_plan.view');
             Route::post('/tickets/{ticket}/release-plan', [PicReleaseController::class, 'storePlan'])->middleware('permission:ticket.release_plan.manage');
             Route::post('/tickets/{ticket}/rollback-plan', [PicReleaseController::class, 'storeRollback'])->middleware('permission:ticket.rollback_plan.manage');
             Route::post('/tickets/{ticket}/release-checklist/{item}/complete', [PicReleaseController::class, 'checklistDecision'])->middleware('permission:ticket.release_checklist.complete');
-            Route::post('/tickets/{ticket}/release-evidence', [PicReleaseController::class, 'uploadEvidence'])->middleware('permission:ticket.release_evidence.manage');
+            Route::post('/tickets/{ticket}/release-evidence', [PicReleaseController::class, 'uploadEvidence'])->middleware(['permission:ticket.release_evidence.manage', 'throttle:mutation']);
         });
 
         Route::prefix('manager')->middleware('permission:ticket.business_approval_queue.view')->name('api.v1.manager.')->group(function (): void {
@@ -272,7 +274,7 @@ Route::prefix('v1')->group(function (): void {
             Route::put('/tickets/{ticket}/defects/{defect}', [QaController::class, 'updateDefect']);
             Route::post('/tickets/{ticket}/defects/{defect}/verify', [QaController::class, 'verifyDefect']);
             Route::post('/tickets/{ticket}/defects/{defect}/reopen', [QaController::class, 'reopenDefect']);
-            Route::post('/tickets/{ticket}/evidence', [QaController::class, 'uploadEvidence']);
+            Route::post('/tickets/{ticket}/evidence', [QaController::class, 'uploadEvidence'])->middleware('throttle:mutation');
         });
 
         Route::prefix('requester')->middleware('permission:ticket.uat_assignment.view')->name('api.v1.requester.')->group(function (): void {
@@ -300,7 +302,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/uat-findings/{finding}/reopen', [RequesterUatController::class, 'reopenFinding'])->middleware('permission:ticket.uat_finding.reopen');
 
             // Evidence
-            Route::post('/tickets/{ticket}/uat-evidence', [RequesterUatController::class, 'uploadEvidence'])->middleware('permission:ticket.uat_run.manage');
+            Route::post('/tickets/{ticket}/uat-evidence', [RequesterUatController::class, 'uploadEvidence'])->middleware(['permission:ticket.uat_run.manage', 'throttle:mutation']);
         });
 
         Route::prefix('master')->middleware('permission:master_data.view')->name('api.v1.master.')->group(function (): void {
@@ -315,7 +317,7 @@ Route::prefix('v1')->group(function (): void {
             Route::get('holidays', [MasterDataController::class, 'holidays'])->name('holidays');
         });
 
-        Route::prefix('admin')->middleware('permission:master_data.manage')->name('api.v1.admin.')->group(function (): void {
+        Route::prefix('admin')->middleware(['permission:master_data.manage', 'throttle:admin-mutation'])->name('api.v1.admin.')->group(function (): void {
             Route::get('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'index']);
             Route::post('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'store']);
             Route::put('/sla-escalation-policies/{policy}', [AdminSlaEscalationPolicyController::class, 'update']);
@@ -377,7 +379,7 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('deployment', [ManagerReportController::class, 'deployment']);
                 Route::get('pic-performance', [ManagerReportController::class, 'picPerformance']);
                 Route::get('aging-tickets', [ManagerReportController::class, 'agingTickets']);
-                Route::get('export', [ManagerReportController::class, 'export']);
+                Route::get('export', [ManagerReportController::class, 'export'])->middleware('throttle:export');
             });
 
             Route::prefix('it-lead')->group(function (): void {
@@ -389,7 +391,7 @@ Route::prefix('v1')->group(function (): void {
                 Route::get('deployment', [ItLeadReportController::class, 'deployment']);
                 Route::get('pic-performance', [ItLeadReportController::class, 'picPerformance']);
                 Route::get('aging-tickets', [ItLeadReportController::class, 'agingTickets']);
-                Route::get('export', [ItLeadReportController::class, 'export']);
+                Route::get('export', [ItLeadReportController::class, 'export'])->middleware('throttle:export');
             });
 
             Route::prefix('supervisor')->group(function (): void {
@@ -398,13 +400,13 @@ Route::prefix('v1')->group(function (): void {
 
             Route::prefix('pic')->group(function (): void {
                 Route::get('performance', [PicPerformanceController::class, 'summary']);
-                Route::get('export', [PicPerformanceController::class, 'export']);
+                Route::get('export', [PicPerformanceController::class, 'export'])->middleware('throttle:export');
             });
 
             Route::prefix('executive')->group(function (): void {
                 Route::get('/alerts/summary', [ExecutiveAlertController::class, 'summary']);
                 Route::get('summary', [ExecutiveAnalyticsController::class, 'summary']);
-                Route::get('export', [ExecutiveAnalyticsController::class, 'export']);
+                Route::get('export', [ExecutiveAnalyticsController::class, 'export'])->middleware('throttle:export');
             });
         });
     });

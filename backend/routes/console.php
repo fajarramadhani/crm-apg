@@ -9,5 +9,5 @@ Artisan::command('inspire', function () {
 
 use Illuminate\Support\Facades\Schedule;
 
-Schedule::command('tickets:scan-sla-alerts')->everyFifteenMinutes()->withoutOverlapping();
-Schedule::command('tickets:scan-inactivity')->everyFifteenMinutes()->withoutOverlapping();
+Schedule::command('tickets:scan-sla-alerts')->everyFifteenMinutes()->withoutOverlapping(20)->onOneServer();
+Schedule::command('tickets:scan-inactivity')->everyFifteenMinutes()->withoutOverlapping(20)->onOneServer();

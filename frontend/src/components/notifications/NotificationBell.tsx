@@ -3,6 +3,9 @@ import { NavLink } from 'react-router-dom'
 import { getUnreadCount, getNotifications, markAsRead } from '../../api/notifications'
 import { Notification } from '../../types/notifications'
 
+const safeActionUrl = (url: string | null): string =>
+  url && url.startsWith('/') && !url.startsWith('//') && !url.includes('\\') ? url : '/notifications'
+
 export const NotificationBell: React.FC = () => {
   const [unreadCount, setUnreadCount] = useState(0)
   const [notifications, setNotifications] = useState<Notification[]>([])
@@ -130,7 +133,7 @@ export const NotificationBell: React.FC = () => {
                 {notifications.map((notif) => (
                   <NavLink
                     key={notif.id}
-                    to={notif.action_url || '/notifications'}
+                    to={safeActionUrl(notif.action_url)}
                     onClick={() => handleNotificationClick(notif.id, notif.action_url)}
                     className={`block p-4 hover:bg-gray-50 transition-colors ${!notif.is_read ? 'bg-blue-50/30' : ''}`}
                   >

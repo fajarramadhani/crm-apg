@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Models\Division;
 use App\Models\Role;
+use App\Models\Ticket;
 use App\Models\User;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RoleSeeder;
@@ -65,5 +67,22 @@ class ReportAuthorizationTest extends TestCase
 
         $this->actingAs($supervisor)->getJson('/api/v1/reports/supervisor/summary')->assertStatus(200);
         $this->actingAs($supervisor)->getJson('/api/v1/reports/manager/summary')->assertStatus(403);
+    }
+
+    public function test_manager_report_scope_cannot_be_overridden_to_another_division(): void
+    {
+        $managerDivision = Division::firstOrFail();
+        $otherDivision = Division::query()->whereKeyNot($managerDivision->id)->first()
+            ?? Division::create(['code' => 'OTHER', 'name' => 'Other Division', 'is_active' => true]);
+        $manager = $this->user('manager');
+        $manager->update(['division_id' => $managerDivision->id]);
+
+        Ticket::factory()->create(['division_id' => $managerDivision->id, 'current_division_id' => $managerDivision->id]);
+        Ticket::factory()->create(['division_id' => $otherDivision->id, 'current_division_id' => $otherDivision->id]);
+
+        $this->actingAs($manager)
+            ->getJson("/api/v1/reports/manager/summary?division_id={$otherDivision->id}")
+            ->assertOk()
+            ->assertJsonPath('filters.division_id', $managerDivision->id);
     }
 }

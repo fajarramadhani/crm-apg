@@ -22,6 +22,8 @@ export class ApiRequestError extends Error {
   }
 }
 
+export const SESSION_EXPIRED_EVENT = 'tic-hub:session-expired'
+
 function cookie(name: string): string | undefined {
   return document.cookie
     .split('; ')
@@ -48,7 +50,12 @@ async function request<T>(path: string, init: RequestInit = {}, retriedCsrf = fa
 
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
   if (method !== 'GET' && method !== 'HEAD' && xsrfToken) {
-    headers.set('X-XSRF-TOKEN', decodeURIComponent(xsrfToken))
+    try {
+      headers.set('X-XSRF-TOKEN', decodeURIComponent(xsrfToken))
+    } catch {
+      await fetchCsrfCookie()
+      return request<T>(path, init, true)
+    }
   }
 
   const response = await fetch(`${env.apiBaseUrl}${path}`, {
@@ -65,6 +72,7 @@ async function request<T>(path: string, init: RequestInit = {}, retriedCsrf = fa
 
   if (!response.ok) {
     const error = payload as ApiError | null
+    if (response.status === 401 && path !== '/auth/login') window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
     throw new ApiRequestError(
       error?.message || 'Permintaan tidak dapat diproses.',
       response.status,

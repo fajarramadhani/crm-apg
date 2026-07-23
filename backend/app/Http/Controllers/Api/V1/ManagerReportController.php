@@ -10,6 +10,7 @@ use App\Http\Resources\Api\V1\QualityReportResource;
 use App\Http\Resources\Api\V1\SlaReportResource;
 use App\Http\Resources\Api\V1\TicketVolumeReportResource;
 use App\Http\Resources\Api\V1\WorkflowDurationReportResource;
+use App\Models\User;
 use App\Services\Reports\DeploymentReportService;
 use App\Services\Reports\PicPerformanceReportService;
 use App\Services\Reports\TicketQualityReportService;
@@ -31,11 +32,16 @@ class ManagerReportController extends Controller
         private TicketReportExportService $exportService,
     ) {}
 
+    private function scopedFilters(ReportFilterRequest $request): array
+    {
+        return [...$request->validated(), 'division_id' => $request->user()->division_id];
+    }
+
     public function getSummary(ReportFilterRequest $request): JsonResponse
     {
         $this->authorize('report.manager.view');
 
-        $filters = $request->validated();
+        $filters = $this->scopedFilters($request);
         $dateFrom = $request->getValidDateFrom();
         $dateTo = $request->getValidDateTo();
 
@@ -63,8 +69,8 @@ class ManagerReportController extends Controller
         $this->authorize('report.ticket_volume.view');
 
         return new TicketVolumeReportResource([
-            'data' => $this->volumeService->getSummary($request->validated(), $request->getValidDateFrom(), $request->getValidDateTo()),
-            'filters' => $request->validated(),
+            'data' => $this->volumeService->getSummary($this->scopedFilters($request), $request->getValidDateFrom(), $request->getValidDateTo()),
+            'filters' => $this->scopedFilters($request),
             'period' => ['date_from' => $request->getValidDateFrom(), 'date_to' => $request->getValidDateTo()],
         ]);
     }
@@ -75,8 +81,8 @@ class ManagerReportController extends Controller
         $this->authorize('report.sla.view');
 
         return new SlaReportResource([
-            'data' => $this->slaService->getSummary($request->validated(), $request->getValidDateFrom(), $request->getValidDateTo()),
-            'filters' => $request->validated(),
+            'data' => $this->slaService->getSummary($this->scopedFilters($request), $request->getValidDateFrom(), $request->getValidDateTo()),
+            'filters' => $this->scopedFilters($request),
             'period' => ['date_from' => $request->getValidDateFrom(), 'date_to' => $request->getValidDateTo()],
         ]);
     }
@@ -87,8 +93,8 @@ class ManagerReportController extends Controller
         $this->authorize('report.workflow_duration.view');
 
         return new WorkflowDurationReportResource([
-            'data' => $this->durationService->getSummary($request->validated(), $request->getValidDateFrom(), $request->getValidDateTo()),
-            'filters' => $request->validated(),
+            'data' => $this->durationService->getSummary($this->scopedFilters($request), $request->getValidDateFrom(), $request->getValidDateTo()),
+            'filters' => $this->scopedFilters($request),
             'period' => ['date_from' => $request->getValidDateFrom(), 'date_to' => $request->getValidDateTo()],
         ]);
     }
@@ -99,8 +105,8 @@ class ManagerReportController extends Controller
         $this->authorize('report.quality.view');
 
         return new QualityReportResource([
-            'data' => $this->qualityService->getSummary($request->validated(), $request->getValidDateFrom(), $request->getValidDateTo()),
-            'filters' => $request->validated(),
+            'data' => $this->qualityService->getSummary($this->scopedFilters($request), $request->getValidDateFrom(), $request->getValidDateTo()),
+            'filters' => $this->scopedFilters($request),
             'period' => ['date_from' => $request->getValidDateFrom(), 'date_to' => $request->getValidDateTo()],
         ]);
     }
@@ -111,8 +117,8 @@ class ManagerReportController extends Controller
         $this->authorize('report.deployment.view');
 
         return new DeploymentReportResource([
-            'data' => $this->deploymentService->getSummary($request->validated(), $request->getValidDateFrom(), $request->getValidDateTo()),
-            'filters' => $request->validated(),
+            'data' => $this->deploymentService->getSummary($this->scopedFilters($request), $request->getValidDateFrom(), $request->getValidDateTo()),
+            'filters' => $this->scopedFilters($request),
             'period' => ['date_from' => $request->getValidDateFrom(), 'date_to' => $request->getValidDateTo()],
         ]);
     }
@@ -122,9 +128,12 @@ class ManagerReportController extends Controller
         $this->authorize('report.manager.view');
         $this->authorize('report.pic_performance.view');
 
-        $filters = $request->validated();
+        $filters = $this->scopedFilters($request);
         if (empty($filters['pic_id'])) {
             abort(422, 'pic_id is required for this report');
+        }
+        if (! User::query()->whereKey($filters['pic_id'])->where('division_id', $filters['division_id'])->exists()) {
+            abort(422, 'The selected PIC is outside your division.');
         }
 
         return new PicPerformanceReportResource([
@@ -140,8 +149,8 @@ class ManagerReportController extends Controller
         $this->authorize('report.aging.view');
 
         return response()->json([
-            'data' => $this->volumeService->getAging($request->validated()),
-            'filters' => $request->validated(),
+            'data' => $this->volumeService->getAging($this->scopedFilters($request)),
+            'filters' => $this->scopedFilters($request),
         ]);
     }
 

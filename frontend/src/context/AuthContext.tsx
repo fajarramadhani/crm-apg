@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ApiRequestError } from '../api/client'
+import { ApiRequestError, SESSION_EXPIRED_EVENT } from '../api/client'
 import { authService } from '../services/authService'
 import type { AuthenticatedUser, Role } from '../types'
 
@@ -41,6 +41,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       active = false
     }
+  }, [])
+
+  useEffect(() => {
+    const expireSession = () => {
+      setUser(null)
+      setStatus('unauthenticated')
+    }
+
+    window.addEventListener(SESSION_EXPIRED_EVENT, expireSession)
+    return () => window.removeEventListener(SESSION_EXPIRED_EVENT, expireSession)
   }, [])
 
   const login = useCallback(async (email: string, password: string) => {

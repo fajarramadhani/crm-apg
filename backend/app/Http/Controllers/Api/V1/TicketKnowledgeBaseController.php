@@ -26,6 +26,7 @@ class TicketKnowledgeBaseController extends Controller
         Gate::authorize('knowledge_base.view');
 
         $ticket = Ticket::findOrFail($ticketId);
+        Gate::authorize('view', $ticket);
 
         $articles = $ticket->kbArticles()
             ->where(function ($q) use ($request) {
@@ -43,6 +44,7 @@ class TicketKnowledgeBaseController extends Controller
         Gate::authorize('knowledge_base.view');
 
         $ticket = Ticket::findOrFail($ticketId);
+        Gate::authorize('view', $ticket);
 
         $recommendations = $this->recommendationService->getRecommendations($ticket, $request->user());
 
@@ -54,6 +56,7 @@ class TicketKnowledgeBaseController extends Controller
         Gate::authorize('knowledge_base.link_ticket');
 
         $ticket = Ticket::findOrFail($ticketId);
+        Gate::authorize('view', $ticket);
 
         $validated = $request->validate([
             'article_id' => 'required|exists:knowledge_base_articles,id',
@@ -72,6 +75,7 @@ class TicketKnowledgeBaseController extends Controller
         Gate::authorize('knowledge_base.link_ticket');
 
         $ticket = Ticket::findOrFail($ticketId);
+        Gate::authorize('view', $ticket);
 
         $article = KnowledgeBaseArticle::findOrFail($articleId);
 
@@ -85,6 +89,7 @@ class TicketKnowledgeBaseController extends Controller
         Gate::authorize('knowledge_base.create_from_ticket');
 
         $ticket = Ticket::findOrFail($ticketId);
+        Gate::authorize('view', $ticket);
 
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',

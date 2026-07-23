@@ -3,6 +3,9 @@ import { NavLink } from 'react-router-dom'
 import { getNotifications, markAsRead, markAllAsRead, archiveNotification } from '../../api/notifications'
 import { Notification } from '../../types/notifications'
 
+const safeActionUrl = (url: string | null): string =>
+  url && url.startsWith('/') && !url.startsWith('//') && !url.includes('\\') ? url : '/notifications'
+
 export const NotificationCenter: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -149,7 +152,7 @@ export const NotificationCenter: React.FC = () => {
                     <div className="mt-3 flex items-center gap-3">
                       {notif.action_url && (
                         <NavLink
-                          to={notif.action_url}
+                          to={safeActionUrl(notif.action_url)}
                           onClick={() => handleMarkRead(notif.id)}
                           className="text-xs font-medium text-blue-600 hover:text-blue-800 bg-blue-50 px-2 py-1 rounded"
                         >

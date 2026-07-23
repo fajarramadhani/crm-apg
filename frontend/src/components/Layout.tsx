@@ -105,7 +105,13 @@ export function Layout({
   }
 
   return (
-    <div className="flex h-screen bg-[#F0F4F8] overflow-hidden">
+    <div className="flex h-dvh bg-[#F0F4F8] overflow-hidden">
+      <a
+        href="#main-content"
+        className="fixed left-3 top-3 z-[60] -translate-y-20 rounded-lg bg-white px-4 py-2 text-sm font-semibold text-blue-900 shadow focus:translate-y-0"
+      >
+        Lewati ke konten utama
+      </a>
       {/* Sidebar */}
       {sidebarOpen && (
         <button
@@ -226,7 +232,7 @@ export function Layout({
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto">
+        <main id="main-content" tabIndex={-1} className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 max-w-[1400px] mx-auto">{children}</div>
         </main>
       </div>

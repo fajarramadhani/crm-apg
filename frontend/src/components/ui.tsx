@@ -118,6 +118,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 export function Input({ label, error, hint, className = '', id, ...props }: InputProps) {
   const inputId = id ?? React.useId()
+  const descriptionId = `${inputId}-description`
   return (
     <div className="w-full">
       {label && (
@@ -127,11 +128,21 @@ export function Input({ label, error, hint, className = '', id, ...props }: Inpu
       )}
       <input
         id={inputId}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error || hint ? descriptionId : undefined}
         {...props}
         className={`w-full px-3 py-2 text-sm border rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A] transition-colors ${error ? 'border-red-400' : 'border-gray-300'} ${className}`}
       />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-      {hint && !error && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+      {error && (
+        <p id={descriptionId} className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
+      {hint && !error && (
+        <p id={descriptionId} className="mt-1 text-xs text-gray-500">
+          {hint}
+        </p>
+      )}
     </div>
   )
 }
@@ -144,6 +155,7 @@ interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
 
 export function Select({ label, error, options, className = '', id, ...props }: SelectProps) {
   const selectId = id ?? React.useId()
+  const errorId = `${selectId}-error`
   return (
     <div className="w-full">
       {label && (
@@ -153,6 +165,8 @@ export function Select({ label, error, options, className = '', id, ...props }: 
       )}
       <select
         id={selectId}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error ? errorId : undefined}
         {...props}
         className={`w-full px-3 py-2 text-sm border rounded-lg bg-white text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A] transition-colors ${error ? 'border-red-400' : 'border-gray-300'} ${className}`}
       >
@@ -162,7 +176,11 @@ export function Select({ label, error, options, className = '', id, ...props }: 
           </option>
         ))}
       </select>
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+      {error && (
+        <p id={errorId} className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
     </div>
   )
 }
@@ -175,6 +193,7 @@ interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement
 
 export function Textarea({ label, error, hint, className = '', id, ...props }: TextareaProps) {
   const textareaId = id ?? React.useId()
+  const descriptionId = `${textareaId}-description`
   return (
     <div className="w-full">
       {label && (
@@ -184,11 +203,21 @@ export function Textarea({ label, error, hint, className = '', id, ...props }: T
       )}
       <textarea
         id={textareaId}
+        aria-invalid={Boolean(error)}
+        aria-describedby={error || hint ? descriptionId : undefined}
         {...props}
         className={`w-full px-3 py-2 text-sm border rounded-lg bg-white text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#1E3A8A]/30 focus:border-[#1E3A8A] transition-colors resize-vertical ${error ? 'border-red-400' : 'border-gray-300'} ${className}`}
       />
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-      {hint && !error && <p className="mt-1 text-xs text-gray-500">{hint}</p>}
+      {error && (
+        <p id={descriptionId} className="mt-1 text-xs text-red-600">
+          {error}
+        </p>
+      )}
+      {hint && !error && (
+        <p id={descriptionId} className="mt-1 text-xs text-gray-500">
+          {hint}
+        </p>
+      )}
     </div>
   )
 }

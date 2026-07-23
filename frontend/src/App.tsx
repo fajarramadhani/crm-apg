@@ -155,7 +155,7 @@ function AppRoutes() {
         <Route path="/pic/reports" element={guard(['pic'], <AnalyticsDashboard role="pic" />)} />
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
         <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />
-        <Route path="/manager/approval" element={guard(['manager'], <ManagerApproval />)} />
+        <Route path="/manager/approvals" element={guard(['manager'], <ManagerApproval />)} />
         <Route path="/manager/alerts" element={guard(['manager'], <ManagerAlerts />)} />
         <Route path="/manager/reports" element={guard(['manager'], <AnalyticsDashboard role="manager" />)} />
         <Route path="/sla-monitoring" element={guard(['it_lead', 'manager', 'executive'], <SLAMonitoring />)} />
