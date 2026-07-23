@@ -143,3 +143,7 @@ Current Phase 15 verification baseline:
 - Phase 15: Knowledge Base article lifecycle, visibility and permissions, version history, sanitization/redaction, review separation of duties, publishing, ticket resolution reuse, deterministic recommendations, feedback, audit, notifications, and responsive frontend workflows.
 
 Phase 16 is explicitly out of scope for the completed Phase 15 delivery.
+
+## Operations and release readiness
+
+Phase 16 hardening and staging-readiness materials are indexed in [`docs/README.md`](docs/README.md): architecture, API, role matrix, database, scheduler/queue, backup/restore, deployment, rollback, logging/monitoring, release checklist, final UAT, handover, and known risks. Production deployment and human sign-off are not performed by this repository workflow.
