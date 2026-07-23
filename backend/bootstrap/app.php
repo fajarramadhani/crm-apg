@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\InvalidTicketTransition;
+use App\Exceptions\KnowledgeBaseConflict;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureUserHasPermission;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -80,6 +81,16 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return ApiResponse::error($request, $exception->getMessage(), 'INVALID_TRANSITION', 409, ['current_status' => $exception->currentStatus]);
+        });
+
+        $exceptions->render(function (KnowledgeBaseConflict $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            $details = $exception->currentStatus === null ? [] : ['current_status' => $exception->currentStatus];
+
+            return ApiResponse::error($request, $exception->getMessage(), 'KNOWLEDGE_BASE_CONFLICT', 409, $details);
         });
 
         $exceptions->render(function (TooManyRequestsHttpException $exception, Request $request) {

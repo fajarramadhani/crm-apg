@@ -13,6 +13,10 @@ use App\Http\Controllers\Api\V1\ItLeadReleaseController;
 use App\Http\Controllers\Api\V1\ItLeadReportController;
 use App\Http\Controllers\Api\V1\ItLeadTicketController;
 use App\Http\Controllers\Api\V1\ItLeadUatController;
+use App\Http\Controllers\Api\V1\KnowledgeBaseArticleController;
+use App\Http\Controllers\Api\V1\KnowledgeBaseFeedbackController;
+use App\Http\Controllers\Api\V1\KnowledgeBaseReviewController;
+use App\Http\Controllers\Api\V1\KnowledgeBaseTagController;
 use App\Http\Controllers\Api\V1\ManagerAlertController;
 use App\Http\Controllers\Api\V1\ManagerApprovalController;
 use App\Http\Controllers\Api\V1\ManagerReportController;
@@ -35,6 +39,7 @@ use App\Http\Controllers\Api\V1\TicketAttachmentController;
 use App\Http\Controllers\Api\V1\TicketClosureController;
 use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TicketDeploymentController;
+use App\Http\Controllers\Api\V1\TicketKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\TicketMonitoringController;
 use Illuminate\Support\Facades\Route;
 
@@ -101,6 +106,40 @@ Route::prefix('v1')->group(function (): void {
         Route::prefix('notification-preferences')->name('api.v1.notification_preferences.')->group(function (): void {
             Route::get('/', [NotificationPreferenceController::class, 'index']);
             Route::put('/{notificationType}', [NotificationPreferenceController::class, 'update']);
+        });
+
+        // Phase 15: Knowledge Base
+        Route::prefix('knowledge-base')->name('api.v1.knowledge_base.')->group(function (): void {
+            Route::get('/', [KnowledgeBaseArticleController::class, 'index']);
+            Route::post('/', [KnowledgeBaseArticleController::class, 'store']);
+            Route::get('/{article}', [KnowledgeBaseArticleController::class, 'show']);
+            Route::put('/{article}', [KnowledgeBaseArticleController::class, 'update']);
+            Route::get('/{article}/related', [KnowledgeBaseArticleController::class, 'related']);
+            Route::get('/{article}/versions', [KnowledgeBaseArticleController::class, 'versions']);
+            Route::get('/{article}/versions/{version}', [KnowledgeBaseArticleController::class, 'showVersion']);
+            Route::get('/{article}/activity', [KnowledgeBaseArticleController::class, 'activity']);
+            Route::post('/{article}/submit-review', [KnowledgeBaseArticleController::class, 'submitReview']);
+            Route::post('/{article}/publish', [KnowledgeBaseReviewController::class, 'publish']);
+            Route::post('/{article}/reject', [KnowledgeBaseReviewController::class, 'reject']);
+            Route::post('/{article}/archive', [KnowledgeBaseArticleController::class, 'archive']);
+            Route::post('/{article}/restore', [KnowledgeBaseArticleController::class, 'restore']);
+            Route::post('/{article}/restore-version/{version}', [KnowledgeBaseArticleController::class, 'restoreVersion']);
+            Route::post('/{article}/feedback', [KnowledgeBaseFeedbackController::class, 'store']);
+        });
+
+        Route::prefix('knowledge-base-tags')->name('api.v1.knowledge_base_tags.')->group(function (): void {
+            Route::get('/', [KnowledgeBaseTagController::class, 'index']);
+            Route::post('/', [KnowledgeBaseTagController::class, 'store']);
+            Route::put('/{tag}', [KnowledgeBaseTagController::class, 'update']);
+            Route::delete('/{tag}', [KnowledgeBaseTagController::class, 'destroy']);
+        });
+
+        Route::prefix('tickets/{ticket}/knowledge-base')->name('api.v1.tickets.kb.')->group(function (): void {
+            Route::get('/', [TicketKnowledgeBaseController::class, 'index']);
+            Route::get('/recommendations', [TicketKnowledgeBaseController::class, 'recommendations']);
+            Route::post('/link', [TicketKnowledgeBaseController::class, 'link']);
+            Route::delete('/{article}', [TicketKnowledgeBaseController::class, 'unlink']);
+            Route::post('/create-draft', [TicketKnowledgeBaseController::class, 'createDraft']);
         });
 
         Route::prefix('supervisor')->middleware('permission:ticket.validation_queue.view')->name('api.v1.supervisor.')->group(function (): void {

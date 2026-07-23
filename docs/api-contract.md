@@ -1,5 +1,40 @@
 # API Contract Plan
 
+## Phase 15 Knowledge Base endpoints
+
+All 25 routes below are under `/api/v1`, require Sanctum authentication and an active user, and participate in the existing request-ID/error handling. The current application inventory is **268 API routes total**.
+
+| Method   | Endpoint                                              | Purpose                                                                                                                                                                                                                                                |
+| -------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `GET`    | `/knowledge-base`                                     | Visibility/status-scoped search with article number, title, summary, content, tag, category, and application matching; filters include status, visibility, category/application/author, tag, publication dates, sorting, and pagination capped at 100. |
+| `POST`   | `/knowledge-base`                                     | Create `draft`, optionally submit immediately as `in_review`; generate annual article number, unique slug, sanitized content, tags, version 1, and activity.                                                                                           |
+| `GET`    | `/knowledge-base/{article}`                           | Fetch by numeric ID or slug; non-reviewers receive `404` for another author's unpublished article and `403` for unauthorized IT-internal content; successful reads increment views.                                                                    |
+| `PUT`    | `/knowledge-base/{article}`                           | Edit an authorized unpublished article, or create a required-change-summary revision draft from a published article.                                                                                                                                   |
+| `GET`    | `/knowledge-base/{article}/related`                   | Up to five published, visibility-safe articles in the same category when present.                                                                                                                                                                      |
+| `GET`    | `/knowledge-base/{article}/versions`                  | List immutable article versions.                                                                                                                                                                                                                       |
+| `GET`    | `/knowledge-base/{article}/versions/{version}`        | Read one article-scoped version.                                                                                                                                                                                                                       |
+| `GET`    | `/knowledge-base/{article}/activity`                  | Authorized append-only activity stream; metadata is exposed only with activity permission.                                                                                                                                                             |
+| `POST`   | `/knowledge-base/{article}/submit-review`             | `draft` or `rejected` to `in_review`; duplicate/invalid transitions return `409`.                                                                                                                                                                      |
+| `POST`   | `/knowledge-base/{article}/publish`                   | `in_review -> published`, optional `change_summary` up to 500 characters; author self-approval returns `409`.                                                                                                                                          |
+| `POST`   | `/knowledge-base/{article}/reject`                    | `in_review -> rejected`; requires a 3-1,000 character reason and forbids self-rejection.                                                                                                                                                               |
+| `POST`   | `/knowledge-base/{article}/archive`                   | `published -> archived`.                                                                                                                                                                                                                               |
+| `POST`   | `/knowledge-base/{article}/restore`                   | `archived -> draft`.                                                                                                                                                                                                                                   |
+| `POST`   | `/knowledge-base/{article}/restore-version/{version}` | Copy an old snapshot into a newly numbered `draft` version without mutating history.                                                                                                                                                                   |
+| `POST`   | `/knowledge-base/{article}/feedback`                  | Upsert the current user's helpful/not-helpful vote and optional comment up to 500 characters; published articles only.                                                                                                                                 |
+| `GET`    | `/knowledge-base-tags`                                | Active tags for normal readers; all tags for tag administrators.                                                                                                                                                                                       |
+| `POST`   | `/knowledge-base-tags`                                | Create a unique tag.                                                                                                                                                                                                                                   |
+| `PUT`    | `/knowledge-base-tags/{tag}`                          | Rename and/or activate/deactivate a tag.                                                                                                                                                                                                               |
+| `DELETE` | `/knowledge-base-tags/{tag}`                          | Deactivate without deleting article relationships.                                                                                                                                                                                                     |
+| `GET`    | `/tickets/{ticket}/knowledge-base`                    | List linked articles, filtered by the caller's article visibility.                                                                                                                                                                                     |
+| `GET`    | `/tickets/{ticket}/knowledge-base/recommendations`    | Return up to ten published, visibility-safe recommendations in deterministic score order.                                                                                                                                                              |
+| `POST`   | `/tickets/{ticket}/knowledge-base/link`               | Idempotently link an article as `source`, `related`, `used_as_solution`, or `recommended`.                                                                                                                                                             |
+| `DELETE` | `/tickets/{ticket}/knowledge-base/{article}`          | Remove article links for the ticket and audit the action.                                                                                                                                                                                              |
+| `POST`   | `/tickets/{ticket}/knowledge-base/create-draft`       | Create and source-link a sanitized draft from a ticket that has closure, current analysis, or current solution-plan resolution data.                                                                                                                   |
+
+Recommendation score weights are deterministic: same application `+30`, same ticket category `+25`, each article tag exactly matching a normalized ticket-title word `+10`, each title-word overlap `+5`, each summary-word overlap `+2`, and integer helpful-ratio bonus `0..5`. Results are ordered by descending score with publication time included in the sort key and capped at ten; visibility filtering occurs before scoring.
+
+Feedback is unique per article/user and subsequent submissions update the vote. Counts are recalculated from feedback rows; `helpful_ratio` is rounded to two decimals and is `null` with no feedback. Article/ticket mutations write activity records. Submit, publish, reject, and archive events trigger in-app notifications: submissions target active IT Leads, while later outcomes target the active author. Existing preference/mute handling, per-article-version deduplication, and delivery logs are reused.
+
 ## Phase 14 endpoints
 
 Notification, Preferences, and Alert endpoints:
@@ -58,16 +93,16 @@ QA assignment, test execution, defect tracking, and PIC rework endpoints:
 
 All routes use `/api/v1`, Sanctum authentication, active-user and permission middleware, the standard envelope, and `meta.request_id`.
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/it-lead/triage-queue` | Paginated `validated`/`triage` queue with search/status/master/date filters |
-| GET | `/it-lead/tickets/{ticket}` | Technical triage detail |
-| POST | `/it-lead/tickets/{ticket}/start-triage` | Locked `validated -> triage` transition |
-| POST | `/it-lead/tickets/{ticket}/assign` | Server-authoritative priority, PIC, SLA/calendar, and deadline transaction |
-| GET | `/it-lead/pic-options` | Active PIC identities and aggregate workload |
-| GET | `/it-lead/pic-workloads` | Active/critical/high counts and simple indicator |
-| GET | `/pic/assignments` | Logged-in PIC active assignment list; status/priority filters |
-| GET | `/pic/tickets/{ticket}` | Read-only detail for the current assigned PIC only |
+| Method | Endpoint                                 | Purpose                                                                     |
+| ------ | ---------------------------------------- | --------------------------------------------------------------------------- |
+| GET    | `/it-lead/triage-queue`                  | Paginated `validated`/`triage` queue with search/status/master/date filters |
+| GET    | `/it-lead/tickets/{ticket}`              | Technical triage detail                                                     |
+| POST   | `/it-lead/tickets/{ticket}/start-triage` | Locked `validated -> triage` transition                                     |
+| POST   | `/it-lead/tickets/{ticket}/assign`       | Server-authoritative priority, PIC, SLA/calendar, and deadline transaction  |
+| GET    | `/it-lead/pic-options`                   | Active PIC identities and aggregate workload                                |
+| GET    | `/it-lead/pic-workloads`                 | Active/critical/high counts and simple indicator                            |
+| GET    | `/pic/assignments`                       | Logged-in PIC active assignment list; status/priority filters               |
+| GET    | `/pic/tickets/{ticket}`                  | Read-only detail for the current assigned PIC only                          |
 
 Stale workflow actions return `409 INVALID_TRANSITION`; inactive/invalid master or PIC choices return `422`. Deadlines are never accepted from clients.
 
@@ -135,16 +170,16 @@ Expected status codes: 200/201/204, 401 unauthenticated, 403 forbidden, 404 miss
 
 ## Authentication and current user
 
-| Method    | Endpoint                       | Purpose                                                   |
-| --------- | ------------------------------ | --------------------------------------------------------- |
-| GET       | `/sanctum/csrf-cookie`         | Initialize CSRF cookie (Laravel route outside `/api/v1`)  |
-| POST      | `/auth/login`                  | Create SPA session; email/password                        |
-| POST      | `/auth/logout`                 | Revoke current session                                    |
-| GET       | `/auth/me`                     | Current user, primary role, and effective permissions     |
-| GET       | `/me/notifications`            | Paginated own notifications                               |
-| PATCH     | `/me/notifications/{id}/read`  | Mark one as read                                          |
-| POST      | `/me/notifications/read-all`   | Mark scoped notifications read                            |
-| GET/PATCH | `/me/notification-preferences` | Read/update own preferences                               |
+| Method    | Endpoint                       | Purpose                                                  |
+| --------- | ------------------------------ | -------------------------------------------------------- |
+| GET       | `/sanctum/csrf-cookie`         | Initialize CSRF cookie (Laravel route outside `/api/v1`) |
+| POST      | `/auth/login`                  | Create SPA session; email/password                       |
+| POST      | `/auth/logout`                 | Revoke current session                                   |
+| GET       | `/auth/me`                     | Current user, primary role, and effective permissions    |
+| GET       | `/me/notifications`            | Paginated own notifications                              |
+| PATCH     | `/me/notifications/{id}/read`  | Mark one as read                                         |
+| POST      | `/me/notifications/read-all`   | Mark scoped notifications read                           |
+| GET/PATCH | `/me/notification-preferences` | Read/update own preferences                              |
 
 SSO, reset password, MFA, and session management endpoint ditambahkan hanya setelah identity policy diputuskan.
 
@@ -275,22 +310,22 @@ Upload validates size/MIME/extension, records checksum and scan state. Ticket mu
 
 ## Phase 10 UAT
 
-| Method | Endpoint | Purpose |
-| --- | --- | --- |
-| GET | `/it-lead/uat-assignment-queue` | IT Lead queue for `ready_for_uat`/`uat_assignment` tickets. |
-| POST | `/it-lead/tickets/{ticket}/assign-uat` | Assign the ticket owner requester; duplicate/stale assignment returns `409`. |
-| GET/POST | `/requester/tickets/{ticket}/uat-scenarios` | Read/create active scenarios; each scenario requires steps and acceptance criteria. |
-| POST | `/requester/tickets/{ticket}/uat/start` | Start initial or retest UAT cycle. |
-| GET/POST | `/requester/tickets/{ticket}/uat-runs` | Read/create one active UAT run per ticket. |
-| POST | `/requester/tickets/{ticket}/uat-runs/{run}/results` | Record accepted/rejected/blocked scenario result. |
-| POST | `/requester/tickets/{ticket}/uat-runs/{run}/complete` | Complete run and transition to approval or rework. |
-| GET/POST | `/requester/tickets/{ticket}/uat-findings` | Read/create finding linked to rejected/blocked result. |
-| POST | `/requester/tickets/{ticket}/uat-findings/{finding}/verify` | Requester verifies a retest finding. |
-| POST | `/pic/tickets/{ticket}/uat-findings/{finding}/start` | Assigned PIC starts UAT finding rework. |
-| POST | `/pic/tickets/{ticket}/uat-findings/{finding}/resolve` | Assigned PIC resolves finding with notes. |
-| POST | `/pic/tickets/{ticket}/submit-uat-retest` | Submit after 100% progress, rework worklog, passed internal test, and no active run. |
-| POST | `/requester/tickets/{ticket}/uat-evidence` | Requester-visible UAT evidence upload. |
-| POST | `/pic/tickets/{ticket}/uat-evidence` | Internal PIC finding/retest evidence upload. |
+| Method   | Endpoint                                                    | Purpose                                                                              |
+| -------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| GET      | `/it-lead/uat-assignment-queue`                             | IT Lead queue for `ready_for_uat`/`uat_assignment` tickets.                          |
+| POST     | `/it-lead/tickets/{ticket}/assign-uat`                      | Assign the ticket owner requester; duplicate/stale assignment returns `409`.         |
+| GET/POST | `/requester/tickets/{ticket}/uat-scenarios`                 | Read/create active scenarios; each scenario requires steps and acceptance criteria.  |
+| POST     | `/requester/tickets/{ticket}/uat/start`                     | Start initial or retest UAT cycle.                                                   |
+| GET/POST | `/requester/tickets/{ticket}/uat-runs`                      | Read/create one active UAT run per ticket.                                           |
+| POST     | `/requester/tickets/{ticket}/uat-runs/{run}/results`        | Record accepted/rejected/blocked scenario result.                                    |
+| POST     | `/requester/tickets/{ticket}/uat-runs/{run}/complete`       | Complete run and transition to approval or rework.                                   |
+| GET/POST | `/requester/tickets/{ticket}/uat-findings`                  | Read/create finding linked to rejected/blocked result.                               |
+| POST     | `/requester/tickets/{ticket}/uat-findings/{finding}/verify` | Requester verifies a retest finding.                                                 |
+| POST     | `/pic/tickets/{ticket}/uat-findings/{finding}/start`        | Assigned PIC starts UAT finding rework.                                              |
+| POST     | `/pic/tickets/{ticket}/uat-findings/{finding}/resolve`      | Assigned PIC resolves finding with notes.                                            |
+| POST     | `/pic/tickets/{ticket}/submit-uat-retest`                   | Submit after 100% progress, rework worklog, passed internal test, and no active run. |
+| POST     | `/requester/tickets/{ticket}/uat-evidence`                  | Requester-visible UAT evidence upload.                                               |
+| POST     | `/pic/tickets/{ticket}/uat-evidence`                        | Internal PIC finding/retest evidence upload.                                         |
 
 UAT failure records both `uat_in_progress → uat_failed` and `uat_failed → development_in_progress` histories. `uat_approved` is a requester sign-off state only and does not start release approval or deployment.
 
@@ -337,6 +372,8 @@ Dashboard endpoint bukan sumber truth terpisah; ia query read model dari domain 
 
 ## Knowledge Base
 
+The table below was the preliminary target contract and is superseded by the implemented Phase 15 contract above. In particular, the canonical prefixes are `/knowledge-base`, `/knowledge-base-tags`, and `/tickets/{ticket}/knowledge-base`; taxonomy uses tags plus existing ticket categories rather than `/knowledge/categories`.
+
 | Method      | Endpoint                                           | Purpose                         |
 | ----------- | -------------------------------------------------- | ------------------------------- |
 | GET/POST    | `/knowledge/articles`                              | Search/list; create draft       |
@@ -357,20 +394,21 @@ Implement endpoint groups per roadmap vertical slice, not sekaligus. Setiap endp
 
 All routes are under `/api/v1`, require a Sanctum session, use policy plus permission checks, return the standard request ID, and use `409 Conflict` for stale or duplicate transitions.
 
-| Actor | Method | Endpoint | Purpose |
-| --- | --- | --- | --- |
-| PIC | POST | `/pic/tickets/{ticket}/start-analysis` | Move an owned assigned ticket to analysis |
-| PIC | GET/POST | `/pic/tickets/{ticket}/analysis` | Read or create the current analysis |
-| PIC | PUT | `/pic/tickets/{ticket}/analysis/{analysis}` | Explicit draft save with `expected_lock_version` |
-| PIC | POST | `/pic/tickets/{ticket}/analysis/{analysis}/complete` | Complete RCA and enter solution planning |
-| PIC | GET/POST | `/pic/tickets/{ticket}/solution-plan` | Read versions or create the current plan |
-| PIC | PUT | `/pic/tickets/{ticket}/solution-plan/{plan}` | Update the current draft with optimistic locking |
-| PIC | POST | `/pic/tickets/{ticket}/solution-plan/{plan}/submit` | Submit the plan for IT Lead review |
-| IT Lead | GET | `/it-lead/plan-review-queue` | Paginated/filterable submitted-plan queue |
-| IT Lead | GET | `/it-lead/tickets/{ticket}/solution-plan` | RCA, plan, attachment, and history review projection |
-| IT Lead | POST | `/it-lead/tickets/{ticket}/solution-plan/{plan}/request-revision` | Require a reason and return to solution planning |
-| IT Lead | POST | `/it-lead/tickets/{ticket}/solution-plan/{plan}/approve` | Approve and move to ready for development |
+| Actor   | Method   | Endpoint                                                          | Purpose                                              |
+| ------- | -------- | ----------------------------------------------------------------- | ---------------------------------------------------- |
+| PIC     | POST     | `/pic/tickets/{ticket}/start-analysis`                            | Move an owned assigned ticket to analysis            |
+| PIC     | GET/POST | `/pic/tickets/{ticket}/analysis`                                  | Read or create the current analysis                  |
+| PIC     | PUT      | `/pic/tickets/{ticket}/analysis/{analysis}`                       | Explicit draft save with `expected_lock_version`     |
+| PIC     | POST     | `/pic/tickets/{ticket}/analysis/{analysis}/complete`              | Complete RCA and enter solution planning             |
+| PIC     | GET/POST | `/pic/tickets/{ticket}/solution-plan`                             | Read versions or create the current plan             |
+| PIC     | PUT      | `/pic/tickets/{ticket}/solution-plan/{plan}`                      | Update the current draft with optimistic locking     |
+| PIC     | POST     | `/pic/tickets/{ticket}/solution-plan/{plan}/submit`               | Submit the plan for IT Lead review                   |
+| IT Lead | GET      | `/it-lead/plan-review-queue`                                      | Paginated/filterable submitted-plan queue            |
+| IT Lead | GET      | `/it-lead/tickets/{ticket}/solution-plan`                         | RCA, plan, attachment, and history review projection |
+| IT Lead | POST     | `/it-lead/tickets/{ticket}/solution-plan/{plan}/request-revision` | Require a reason and return to solution planning     |
+| IT Lead | POST     | `/it-lead/tickets/{ticket}/solution-plan/{plan}/approve`          | Approve and move to ready for development            |
 
 Requester ticket resources expose only generic workflow progress for these phases. RCA, solution text, risk, rollback, testing, technical history notes, and internal event metadata are omitted.
-\ n -   P h a s e   1 3   R e p o r t   E n d p o i n t s   a d d e d   u n d e r   / a p i / v 1 / r e p o r t s / *  
+\ n -   P h a s e   1 3   R e p o r t   E n d p o i n t s   a d d e d   u n d e r   / a p i / v 1 / r e p o r t s / * 
+ 
  

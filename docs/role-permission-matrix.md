@@ -1,71 +1,95 @@
 # Role Permission Matrix
 
+## Phase 15 Knowledge Base permissions
+
+| Permission                          | Requester | Supervisor | IT Lead | PIC | QA  | Manager | Executive | Admin |
+| ----------------------------------- | --------- | ---------- | ------- | --- | --- | ------- | --------- | ----- |
+| `knowledge_base.view`               | Yes       | Yes        | Yes     | Yes | Yes | Yes     | Yes       | Yes   |
+| `knowledge_base.view_it_internal`   | No        | No         | Yes     | Yes | Yes | No      | No        | No    |
+| `knowledge_base.create`             | No        | No         | Yes     | Yes | Yes | No      | No        | No    |
+| `knowledge_base.edit_own`           | No        | No         | Yes     | Yes | Yes | No      | No        | No    |
+| `knowledge_base.edit_any`           | No        | No         | Yes     | No  | No  | No      | No        | No    |
+| `knowledge_base.submit_review`      | No        | No         | Yes     | Yes | Yes | No      | No        | No    |
+| `knowledge_base.review`             | No        | No         | Yes     | No  | No  | No      | No        | No    |
+| `knowledge_base.publish`            | No        | No         | Yes     | No  | No  | No      | No        | No    |
+| `knowledge_base.archive`            | No        | No         | Yes     | No  | No  | No      | No        | No    |
+| `knowledge_base.restore_version`    | No        | No         | Yes     | No  | No  | No      | No        | No    |
+| `knowledge_base.link_ticket`        | No        | Yes        | Yes     | Yes | No  | No      | No        | No    |
+| `knowledge_base.create_from_ticket` | No        | No         | No      | Yes | No  | No      | No        | No    |
+| `knowledge_base.view_activity`      | No        | No         | Yes     | No  | No  | No      | No        | Yes   |
+| `knowledge_base.feedback`           | Yes       | Yes        | Yes     | Yes | Yes | Yes     | No        | No    |
+| `knowledge_base.manage_tags`        | No        | No         | No      | No  | No  | No      | No        | Yes   |
+
+Permissions are necessary but not sufficient. Unpublished detail is limited to the author or a reviewer; list status filters expose only the author's own unpublished rows unless the user can review/edit any; `it_internal` is filtered at query and detail boundaries; only published articles accept feedback; and only published articles are recommended. The IT Lead is the sole reviewer/publisher and cannot publish or reject an article they authored, enforcing separation of duties. Admin manages tags and may inspect activity but is not implicitly an author, reviewer, publisher, ticket linker, or feedback actor.
+
+Implementation note: `knowledge_base.submit_review` is registered for IT Lead, PIC, and QA and expresses the intended capability set, but the current submit-review controller enforces article ownership through `knowledge_base.edit_own` or `knowledge_base.edit_any` rather than checking `knowledge_base.submit_review` independently. Backend ownership and lifecycle checks remain authoritative.
+
 ## Phase 14 permissions
 
-| Permission | Requester | Supervisor | IT Lead | PIC | QA | Manager | Executive | Admin |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `notification.view_own` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| `notification.manage_own` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| `notification.preference.manage_own` | Yes | Yes | Yes | Yes | Yes | Yes | Yes | Yes |
-| `alert.itlead.view` | No | No | Yes | No | No | No | No | No |
-| `alert.manager.view` | No | No | No | No | No | Yes | No | No |
-| `alert.executive.view_summary` | No | No | No | No | No | No | Yes | No |
-| `sla_escalation_policy.view` | No | No | No | No | No | No | No | Yes |
-| `sla_escalation_policy.manage` | No | No | No | No | No | No | No | Yes |
+| Permission                           | Requester | Supervisor | IT Lead | PIC | QA  | Manager | Executive | Admin |
+| ------------------------------------ | --------- | ---------- | ------- | --- | --- | ------- | --------- | ----- |
+| `notification.view_own`              | Yes       | Yes        | Yes     | Yes | Yes | Yes     | Yes       | Yes   |
+| `notification.manage_own`            | Yes       | Yes        | Yes     | Yes | Yes | Yes     | Yes       | Yes   |
+| `notification.preference.manage_own` | Yes       | Yes        | Yes     | Yes | Yes | Yes     | Yes       | Yes   |
+| `alert.itlead.view`                  | No        | No         | Yes     | No  | No  | No      | No        | No    |
+| `alert.manager.view`                 | No        | No         | No      | No  | No  | Yes     | No        | No    |
+| `alert.executive.view_summary`       | No        | No         | No      | No  | No  | No      | Yes       | No    |
+| `sla_escalation_policy.view`         | No        | No         | No      | No  | No  | No      | No        | Yes   |
+| `sla_escalation_policy.manage`       | No        | No         | No      | No  | No  | No      | No        | Yes   |
 
 ## Phase 9 permissions
 
-| Capability | QA | PIC | IT Lead | Requester/Executive |
-| --- | --- | --- | --- | --- |
-| Assign QA / Workload View | No | No | Yes (`ticket.qa.assign`, `ticket.qa_workload.view`) | No |
-| Start Testing / Retesting | Yes (`ticket.qa.start`) | No | No | No |
-| Manage Test Cases / Runs | Yes (`ticket.qa_test_case.manage`, `ticket.qa_test_run.manage`) | No | No | No |
-| Report & Verify QA Defects | Yes (`ticket.qa_defect.manage`, `ticket.qa_defect.verify`) | No | No | No |
-| Upload QA Evidence | Yes (`ticket.assigned.view`) | No | No | No |
-| PIC Defect Start & Resolution | No | Yes (`ticket.qa_defect.manage`) | No | No |
-| Submit Ticket for Retesting | No | Yes (`ticket.qa_retest.submit`) | No | No |
-| View Defect Comments/Files | Yes | Yes | Yes | Redacted/Not Visible |
+| Capability                    | QA                                                              | PIC                             | IT Lead                                             | Requester/Executive  |
+| ----------------------------- | --------------------------------------------------------------- | ------------------------------- | --------------------------------------------------- | -------------------- |
+| Assign QA / Workload View     | No                                                              | No                              | Yes (`ticket.qa.assign`, `ticket.qa_workload.view`) | No                   |
+| Start Testing / Retesting     | Yes (`ticket.qa.start`)                                         | No                              | No                                                  | No                   |
+| Manage Test Cases / Runs      | Yes (`ticket.qa_test_case.manage`, `ticket.qa_test_run.manage`) | No                              | No                                                  | No                   |
+| Report & Verify QA Defects    | Yes (`ticket.qa_defect.manage`, `ticket.qa_defect.verify`)      | No                              | No                                                  | No                   |
+| Upload QA Evidence            | Yes (`ticket.assigned.view`)                                    | No                              | No                                                  | No                   |
+| PIC Defect Start & Resolution | No                                                              | Yes (`ticket.qa_defect.manage`) | No                                                  | No                   |
+| Submit Ticket for Retesting   | No                                                              | Yes (`ticket.qa_retest.submit`) | No                                                  | No                   |
+| View Defect Comments/Files    | Yes                                                             | Yes                             | Yes                                                 | Redacted/Not Visible |
 
 Added permissions: `ticket.qa.assign`, `ticket.qa_assignment_queue.view`, `ticket.qa_options.view`, `ticket.qa_workload.view`, `ticket.qa_test_case.view`, `ticket.qa_test_case.manage`, `ticket.qa_test_run.view`, `ticket.qa_test_run.manage`, `ticket.qa_defect.view`, `ticket.qa_defect.manage`, `ticket.qa_defect.verify`, `ticket.qa_retest.submit`.
 
 ## Phase 8 permissions
 
-| Permission | Requester | Supervisor | IT Lead | PIC | Executive |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| `ticket.triage_queue.view` | No | No | Yes | No | No |
-| `ticket.triage.start` | No | No | Yes | No | No |
-| `ticket.priority.finalize` | No | No | Yes | No | No |
-| `ticket.assign` | No | No | Yes | No | No |
-| `ticket.pic_options.view` | No | No | Yes | No | No |
-| `ticket.workload.view` | No | No | Yes | No | No |
-| `ticket.assigned.view` | No | No | No | Own active assignment | No |
+| Permission                 | Requester | Supervisor | IT Lead |                   PIC | Executive |
+| -------------------------- | --------: | ---------: | ------: | --------------------: | --------: |
+| `ticket.triage_queue.view` |        No |         No |     Yes |                    No |        No |
+| `ticket.triage.start`      |        No |         No |     Yes |                    No |        No |
+| `ticket.priority.finalize` |        No |         No |     Yes |                    No |        No |
+| `ticket.assign`            |        No |         No |     Yes |                    No |        No |
+| `ticket.pic_options.view`  |        No |         No |     Yes |                    No |        No |
+| `ticket.workload.view`     |        No |         No |     Yes |                    No |        No |
+| `ticket.assigned.view`     |        No |         No |      No | Own active assignment |        No |
 
 Requester ownership continues after assignment but internal assignment notes/metadata are redacted. Executive has no technical triage/PIC access. Until application ownership is modeled, IT Lead scope is explicitly all `validated` and `triage` tickets.
 
 ## Phase 5 ticket permissions
 
-| Permission | Requester | Supervisor |
-| --- | --- | --- |
-| `ticket.create` | Yes | No |
-| `ticket.own.view` | Own only | No |
-| `ticket.own.update` | Draft/revision | No |
-| `ticket.own.cancel` | Before validated | No |
-| `ticket.own.attachment.manage` | Own/uploader before validated | No |
-| `ticket.validation_queue.view` | No | Same current division |
-| `ticket.validate` | No | Scoped |
-| `ticket.request_revision` | No | Scoped |
-| `ticket.reject` | No | Scoped |
-| `ticket.transfer` | No | Scoped |
-| `ticket.division.view` | No | Same current division |
+| Permission                     | Requester                     | Supervisor            |
+| ------------------------------ | ----------------------------- | --------------------- |
+| `ticket.create`                | Yes                           | No                    |
+| `ticket.own.view`              | Own only                      | No                    |
+| `ticket.own.update`            | Draft/revision                | No                    |
+| `ticket.own.cancel`            | Before validated              | No                    |
+| `ticket.own.attachment.manage` | Own/uploader before validated | No                    |
+| `ticket.validation_queue.view` | No                            | Same current division |
+| `ticket.validate`              | No                            | Scoped                |
+| `ticket.request_revision`      | No                            | Scoped                |
+| `ticket.reject`                | No                            | Scoped                |
+| `ticket.transfer`              | No                            | Scoped                |
+| `ticket.division.view`         | No                            | Same current division |
 
 Laravel `TicketPolicy` is authoritative for ownership, mutable states, attachment parent access, and Supervisor division scope. Admin is not implicitly granted Supervisor actions.
 
 ## Phase 4 additions
 
-| Permission | Requester | Supervisor | IT Lead | PIC | QA | Manager | Executive | Admin |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| `master_data.view` | Yes | Yes | Yes | Yes | Yes | Yes | Yes (read-only) | Yes |
-| `master_data.manage` | No | No | No | No | No | No | No | Yes |
+| Permission           | Requester | Supervisor | IT Lead | PIC | QA  | Manager | Executive       | Admin |
+| -------------------- | --------- | ---------- | ------- | --- | --- | ------- | --------------- | ----- |
+| `master_data.view`   | Yes       | Yes        | Yes     | Yes | Yes | Yes     | Yes (read-only) | Yes   |
+| `master_data.manage` | No        | No         | No      | No  | No  | No      | No              | Yes   |
 
 Frontend route guards improve navigation, but the Laravel permission middleware is authoritative. Executive receives only active form-reference master data and cannot call Admin mutations.
 
@@ -84,16 +108,16 @@ Matrix adalah baseline untuk implementasi Policy dan test. Permission efektif ju
 
 Phase 3 memakai satu `role_id` utama per user. Registry konfigurasi menjadi sumber effective permission sementara, sehingga controller tidak menyebarkan pemeriksaan role. Struktur `User -> Role`, `hasRole()`, `hasPermission()`, dan middleware dapat dikembangkan menjadi relasi multi-role pada fase berikutnya tanpa mengubah kontrak frontend.
 
-| Role         | Dashboard permission          | Ticket scope          | Additional permission      |
-| ------------ | ----------------------------- | --------------------- | -------------------------- |
-| `requester`  | `dashboard.requester.view`    | `ticket.own.view`     | —                          |
-| `supervisor` | `dashboard.supervisor.view`   | `ticket.division.view`| —                          |
-| `it_lead`    | `dashboard.it_lead.view`      | `ticket.all.view`     | `ticket.technical.view`    |
-| `pic`        | `dashboard.pic.view`          | `ticket.assigned.view`| `ticket.technical.view`    |
-| `qa`         | `dashboard.qa.view`           | `ticket.assigned.view`| `ticket.technical.view`    |
-| `manager`    | `dashboard.manager.view`      | `ticket.all.view`     | `ticket.technical.view`    |
-| `executive`  | `dashboard.executive.view`    | —                     | `executive.aggregate.view` |
-| `admin`      | `dashboard.admin.view`        | `ticket.all.view`     | `ticket.technical.view`, `admin.access` |
+| Role         | Dashboard permission        | Ticket scope           | Additional permission                   |
+| ------------ | --------------------------- | ---------------------- | --------------------------------------- |
+| `requester`  | `dashboard.requester.view`  | `ticket.own.view`      | —                                       |
+| `supervisor` | `dashboard.supervisor.view` | `ticket.division.view` | —                                       |
+| `it_lead`    | `dashboard.it_lead.view`    | `ticket.all.view`      | `ticket.technical.view`                 |
+| `pic`        | `dashboard.pic.view`        | `ticket.assigned.view` | `ticket.technical.view`                 |
+| `qa`         | `dashboard.qa.view`         | `ticket.assigned.view` | `ticket.technical.view`                 |
+| `manager`    | `dashboard.manager.view`    | `ticket.all.view`      | `ticket.technical.view`                 |
+| `executive`  | `dashboard.executive.view`  | —                      | `executive.aggregate.view`              |
+| `admin`      | `dashboard.admin.view`      | `ticket.all.view`      | `ticket.technical.view`, `admin.access` |
 
 Executive sengaja tidak menerima `ticket.technical.view`. Endpoint dan route bisnis pada fase selanjutnya tetap wajib memakai policy/resource projection; permission frontend hanya mengatur tampilan.
 
@@ -123,15 +147,15 @@ Executive sengaja tidak menerima `ticket.technical.view`. Endpoint dan route bis
 | Execute UAT                          | O when assigned | D if assigned | Coordinate |         Support |       Support |       View |           — |              — |
 | Assign UAT requester                 |               — |             — |          A |               — |             — |          — |           — |              — |
 | Create UAT finding                   | O when assigned |             — |          G |               — |          View |          — |           — |              — |
-| Resolve assigned UAT finding         |               — |             — |          G | A if assigned |           — |          — |           — |              — |
-| Verify/reopen UAT finding            | O when assigned |             — |          G |               — |           — |          — |           — |              — |
-| Submit UAT retest                    |               — |             — |          G | A if assigned |           — |          — |           — |              — |
-| Request release approval             |               — |             — |          A |               — |           — |       View |        View |              — |
-| Business approval                    |               — |             — |       View |               — |        View | A assigned |   Aggregate |              — |
-| Technical readiness                  |               — |             — | A assigned |         Support |        View |       View |   Aggregate |              — |
-| Prepare release/rollback plan        |    Status only |   Status only |          A | A if assigned |        View |   Summary |        None |              — |
-| Complete release checklist           |               — |             — |          A | A if assigned | View subset |       View |   Aggregate | Templates only |
-| Confirm release ready                |               — |             — |          A |               — |           — |       View |   Aggregate |              — |
+| Resolve assigned UAT finding         |               — |             — |          G |   A if assigned |             — |          — |           — |              — |
+| Verify/reopen UAT finding            | O when assigned |             — |          G |               — |             — |          — |           — |              — |
+| Submit UAT retest                    |               — |             — |          G |   A if assigned |             — |          — |           — |              — |
+| Request release approval             |               — |             — |          A |               — |             — |       View |        View |              — |
+| Business approval                    |               — |             — |       View |               — |          View | A assigned |   Aggregate |              — |
+| Technical readiness                  |               — |             — | A assigned |         Support |          View |       View |   Aggregate |              — |
+| Prepare release/rollback plan        |     Status only |   Status only |          A |   A if assigned |          View |    Summary |        None |              — |
+| Complete release checklist           |               — |             — |          A |   A if assigned |   View subset |       View |   Aggregate | Templates only |
+| Confirm release ready                |               — |             — |          A |               — |             — |       View |   Aggregate |              — |
 | Approve/reject deployment            |               — |             — |  Recommend |               — |     Recommend | A/assigned |           — |              — |
 | Prepare deployment                   |               — |             — |          G |               A |      Verify A |    Approve |           — |              — |
 | Execute/confirm deployment           |               — |             — |          G | A if authorized |        Verify |       View |           — |              — |
@@ -144,6 +168,8 @@ Executive sengaja tidak menerima `ticket.technical.view`. Endpoint dan route bis
 `O limited` untuk requester berarti informasi tiket sendiri, tetapi internal security notes, infrastructure secrets, internal-only RCA/worklog, dan data user lain tetap disembunyikan.
 
 ## Administration, reporting, notification, and KB
+
+The broad capability table below is an earlier design baseline. For Phase 15, the concrete permission-code matrix above is authoritative; notably Manager does not create/review/publish, Supervisor only reads/feeds back/links, Executive is read-only without feedback, and Admin only reads, manages tags, and views activity.
 
 | Capability                            |     Requester | Supervisor |       IT Lead |        PIC |             QA |        Manager |     Executive |       Admin |
 | ------------------------------------- | ------------: | ---------: | ------------: | ---------: | -------------: | -------------: | ------------: | ----------: |
@@ -205,14 +231,15 @@ knowledge.view, knowledge.create, knowledge.review, knowledge.publish, knowledge
 
 ## Phase 7 enforced permissions
 
-| Capability | Requester | Supervisor | IT Lead | Assigned PIC | QA | Manager | Executive | Admin |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Start/manage/complete analysis | — | — | — | Allow | — | — | — | — |
-| Create/update/submit solution plan | — | — | — | Allow | — | — | — | — |
-| View Plan Review queue and technical detail | — | — | Allow | Own assigned ticket only | — | — | Deny | — |
-| Request plan revision / approve plan | — | — | Allow | — | — | — | Deny | — |
-| View generic Phase 7 progress on own ticket | Allow | Existing scope | Allow | Allow | Existing scope | Existing scope | Aggregate only | Existing scope |
+| Capability                                  | Requester |     Supervisor | IT Lead |             Assigned PIC |             QA |        Manager |      Executive |          Admin |
+| ------------------------------------------- | --------: | -------------: | ------: | -----------------------: | -------------: | -------------: | -------------: | -------------: |
+| Start/manage/complete analysis              |         — |              — |       — |                    Allow |              — |              — |              — |              — |
+| Create/update/submit solution plan          |         — |              — |       — |                    Allow |              — |              — |              — |              — |
+| View Plan Review queue and technical detail |         — |              — |   Allow | Own assigned ticket only |              — |              — |           Deny |              — |
+| Request plan revision / approve plan        |         — |              — |   Allow |                        — |              — |              — |           Deny |              — |
+| View generic Phase 7 progress on own ticket |     Allow | Existing scope |   Allow |                    Allow | Existing scope | Existing scope | Aggregate only | Existing scope |
 
 Concrete permission codes are `ticket.analysis.start`, `ticket.analysis.view`, `ticket.analysis.manage`, `ticket.solution_plan.view`, `ticket.solution_plan.manage`, `ticket.solution_plan.submit`, `ticket.plan_review_queue.view`, `ticket.solution_plan.request_revision`, and `ticket.solution_plan.approve`. Ownership is rechecked under row lock during mutations; a permission alone never grants a PIC access to another PIC's assignment.
-\ n -   P h a s e   1 3   R e p o r t i n g   v i e w   p e r m i s s i o n s   m a p p e d  
+\ n -   P h a s e   1 3   R e p o r t i n g   v i e w   p e r m i s s i o n s   m a p p e d 
+ 
  

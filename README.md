@@ -1,5 +1,7 @@
 # Tic Hub
 
+Phase 15 implements the Knowledge Base and resolution-reuse vertical slice: permission-scoped article search and reading, draft/review/reject/publish/archive/restore lifecycle, immutable version snapshots, server-side sanitization, tag administration, ticket links and redacted ticket-derived drafts, deterministic recommendations, feedback, activity audit, and deduplicated in-app workflow notifications. The responsive frontend includes reader, author, reviewer, tag-management, and ticket-resolution workflows. See `docs/phase-15-knowledge-base-resolution-reuse.md`.
+
 Phase 8 implements `ready_for_development -> development_in_progress -> internal_testing -> ready_for_qa`, including PIC worklogs, progress snapshots, private development evidence, internal test cases/runs/results, failure-to-rework behavior, an IT Lead read-only queue, and requester-safe progress. QA execution remains outside this phase.
 
 Phase 10 implements UAT execution, requester revision and sign-off: IT Lead requester assignment, ticket-specific scenarios, UAT runs/results, finding history, PIC rework gates, retest cycles, evidence authorization, and requester-driven `uat_approved`. See `docs/phase-10-uat-requester-signoff.md`.
@@ -81,6 +83,8 @@ Seeder menyediakan delapan akun khusus environment `local`/`testing`: `requester
 
 ## Database
 
+The repository currently contains **22 migrations**. The Phase 15 migration creates eight Knowledge Base tables for annual numbering, articles, immutable versions, tags, article-tag membership, ticket links, per-user feedback, and activity logs; see `docs/database-design.md`.
+
 Jalankan migration development setelah memastikan `.env` menunjuk ke database yang benar:
 
 ```bash
@@ -119,6 +123,14 @@ php artisan test
 vendor/bin/pint --test
 ```
 
+Current Phase 15 verification baseline:
+
+- Backend automated suite: **182 tests, 1,145 assertions**, all passing.
+- API inventory: **25 Knowledge Base routes** and **268 API routes total**.
+- Frontend: TypeScript check, Prettier check, and production build pass.
+- Build warning: the main minified JavaScript chunk is 945.85 kB (254.53 kB gzip), above Vite's 500 kB warning threshold; code splitting remains a follow-up.
+- HTTP server E2E and interactive desktop/mobile browser verification have **not** been run for Phase 15 and remain pending runtime verification.
+
 ## Status implementasi
 
 - Phase 3: Laravel Sanctum SPA authentication, primary roles, permission registry, login rate limit, local seeders, frontend auth bootstrap, protected routes, role guards, and session persistence.
@@ -127,3 +139,6 @@ vendor/bin/pint --test
 - Phase 10: UAT assignment, requester execution/sign-off, rejected UAT rework, PIC finding lifecycle, retest cycles, evidence authorization, and UAT-specific responsive UI.
 - Phase 11: Business approval, technical readiness, release and rollback plans, release checklist, readiness validation, and `release_ready`.
 - Phase 14: Notification center, SLA escalation, and operational alerts. In-app notifications, delivery logs, preferences authorization, SLA warning/breach scanning, inactivity tracking, role-specific alert APIs, and fully responsive layouts.
+- Phase 15: Knowledge Base article lifecycle, visibility and permissions, version history, sanitization/redaction, review separation of duties, publishing, ticket resolution reuse, deterministic recommendations, feedback, audit, notifications, and responsive frontend workflows.
+
+Phase 16 is explicitly out of scope for the completed Phase 15 delivery.

@@ -29,6 +29,12 @@ enum NotificationType: string
     case SlaBreached = 'sla_breached';
     case TicketInactive = 'ticket_inactive';
     case TicketEscalated = 'ticket_escalated';
+    case KnowledgeArticleSubmitted = 'knowledge_article_submitted';
+    case KnowledgeArticleApproved = 'knowledge_article_approved';
+    case KnowledgeArticleRejected = 'knowledge_article_rejected';
+    case KnowledgeArticlePublished = 'knowledge_article_published';
+    case KnowledgeArticleArchived = 'knowledge_article_archived';
+    case KnowledgeArticleRevisionRequested = 'knowledge_article_revision_requested';
 
     public static function values(): array
     {

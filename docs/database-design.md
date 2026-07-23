@@ -1,5 +1,26 @@
 # Database Design
 
+## Phase 15 Knowledge Base and resolution reuse
+
+The repository currently has **22 migration files**. Phase 15 is implemented by one migration, `2026_07_22_120000_create_knowledge_base_tables.php`, which creates eight tables:
+
+| Table                             | Implemented purpose and constraints                                                                                                                                                                                                                                     |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `knowledge_base_number_sequences` | One row per year, row-locked when allocating `KB-YYYY-NNNNNN` article numbers.                                                                                                                                                                                          |
+| `knowledge_base_articles`         | Current article projection: unique number/slug, title, summary, sanitized content, status, visibility, optional existing ticket category/application, author/reviewer/publisher/rejector/archiver, lifecycle timestamps, current version, views, and feedback counters. |
+| `knowledge_base_article_versions` | Immutable content snapshots keyed uniquely by `(article_id, version_number)`, including visibility, category/application, change summary, creator, and creation time.                                                                                                   |
+| `knowledge_base_tags`             | Unique name and slug with `is_active`; removal deactivates a tag rather than deleting its article relationships.                                                                                                                                                        |
+| `knowledge_base_article_tag`      | Composite-primary-key many-to-many membership between articles and tags.                                                                                                                                                                                                |
+| `knowledge_base_article_ticket`   | Unique `(article_id, ticket_id, relation_type)` links with `source`, `related`, `used_as_solution`, or `recommended`, plus linker and timestamp.                                                                                                                        |
+| `knowledge_base_feedback`         | One mutable vote per `(article_id, user_id)` with helpful flag and optional comment; article counters are recalculated transactionally.                                                                                                                                 |
+| `knowledge_base_activity_logs`    | Append-only application audit entries for actor, action, status transition, metadata, and timestamps.                                                                                                                                                                   |
+
+The canonical lifecycle values are `draft`, `in_review`, `published`, `rejected`, and `archived`. The canonical visibility values are `it_internal`, `business_internal`, and `all_authenticated`; all are authenticated-only, and `it_internal` additionally requires `knowledge_base.view_it_internal`. Ordinary readers query published articles only, authors may see their own unpublished work, and reviewers may query unpublished work globally within their visibility.
+
+Article creation stores version 1. Draft edits update the current projection; submission creates a new immutable version only when snapshotted content changed. Editing a published article creates a new version and returns it to `draft`; restoring an old snapshot also creates a new version rather than overwriting history. Publication records reviewer/publisher and time, rejection records actor/time/reason, archive records actor/time, and restore moves an archived article back to `draft`.
+
+Title and summary are stripped of HTML. Content sanitization removes dangerous embedded tags, inline event handlers, `javascript:`/`data:` URLs, token/password/key patterns, private keys, and internal storage paths. Ticket-derived drafts additionally redact email addresses and phone numbers before persistence. Sanitization is defense in depth, not a replacement for authors reviewing generated drafts before publication.
+
 ## Phase 8 development execution and internal testing
 
 Tickets now store development/internal-test timestamps, `progress_percentage` (0–100), and `latest_progress_at`. `ticket_worklogs` records actual effort and progress before/after; `ticket_development_updates` is an append-only snapshot stream. Internal testing uses ticket-scoped cases, numbered runs, and one result per case/run. Completed runs remain immutable; used cases cannot be deleted. `ticket_attachments.visibility` is `internal` by default for Phase 8 evidence, while requester-created attachments are explicitly marked `requester`.
@@ -137,23 +158,23 @@ Waiting states harus menyimpan `resume_status` pada history/transition metadata 
 
 Phase 10 uses ticket-specific UAT records rather than shared mutable test data:
 
-| Tabel | Tujuan |
-| --- | --- |
-| `ticket_uat_assignments` | Assignment history, active requester assignment, assignment notes, and end timestamps. |
-| `ticket_uat_scenarios` | Scenario, steps, expected result, acceptance criteria, priority, and soft-deactivation state. |
-| `ticket_uat_runs` | Cycle/run number, environment, requester, status, and completion summary. |
-| `ticket_uat_results` | One immutable result per scenario in a run. |
-| `ticket_uat_findings` | UAT finding, requester report, active PIC assignment, resolution, and verification fields. |
-| `ticket_uat_finding_histories` | Append-only finding lifecycle history. |
-| `ticket_uat_finding_sequences` | Row-locked per-ticket sequence for concurrency-safe finding numbers. |
+| Tabel                          | Tujuan                                                                                        |
+| ------------------------------ | --------------------------------------------------------------------------------------------- |
+| `ticket_uat_assignments`       | Assignment history, active requester assignment, assignment notes, and end timestamps.        |
+| `ticket_uat_scenarios`         | Scenario, steps, expected result, acceptance criteria, priority, and soft-deactivation state. |
+| `ticket_uat_runs`              | Cycle/run number, environment, requester, status, and completion summary.                     |
+| `ticket_uat_results`           | One immutable result per scenario in a run.                                                   |
+| `ticket_uat_findings`          | UAT finding, requester report, active PIC assignment, resolution, and verification fields.    |
+| `ticket_uat_finding_histories` | Append-only finding lifecycle history.                                                        |
+| `ticket_uat_finding_sequences` | Row-locked per-ticket sequence for concurrency-safe finding numbers.                          |
 
 UAT evidence is linked through `ticket_attachments.uat_finding_id`; cross-ticket finding references are rejected. Internal PIC evidence remains hidden from requester and executive projections.
 
 ### Phase 11 approval and release preparation
 
 Phase 11 adds ticket-level approval/release timestamps, release owner/risk, latest approval result, and cycle counters. Approval requests retain per-cycle business and technical steps with append-only action histories. Release and rollback plans use per-ticket versions plus optimistic lock versions. Checklist items are generated from active database templates and maintain append-only histories. These tables represent preparation only; no deployment execution table or transition is introduced in Phase 11.
-| `monitoring_records`     | id, ticket_id, deployment_id, owner_id, started_at, planned_end_at, ended_at, result, metrics_summary, incident_found, notes, timestamps                                                        | Post-deploy monitoring                           |
-| `closure_records`        | id, ticket_id unique, resolution_code, resolution_summary, closed_by, requester_confirmed_by nullable, requester_confirmed_at nullable, knowledge_article_id nullable, closed_at                | Closing evidence                                 |
+| `monitoring_records` | id, ticket_id, deployment_id, owner_id, started_at, planned_end_at, ended_at, result, metrics_summary, incident_found, notes, timestamps | Post-deploy monitoring |
+| `closure_records` | id, ticket_id unique, resolution_code, resolution_summary, closed_by, requester_confirmed_by nullable, requester_confirmed_at nullable, knowledge_article_id nullable, closed_at | Closing evidence |
 
 ## SLA and escalation
 
@@ -172,6 +193,8 @@ Phase 11 adds ticket-level approval/release timestamps, release owner/risk, late
 Policy matching order yang direkomendasikan: application+category+priority, category+priority, lalu priority default. Simpan policy/target snapshot pada clock agar perubahan admin tidak mengubah deadline tiket berjalan secara retroaktif.
 
 ## Notifications, audit, and Knowledge Base
+
+The Knowledge Base rows in the older target-design table below are conceptual history. The implemented Phase 15 `knowledge_base_*` schema above is canonical: it reuses `ticket_categories` instead of adding `knowledge_categories`, adds numbering/tags/activity, and delivers feedback in this phase.
 
 | Tabel                        | Kolom utama                                                                                                                                                                                    | Relasi/catatan                                    |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
@@ -233,5 +256,6 @@ The implemented Phase 14 tables introduce notification management, delivery logs
 - `notification_delivery_logs`: logs notification deliveries (notification_id, user_id, notification_type, status, delivery_channel, deduplication_key, delivered_at, failure_reason).
 - `sla_escalation_policies`: manages SLA policies (name, priority, sla_type, warning_threshold_percent, critical_threshold_percent, inactivity_threshold_minutes, escalate_to_it_lead, escalate_to_manager, escalate_to_supervisor, is_active).
 - `ticket_sla_alerts`: logs triggered alerts (ticket_id, ticket_sla_id, sla_type, alert_level, threshold_percent, elapsed_minutes, target_minutes, remaining_minutes, recipient_scope, triggered_at, resolved_at, deduplication_key). Unique on `deduplication_key`.
-\ n -   P h a s e   1 3   R e p o r t i n g   i n d e x e s   a d d e d   t o   t i c k e t s   a n d   t i c k e t _ s t a t u s _ h i s t o r i e s  
- 
+  \ n -   P h a s e   1 3   R e p o r t i n g   i n d e x e s   a d d e d   t o   t i c k e t s   a n d   t i c k e t * s t a t u s * h i s t o r i e s 
+   
+   

@@ -15,6 +15,7 @@ import {
 } from '../../components/ui'
 import { ticketService, type TicketPayload, type TicketRecord } from '../../services/ticketService'
 import type { Priority, TicketStatus } from '../../types'
+import { TicketKnowledgePanel } from '../../components/knowledgeBase/TicketKnowledgePanel'
 
 export default function TicketDetail() {
   const navigate = useNavigate()
@@ -282,6 +283,7 @@ export default function TicketDetail() {
           </SectionCard>
         </div>
         <div className="space-y-5">
+          <TicketKnowledgePanel ticketId={ticket.id} />
           <SectionCard title={`Lampiran (${ticket.attachments.length})`}>
             <div className="space-y-3">
               {ticket.attachments.length === 0 && <p className="text-sm text-gray-500">Belum ada lampiran.</p>}

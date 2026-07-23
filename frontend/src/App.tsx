@@ -44,6 +44,11 @@ import DivisionManagement from './pages/admin/DivisionManagement'
 import SLARules from './pages/admin/SLARules'
 import EscalationMatrix from './pages/admin/EscalationMatrix'
 import AuditLog from './pages/admin/AuditLog'
+import KnowledgeBaseList from './pages/knowledgeBase/KnowledgeBaseList'
+import KnowledgeBaseDetail from './pages/knowledgeBase/KnowledgeBaseDetail'
+import KnowledgeBaseForm from './pages/knowledgeBase/KnowledgeBaseForm'
+import KnowledgeBaseReview from './pages/knowledgeBase/KnowledgeBaseReview'
+import KnowledgeBaseTags from './pages/settings/KnowledgeBaseTags'
 
 export const DEFAULT_ROUTES: Record<Role, string> = {
   requester: '/user/dashboard',
@@ -78,6 +83,11 @@ function RequireRole({ allowed, children }: { allowed: Role[]; children: ReactNo
   return hasRole(...allowed) ? children : <Navigate to="/unauthorized" replace />
 }
 
+function RequirePermission({ allowed, children }: { allowed: string[]; children: ReactNode }) {
+  const { hasPermission } = useAuth()
+  return allowed.some(hasPermission) ? children : <Navigate to="/unauthorized" replace />
+}
+
 function AuthenticatedLayout() {
   const { user, logout } = useAuth()
   if (!user) return null
@@ -103,6 +113,9 @@ function AppRoutes() {
   const { user } = useAuth()
   const allRoles: Role[] = ['requester', 'supervisor', 'it_lead', 'pic', 'qa', 'manager', 'executive', 'admin']
   const guard = (roles: Role[], page: ReactNode) => <RequireRole allowed={roles}>{page}</RequireRole>
+  const permit = (permissions: string[], page: ReactNode) => (
+    <RequirePermission allowed={permissions}>{page}</RequirePermission>
+  )
 
   return (
     <Routes>
@@ -148,6 +161,22 @@ function AppRoutes() {
         <Route path="/sla-monitoring" element={guard(['it_lead', 'manager', 'executive'], <SLAMonitoring />)} />
         <Route path="/notifications" element={guard(allRoles, <NotificationCenter />)} />
         <Route path="/settings/notifications" element={guard(allRoles, <NotificationPreferences />)} />
+        <Route path="/knowledge-base" element={permit(['knowledge_base.view'], <KnowledgeBaseList />)} />
+        <Route
+          path="/knowledge-base/manage"
+          element={permit(['knowledge_base.create', 'knowledge_base.review'], <KnowledgeBaseList manage />)}
+        />
+        <Route path="/knowledge-base/new" element={permit(['knowledge_base.create'], <KnowledgeBaseForm />)} />
+        <Route
+          path="/knowledge-base/:id/edit"
+          element={permit(['knowledge_base.edit_own', 'knowledge_base.edit_any'], <KnowledgeBaseForm />)}
+        />
+        <Route path="/knowledge-base/:id/review" element={permit(['knowledge_base.review'], <KnowledgeBaseReview />)} />
+        <Route path="/knowledge-base/:slug" element={permit(['knowledge_base.view'], <KnowledgeBaseDetail />)} />
+        <Route
+          path="/settings/knowledge-base/tags"
+          element={permit(['knowledge_base.manage_tags'], <KnowledgeBaseTags />)}
+        />
         <Route path="/executive/dashboard" element={guard(['executive'], <ExecutiveDashboard />)} />
         <Route path="/executive/statistics" element={guard(['executive'], <Statistics />)} />
         <Route path="/executive/reports" element={guard(['executive'], <AnalyticsDashboard role="executive" />)} />

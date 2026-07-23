@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -274,5 +275,11 @@ class Ticket extends Model
     public function closures(): HasMany
     {
         return $this->hasMany(TicketClosure::class)->latest();
+    }
+
+    public function kbArticles(): BelongsToMany
+    {
+        return $this->belongsToMany(KnowledgeBaseArticle::class, 'knowledge_base_article_ticket', 'ticket_id', 'article_id')
+            ->withPivot(['relation_type', 'linked_by', 'created_at']);
     }
 }

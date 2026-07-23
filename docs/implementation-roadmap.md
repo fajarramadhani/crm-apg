@@ -1,5 +1,11 @@
 # Implementation Roadmap
 
+## Phase 15 delivered scope
+
+Knowledge Base and resolution reuse are implemented: article search/read, five-state author/reviewer lifecycle, three visibility levels, immutable versions and restore-as-new-version, sanitization/redaction, tag management, ticket links and ticket-derived drafts, deterministic recommendations, feedback, activity audit, deduplicated notifications, and responsive permission-gated frontend workflows. See `docs/phase-15-knowledge-base-resolution-reuse.md`.
+
+Automated verification currently passes at **182 backend tests / 1,145 assertions**, with **25 Knowledge Base routes / 268 API routes total**. Frontend typecheck, Prettier check, and production build pass; the build retains a chunk-size warning. HTTP server E2E and interactive desktop/mobile browser verification have not run and remain pending runtime verification.
+
 ## Phase 11 delivered scope
 
 Business approval, technical readiness, approval revision, versioned release/rollback plans, checklist templates/items/history, internal evidence, release ownership, and the `release_ready` gate are implemented without deployment execution. See `docs/phase-11-approval-release-preparation.md`.
@@ -18,7 +24,7 @@ Development execution, actual-effort worklogs, progress snapshots, private evide
 
 ## Current delivery numbering
 
-Phase 7 is now implemented as **PIC Analysis, RCA, and Solution Planning**. Phase 8 is implemented as **Development Execution and Internal Testing**. Phase 9 is implemented as **QA Assignment, Execution, Defect Rework, and Retests**. Phase 10 is implemented as **UAT Execution, Requester Revision, and Sign-off**. Release approval, deployment, monitoring, notifications, and Knowledge Base remain later phases.
+Phase 7 is implemented as **PIC Analysis, RCA, and Solution Planning**. Phase 8 is implemented as **Development Execution and Internal Testing**. Phase 9 is implemented as **QA Assignment, Execution, Defect Rework, and Retests**. Phase 10 is implemented as **UAT Execution, Requester Revision, and Sign-off**. Subsequent delivered slices include release preparation, deployment/monitoring/closure, reporting, notifications/SLA escalation, and Phase 15 Knowledge Base. Historical phase numbers in older sections are retained as planning context; the delivered Knowledge Base slice is canonically Phase 15.
 
 ## Delivery rules
 
@@ -96,17 +102,27 @@ Konfirmasi business decisions: identity topology, multi-role, approval path, wor
 
 **Acceptance:** role boundaries, optimistic/pessimistic concurrency, nested ownership, readiness blockers, redaction, HTTP E2E, responsive browser checks, and no deployment execution.
 
-## Phase 12 — Knowledge Base
+## Historical Knowledge Base plan (delivered as Phase 15)
 
 **Scope:** categories, article draft/review/publish/archive/versioning, search, ticket linking, closure suggestion, feedback. Preserve executive-safe/publication visibility rules.
 
-**Acceptance:** author/reviewer/publisher policy tests, published-only reader view, version history immutable, ticket-to-article link and search E2E.
+**Acceptance status:** author/reviewer/publisher policy coverage, published-only normal-reader queries, immutable version history, ticket links, search, recommendations, redaction, feedback, audit, and notifications are covered by automated feature tests. HTTP server E2E and interactive browser checks remain pending runtime verification and must not be inferred from Laravel feature tests or the successful frontend production build.
 
 ## Phase 13 — Reporting, hardening, and production readiness (✅ Completed)
 
 **Scope:** accurate role dashboards/exports, performance/index review, accessibility audit, security test, dependency scan, observability, backup/restore drill, retention, runbooks, load test, staging UAT, rollout/rollback plan.
 
 **Acceptance:** CI/CD green; authorization matrix evidence; responsive/browser coverage; performance budget met; backup restored successfully; security findings resolved/accepted; production sign-off.
+
+## Phase 15 — Knowledge Base and resolution reuse (implemented)
+
+**Scope:** the delivered implementation described at the top of this document and in `docs/phase-15-knowledge-base-resolution-reuse.md`.
+
+**Verification:** 22 migrations; 25 KB routes among 268 API routes; 182 tests/1,145 assertions passing; frontend typecheck, format check, and build passing with a main-chunk warning. HTTP E2E and desktop/mobile browser verification remain pending.
+
+## Phase 16 — Out of scope
+
+Phase 16 has not been started and is explicitly outside the completed Phase 15 Knowledge Base delivery. No Phase 16 feature, integration, verification, or production-readiness claim is made here.
 
 ## Recommended first implementation sequence
 

@@ -18,6 +18,7 @@ use App\Events\TicketSolutionPlanSubmitted;
 use App\Events\TicketSubmitted;
 use App\Events\TicketTransferred;
 use App\Events\TicketValidated;
+use App\Listeners\KnowledgeBaseNotificationSubscriber;
 use App\Listeners\TicketNotificationSubscriber;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -57,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Event::subscribe(TicketNotificationSubscriber::class);
+        Event::subscribe(KnowledgeBaseNotificationSubscriber::class);
 
         RateLimiter::for('login', function (Request $request): Limit {
             $email = Str::lower((string) $request->input('email'));
@@ -65,7 +67,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::before(function ($user, $ability) {
-            if ((Str::startsWith($ability, 'report.') || Str::startsWith($ability, 'notification.') || Str::startsWith($ability, 'alert.') || Str::startsWith($ability, 'sla_escalation_policy.')) && $user->hasPermission($ability)) {
+            if ((Str::startsWith($ability, 'report.') || Str::startsWith($ability, 'notification.') || Str::startsWith($ability, 'alert.') || Str::startsWith($ability, 'sla_escalation_policy.') || Str::startsWith($ability, 'knowledge_base.')) && $user->hasPermission($ability)) {
                 return true;
             }
 

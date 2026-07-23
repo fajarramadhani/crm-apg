@@ -76,7 +76,18 @@ export function Layout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 768)
   const navigate = useNavigate()
-  const navItems = NAV_ITEMS[role] || []
+  const navItems = [
+    ...(NAV_ITEMS[role] || []),
+    ...(user.permissions.includes('knowledge_base.view')
+      ? [{ path: '/knowledge-base', label: 'Knowledge Base', icon: '📚' }]
+      : []),
+    ...(user.permissions.includes('knowledge_base.create') || user.permissions.includes('knowledge_base.review')
+      ? [{ path: '/knowledge-base/manage', label: 'Kelola Knowledge', icon: '📝' }]
+      : []),
+    ...(user.permissions.includes('knowledge_base.manage_tags')
+      ? [{ path: '/settings/knowledge-base/tags', label: 'Tag Knowledge', icon: '🏷️' }]
+      : []),
+  ]
   const initials = user.name
     .split(/\s+/)
     .slice(0, 2)

@@ -122,6 +122,11 @@ class User extends Authenticatable
         return $this->morphMany(Notification::class, 'notifiable')->latest();
     }
 
+    public function kbArticles(): HasMany
+    {
+        return $this->hasMany(KnowledgeBaseArticle::class, 'author_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *
