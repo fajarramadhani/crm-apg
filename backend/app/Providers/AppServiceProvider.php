@@ -44,7 +44,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production')) {
+        // Only check production environment when not running package discovery
+        if (app()->environment('production') && ! $this->app->runningInConsole()) {
             $unsafe = config('app.debug')
                 || blank(config('app.key'))
                 || ! config('session.secure')
