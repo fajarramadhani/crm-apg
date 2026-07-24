@@ -29,19 +29,7 @@ class TicketClosureService
             ->first();
 
         if (! $confirmation || $confirmation->status !== RequesterConfirmationStatus::Accepted) {
-            $deploymentId = $ticket->current_deployment_id ?? $ticket->deployments()->latest('version')->first()?->id ?? 1;
-            $confirmation = TicketRequesterConfirmation::updateOrCreate(
-                ['ticket_id' => $ticket->id],
-                [
-                    'deployment_id' => $deploymentId,
-                    'requester_id' => $ticket->requester_id,
-                    'requested_by' => $actor->id,
-                    'requested_at' => now(),
-                    'responded_at' => now(),
-                    'status' => RequesterConfirmationStatus::Accepted,
-                    'notes' => 'Confirmed automatically upon IT Lead closure.',
-                ]
-            );
+            throw new InvalidArgumentException('Ticket cannot be closed before requester confirmation is accepted.');
         }
 
         if ($ticket->postReleaseIncidents()->whereNotIn('status', [IncidentStatus::Closed, IncidentStatus::Resolved])->exists()) {

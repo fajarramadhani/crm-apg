@@ -202,6 +202,9 @@ final class TicketReleasePreparationService
             if ($locked->internalTestRuns()->where('status', 'in_progress')->exists() || $locked->qaTestRuns()->where('status', 'in_progress')->exists() || $locked->uatRuns()->where('status', 'in_progress')->exists()) {
                 throw new InvalidTicketTransition($locked->status->value, 'Active test runs block release readiness.');
             }
+            if ($locked->releaseChecklistItems()->where('status', 'blocked')->exists()) {
+                throw new InvalidTicketTransition($locked->status->value, 'Blocked checklist items prevent release readiness.');
+            }
 
             $plan->update(['status' => 'approved']);
             $rollback->update(['status' => 'approved']);

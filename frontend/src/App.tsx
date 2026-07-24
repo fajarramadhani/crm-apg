@@ -160,7 +160,10 @@ function AppRoutes() {
         />
         <Route path="/supervisor/validation-queue" element={guard(['supervisor'], <ValidationQueue />)} />
         <Route path="/supervisor/reports" element={guard(['supervisor'], <AnalyticsDashboard role="supervisor" />)} />
-        <Route path="/supervisor/queue" element={guard(['supervisor'], <Navigate to="/supervisor/validation-queue" replace />)} />
+        <Route
+          path="/supervisor/queue"
+          element={guard(['supervisor'], <Navigate to="/supervisor/validation-queue" replace />)}
+        />
 
         <Route path="/itlead/dashboard" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
         <Route path="/itlead/triage" element={guard(['it_lead'], <TriageQueue />)} />
@@ -179,29 +182,95 @@ function AppRoutes() {
         <Route path="/it-lead/triage-queue" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
         <Route path="/itlead/triage-queue" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
         <Route path="/it-lead/priority" element={guard(['it_lead'], <Navigate to="/itlead/triage" replace />)} />
-        <Route path="/it-lead/plan-review" element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)} />
-        <Route path="/it-lead/plan-review-queue" element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)} />
-        <Route path="/itlead/plan-review-queue" element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)} />
-        <Route path="/it-lead/development" element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)} />
-        <Route path="/it-lead/development-queue" element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)} />
-        <Route path="/itlead/development-queue" element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)} />
-        <Route path="/it-lead/uat-assignment" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
-        <Route path="/it-lead/uat-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
-        <Route path="/itlead/uat-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
-        <Route path="/it-lead/qa-assignment" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
-        <Route path="/it-lead/qa-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
-        <Route path="/itlead/qa-assignment" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
-        <Route path="/itlead/qa-assignment-queue" element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)} />
-        <Route path="/it-lead/release-preparation" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
-        <Route path="/it-lead/approval-request-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
-        <Route path="/it-lead/technical-approval-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
-        <Route path="/itlead/approval-request-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
-        <Route path="/itlead/technical-approval-queue" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
-        <Route path="/it-lead/approvals" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
-        <Route path="/itlead/approvals" element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)} />
+        <Route
+          path="/it-lead/plan-review"
+          element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)}
+        />
+        <Route
+          path="/it-lead/plan-review-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)}
+        />
+        <Route
+          path="/itlead/plan-review-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/plan-review" replace />)}
+        />
+        <Route
+          path="/it-lead/development"
+          element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)}
+        />
+        <Route
+          path="/it-lead/development-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)}
+        />
+        <Route
+          path="/itlead/development-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/development" replace />)}
+        />
+        <Route
+          path="/it-lead/uat-assignment"
+          element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)}
+        />
+        <Route
+          path="/it-lead/uat-assignment-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)}
+        />
+        <Route
+          path="/itlead/uat-assignment-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)}
+        />
+        <Route
+          path="/it-lead/qa-assignment"
+          element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)}
+        />
+        <Route
+          path="/it-lead/qa-assignment-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)}
+        />
+        <Route
+          path="/itlead/qa-assignment"
+          element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)}
+        />
+        <Route
+          path="/itlead/qa-assignment-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/uat-assignment" replace />)}
+        />
+        <Route
+          path="/it-lead/release-preparation"
+          element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)}
+        />
+        <Route
+          path="/it-lead/approval-request-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)}
+        />
+        <Route
+          path="/it-lead/technical-approval-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)}
+        />
+        <Route
+          path="/itlead/approval-request-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)}
+        />
+        <Route
+          path="/itlead/technical-approval-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)}
+        />
+        <Route
+          path="/it-lead/approvals"
+          element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)}
+        />
+        <Route
+          path="/itlead/approvals"
+          element={guard(['it_lead'], <Navigate to="/itlead/release-preparation" replace />)}
+        />
         <Route path="/it-lead/deployment" element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)} />
-        <Route path="/it-lead/deployment-queue" element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)} />
-        <Route path="/itlead/deployment-queue" element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)} />
+        <Route
+          path="/it-lead/deployment-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)}
+        />
+        <Route
+          path="/itlead/deployment-queue"
+          element={guard(['it_lead'], <Navigate to="/itlead/deployment" replace />)}
+        />
         <Route path="/it-lead/alerts" element={guard(['it_lead'], <Navigate to="/itlead/alerts" replace />)} />
         <Route path="/it-lead/reports" element={guard(['it_lead'], <Navigate to="/itlead/reports" replace />)} />
 
@@ -218,7 +287,10 @@ function AppRoutes() {
         <Route path="/qa/assignments" element={guard(['qa'], <Navigate to="/qa/dashboard" replace />)} />
 
         <Route path="/manager/approvals" element={guard(['manager'], <ManagerApproval />)} />
-        <Route path="/manager/business-approval-queue" element={guard(['manager'], <Navigate to="/manager/approvals" replace />)} />
+        <Route
+          path="/manager/business-approval-queue"
+          element={guard(['manager'], <Navigate to="/manager/approvals" replace />)}
+        />
         <Route path="/manager/dashboard" element={guard(['manager'], <Navigate to="/manager/approvals" replace />)} />
         <Route path="/manager/alerts" element={guard(['manager'], <ManagerAlerts />)} />
         <Route path="/manager/reports" element={guard(['manager'], <AnalyticsDashboard role="manager" />)} />

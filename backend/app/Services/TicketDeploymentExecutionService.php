@@ -90,13 +90,14 @@ class TicketDeploymentExecutionService
             throw new InvalidArgumentException('Only in progress deployments can be completed.');
         }
 
-        // Auto-complete any pending steps if IT Lead completes the deployment
-        $deployment->steps()
+        $hasPendingRequired = $deployment->steps()
+            ->where('is_required', true)
             ->where('status', '!=', DeploymentStepStatus::Completed->value)
-            ->update([
-                'status' => DeploymentStepStatus::Completed->value,
-                'executed_by' => $actor->id,
-            ]);
+            ->exists();
+
+        if ($hasPendingRequired) {
+            throw new HttpException(400, 'Cannot complete deployment because there are pending required steps.');
+        }
 
         return DB::transaction(function () use ($deployment, $actor, $summary) {
             $ticket = $deployment->ticket;

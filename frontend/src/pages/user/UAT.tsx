@@ -338,17 +338,14 @@ export default function UAT() {
                     <span className="font-mono text-xs text-gray-500">{t.ticket_number}</span>
                     <p className="font-semibold text-sm text-gray-900">{t.title}</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      Ditugaskan untuk UAT: {t.uat_assigned_at ? new Date(t.uat_assigned_at).toLocaleString('id-ID') : '—'}
+                      Ditugaskan untuk UAT:{' '}
+                      {t.uat_assigned_at ? new Date(t.uat_assigned_at).toLocaleString('id-ID') : '—'}
                     </p>
                   </div>
                   <div className="flex items-center gap-3">
                     {t.final_priority && <PriorityBadge priority={t.final_priority.key} />}
                     <StatusBadge status={t.status} />
-                    <Button
-                      variant="primary"
-                      size="sm"
-                      onClick={() => navigate(`/user/uat?ticket_id=${t.id}`)}
-                    >
+                    <Button variant="primary" size="sm" onClick={() => navigate(`/user/uat?ticket_id=${t.id}`)}>
                       Jalankan UAT →
                     </Button>
                   </div>

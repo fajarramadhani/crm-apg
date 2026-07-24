@@ -15,11 +15,10 @@ use App\Models\Ticket;
 use App\Services\TicketDeploymentExecutionService;
 use App\Services\TicketDeploymentSchedulingService;
 use App\Services\TicketRollbackService;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Gate;
-
 use App\Support\ApiResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class TicketDeploymentController extends Controller
 {
@@ -78,14 +77,7 @@ class TicketDeploymentController extends Controller
         Gate::authorize('view', $ticket);
         Gate::authorize('manageReleasePreparation', $ticket);
 
-        $deployment = $ticket->deployments()->latest('version')->first();
-        if (! $deployment) {
-            $deployment = $this->schedulingService->schedule(
-                $ticket,
-                ['scheduled_start_at' => now()->toDateTimeString(), 'title' => 'Deployment for ' . $ticket->ticket_number],
-                $request->user()
-            );
-        }
+        $deployment = $ticket->deployments()->latest('version')->firstOrFail();
 
         $this->executionService->start($deployment, $request->user(), $request->validated('notes'));
 

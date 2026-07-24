@@ -124,11 +124,7 @@ export default function DeploymentQueue() {
                           onChange={(e: any) => setScheduleData({ scheduled_start_at: e.target.value })}
                         />
                       </div>
-                      <Button
-                        loading={busy}
-                        onClick={handleSchedule}
-                        disabled={!scheduleData.scheduled_start_at}
-                      >
+                      <Button loading={busy} onClick={handleSchedule} disabled={!scheduleData.scheduled_start_at}>
                         Jadwalkan Deployment
                       </Button>
                     </div>
@@ -141,7 +137,8 @@ export default function DeploymentQueue() {
                     {['release_ready', 'deployment_scheduled'].includes(selected.status) && (
                       <div className="space-y-3">
                         <p className="text-sm text-gray-600">
-                          Tiket siap untuk dirilis. Klik tombol di bawah untuk memulai proses deployment ke lingkungan produksi.
+                          Tiket siap untuk dirilis. Klik tombol di bawah untuk memulai proses deployment ke lingkungan
+                          produksi.
                         </p>
                         <Button variant="success" size="lg" loading={busy} onClick={handleStart}>
                           ▶ Mulai Deployment Sekarang
@@ -158,10 +155,15 @@ export default function DeploymentQueue() {
                         {selected.current_deployment?.steps && selected.current_deployment.steps.length > 0 && (
                           <div className="space-y-2">
                             {selected.current_deployment.steps.map((step: any) => (
-                              <div key={step.id} className="rounded-xl border p-3 text-sm flex items-center justify-between bg-white shadow-sm">
+                              <div
+                                key={step.id}
+                                className="rounded-xl border p-3 text-sm flex items-center justify-between bg-white shadow-sm"
+                              >
                                 <div>
-                                  <b>Step {step.step_number}: {step.title}</b> ({step.step_type})
-                                  <p className="text-xs text-gray-500">Status: {step.status}</p>
+                                  <b>
+                                    Step {step.step_number}: {step.title}
+                                  </b>{' '}
+                                  ({step.step_type})<p className="text-xs text-gray-500">Status: {step.status}</p>
                                 </div>
                                 {step.status !== 'completed' && (
                                   <div className="flex gap-2">
@@ -200,7 +202,9 @@ export default function DeploymentQueue() {
                       </div>
                     )}
 
-                    {['monitoring', 'post_release_issue', 'awaiting_requester_confirmation', 'closed'].includes(selected.status) && (
+                    {['monitoring', 'post_release_issue', 'awaiting_requester_confirmation', 'closed'].includes(
+                      selected.status,
+                    ) && (
                       <div className="space-y-4">
                         <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900 font-medium">
                           🔍 Status: {selected.status.replace(/_/g, ' ').toUpperCase()}
