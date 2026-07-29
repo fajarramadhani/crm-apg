@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\IdempotencyConflict;
 use App\Exceptions\InvalidTicketTransition;
 use App\Exceptions\KnowledgeBaseConflict;
 use App\Http\Middleware\AddSecurityHeaders;
@@ -83,6 +84,16 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return ApiResponse::error($request, $exception->getMessage(), 'INVALID_TRANSITION', 409, ['current_status' => $exception->currentStatus]);
+        });
+
+        $exceptions->render(function (IdempotencyConflict $exception, Request $request) {
+            if (! $request->is('api/*')) {
+                return null;
+            }
+
+            return ApiResponse::error($request, $exception->getMessage(), 'IDEMPOTENCY_CONFLICT', 409, [
+                'reason' => $exception->reason,
+            ]);
         });
 
         $exceptions->render(function (KnowledgeBaseConflict $exception, Request $request) {

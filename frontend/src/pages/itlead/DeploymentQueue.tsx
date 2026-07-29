@@ -72,7 +72,7 @@ export default function DeploymentQueue() {
     selected &&
     act(
       () =>
-        ticketService.closeTicket(selected.id, { closure_summary: 'Closed via UI', resolution_summary: 'Resolved' }),
+        ticketService.closeTicket(selected.id, { notes: 'Closed via UI' }),
       'Tiket ditutup',
     )
 

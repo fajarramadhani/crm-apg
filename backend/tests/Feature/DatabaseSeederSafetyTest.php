@@ -22,7 +22,7 @@ class DatabaseSeederSafetyTest extends TestCase
     {
         $this->seed(DatabaseSeeder::class);
 
-        $this->assertSame(8, Role::query()->count());
+        $this->assertSame(11, Role::query()->count());
         $this->assertSame(0, User::query()->count());
         $this->assertSame(0, Division::query()->count());
         $this->assertSame(0, Branch::query()->count());

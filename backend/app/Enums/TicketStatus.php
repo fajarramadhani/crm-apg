@@ -45,4 +45,13 @@ enum TicketStatus: string
     case Rejected = 'rejected';
     case Transferred = 'transferred';
     case Cancelled = 'cancelled';
+    case UnderAnalysis = 'under_analysis';
+    case NeedInfo = 'need_info';
+    case WaitingExternal = 'waiting_external';
+    case OnHold = 'on_hold';
+    case PendingApproval = 'pending_approval';
+    case InProgress = 'in_progress';
+    case Submitted = 'submitted';
+    case Done = 'done';
+    case Revision = 'revision';
 }

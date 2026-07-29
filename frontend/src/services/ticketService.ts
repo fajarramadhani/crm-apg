@@ -1,5 +1,6 @@
 import { apiClient } from '../api/client'
 import type { ApiResponse } from '../api/types'
+import type { PicDashboardStats } from '../types'
 
 export type TicketState =
   | 'draft'
@@ -43,6 +44,13 @@ export type TicketState =
   | 'rejected'
   | 'transferred'
   | 'cancelled'
+  | 'under_analysis'
+  | 'need_info'
+  | 'waiting_external'
+  | 'on_hold'
+  | 'in_progress'
+  | 'pending_approval'
+  | 'done'
 
 export interface TicketAttachmentRecord {
   id: number
@@ -50,7 +58,9 @@ export interface TicketAttachmentRecord {
   mime_type: string
   size: number
   category: string
-  visibility?: 'internal' | 'requester'
+  visibility?: 'internal' | 'requester' | 'requester_visible'
+  path?: string
+  uploader?: { id: number; name: string }
   created_at: string
 }
 export interface TicketHistoryRecord {
@@ -71,7 +81,6 @@ export interface TicketCommentRecord {
   user?: { id: number; name: string }
   created_at: string
 }
-
 export interface TicketDeploymentStepRecord {
   id: number
   deployment_id: number
@@ -158,6 +167,8 @@ export interface TicketRecord {
   ticket_number: string
   title: string
   description: string
+  affected_url?: string | null
+  reference?: string | null
   business_impact: string | null
   urgency: string | null
   expected_result: string | null
@@ -168,9 +179,11 @@ export interface TicketRecord {
   expected_impact: string | null
   recurring_indication: string | null
   status: TicketState
+  workflow_mode?: 'dynamic' | 'simplified' | 'legacy' | null
   requester: { id: number; name: string }
   division: { id: number; code: string; name: string }
   current_division: { id: number; code: string; name: string }
+  branch?: { id: number; code: string; name: string } | null
   application: { id: number; code: string; name: string } | null
   application_module: { id: number; code: string; name: string } | null
   category: { id: number; code: string; name: string; type: 'incident' | 'request' | 'change' | 'problem' }
@@ -178,6 +191,13 @@ export interface TicketRecord {
   final_priority: { id: number; key: string; name: string } | null
   sla_policy: { id: number; response_minutes: number | null; resolution_minutes: number } | null
   assignee: { id: number; name: string } | null
+  assignments?: Array<{
+    id: number
+    assigned_to: number
+    assignment_type: 'primary' | 'secondary'
+    is_current: boolean
+    assignee?: { id: number; name: string }
+  }>
   qa_assignee: { id: number; name: string } | null
   qa_cycle_number: number | null
   qa_run_number: number | null
@@ -280,6 +300,7 @@ export interface TicketRecord {
   post_release_status?: string
   current_deployment?: TicketDeploymentRecord
   current_monitoring_session?: TicketMonitoringSessionRecord
+  user_assignment_role?: 'primary' | 'secondary' | 'supervisor' | null
 }
 export interface TicketAnalysisRecord {
   id: number
@@ -598,6 +619,8 @@ export const ticketService = {
   listMyTickets: (filters: Record<string, string | number | undefined> = {}) =>
     apiClient.get<TicketPage>(`/tickets?${query(filters)}`),
   get: (id: number) => data(apiClient.get<ApiResponse<TicketRecord>>(`/tickets/${id}`)),
+  createRequesterTicket: (formData: FormData) =>
+    data(apiClient.postForm<ApiResponse<TicketRecord>>('/requester/tickets', formData)),
   create: (payload: TicketPayload) => data(apiClient.post<ApiResponse<TicketRecord>>('/tickets', payload)),
   update: (id: number, payload: TicketPayload) =>
     data(apiClient.put<ApiResponse<TicketRecord>>(`/tickets/${id}`, payload)),
@@ -1009,4 +1032,187 @@ export const ticketService = {
     body.append('category', category)
     return data(apiClient.postForm<ApiResponse<unknown>>(`/pic/tickets/${id}/release-evidence`, body))
   },
+  supervisorItDashboard: () =>
+    data(
+      apiClient.get<
+        ApiResponse<{
+          stats: {
+            new_tickets: number
+            under_analysis: number
+            unassigned: number
+            in_progress: number
+            waiting_info: number
+            waiting_external: number
+            pending_final_review: number
+            overdue: number
+            completed_today: number
+          }
+          action_required_tickets: TicketRecord[]
+          high_priority_tickets: TicketRecord[]
+          unassigned_tickets: TicketRecord[]
+          overdue_tickets: TicketRecord[]
+          pending_approval_tickets: TicketRecord[]
+        }>
+      >('/supervisor-it/dashboard'),
+    ),
+  supervisorItTickets: (params?: Record<string, unknown>) => {
+    const query = params
+      ? '?' +
+        new URLSearchParams(
+          Object.entries(params)
+            .filter(([, v]) => v !== undefined && v !== null && v !== '')
+            .map(([k, v]) => [k, String(v)]),
+        ).toString()
+      : ''
+    return apiClient.get<ApiResponse<TicketRecord[]>>(`/supervisor-it/tickets${query}`)
+  },
+  supervisorItTicketDetail: (id: number | string) =>
+    data(apiClient.get<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}`)),
+  supervisorItAssignees: (params?: { search?: string; page?: number; per_page?: number }) => {
+    const query = params
+      ? '?' +
+        new URLSearchParams(
+          Object.entries(params)
+            .filter(([, value]) => value !== undefined && value !== '')
+            .map(([key, value]) => [key, String(value)]),
+        ).toString()
+      : ''
+    return data(
+      apiClient.get<
+        ApiResponse<
+          Array<{
+            id: number
+            name: string
+            email: string
+            role: { id: number; key: string; name: string }
+            division: { id: number; name: string } | null
+            branch: { id: number; name: string } | null
+            active_ticket_count: number
+          }>
+        >
+      >(`/supervisor-it/assignees${query}`),
+    )
+  },
+  analyzeTicket: (id: number | string, payload: Record<string, unknown>) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/analyze`, payload)),
+  requestTicketInfo: (id: number | string, payload: { notes: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/request-info`, payload)),
+  assignPrimaryPic: (
+    id: number | string,
+    payload: { user_id: number; notes?: string; reason?: string; target_completed_at?: string },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<{ ticket: TicketRecord; assignment_id: number }>>(
+        `/supervisor-it/tickets/${id}/assign-primary`,
+        payload,
+      ),
+    ),
+  addSecondaryPic: (id: number | string, payload: { user_id: number; notes?: string; reason?: string }) =>
+    data(
+      apiClient.post<ApiResponse<{ ticket: TicketRecord; assignment_id: number }>>(
+        `/supervisor-it/tickets/${id}/secondary-assignees`,
+        payload,
+      ),
+    ),
+  removeSecondaryPic: (id: number | string, userId: number) =>
+    data(
+      apiClient.delete<ApiResponse<{ ticket: TicketRecord }>>(
+        `/supervisor-it/tickets/${id}/secondary-assignees/${userId}`,
+      ),
+    ),
+  reassignPic: (id: number | string, payload: { user_id: number; notes?: string; reason?: string }) =>
+    data(
+      apiClient.post<ApiResponse<{ ticket: TicketRecord; assignment_id: number }>>(
+        `/supervisor-it/tickets/${id}/reassign`,
+        payload,
+      ),
+    ),
+  takeoverPic: (id: number | string, payload?: { notes?: string; reason?: string }) =>
+    data(
+      apiClient.post<ApiResponse<{ ticket: TicketRecord; assignment_id: number }>>(
+        `/supervisor-it/tickets/${id}/takeover`,
+        payload ?? {},
+      ),
+    ),
+  requestTicketRevision: (id: number | string, payload: { notes: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/request-revision`, payload)),
+  approveTicket: (id: number | string, payload?: { notes?: string; summary_for_requester?: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/approve`, payload ?? {})),
+  rejectTicket: (id: number | string, payload: { reason: string; summary_for_requester?: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/reject`, payload)),
+  cancelTicket: (id: number | string, payload: { reason: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/cancel`, payload)),
+  reopenTicket: (
+    id: number | string,
+    payload: { reason: string; primary_user_id?: number; target_completion_date?: string },
+  ) => data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/reopen`, payload)),
+  supervisorCloseTicket: (id: number | string, payload?: { notes?: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}/close`, payload ?? {})),
+
+  // Stage 6 PIC Workspace Endpoints
+  getPicDashboard: () => data(apiClient.get<ApiResponse<PicDashboardSummaryData>>('/pic/dashboard')),
+  getPicTickets: (filters: Record<string, any> = {}) =>
+    apiClient.get<TicketPage>(`/pic/tickets?${query(filters)}`),
+  getPicTicketDetail: (id: number | string) =>
+    data(apiClient.get<ApiResponse<PicTicketDetailData>>(`/pic/tickets/${id}`)),
+  startPicTicket: (id: number | string) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/start`)),
+  addPicWorkNote: (id: number | string, payload: { content: string; visibility?: 'internal' | 'requester_visible' }) =>
+    data(
+      apiClient.post<ApiResponse<{ id: number; comment: string; is_internal: boolean; created_at: string }>>(
+        `/pic/tickets/${id}/work-notes`,
+        payload,
+      ),
+    ),
+  uploadPicAttachment: (id: number | string, formData: FormData) =>
+    data(
+      apiClient.post<ApiResponse<TicketAttachmentRecord>>(`/pic/tickets/${id}/attachments`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }),
+    ),
+  updatePicProgress: (id: number | string, payload: { progress_percentage: number; notes?: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/progress`, payload)),
+  requestPicInfo: (id: number | string, payload: { question: string }) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/request-info`, payload)),
+  markPicWaitingExternal: (
+    id: number | string,
+    payload: { external_party_name: string; reference_number?: string; follow_up_date?: string; notes: string },
+  ) => data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/waiting-external`, payload)),
+  resumePicTicket: (id: number | string) =>
+    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/resume`)),
+  submitPicInternalCheck: (
+    id: number | string,
+    payload: { result: 'passed' | 'needs_rework'; notes: string; evidence_attachment_ids?: number[] },
+  ) =>
+    data(
+      apiClient.post<ApiResponse<{ result: string; notes: string; ticket: TicketRecord }>>(
+        `/pic/tickets/${id}/internal-check`,
+        payload,
+      ),
+    ),
+  submitPicForApproval: (
+    id: number | string,
+    payload: { result_summary: string; internal_notes?: string; requester_summary?: string; attachment_ids?: number[] },
+  ) => data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/submit-for-approval`, payload)),
+  requestPicAssistance: (
+    id: number | string,
+    payload: { reason: string; required_expertise?: string; suggested_pic_id?: number },
+  ) => data(apiClient.post<ApiResponse<unknown>>(`/pic/tickets/${id}/request-assistance`, payload)),
+  requestPicTransfer: (id: number | string, payload: { reason: string; suggested_pic_id?: number }) =>
+    data(apiClient.post<ApiResponse<unknown>>(`/pic/tickets/${id}/request-transfer`, payload)),
+}
+
+export interface PicDashboardSummaryData {
+  summary_cards: PicDashboardStats
+  latest_assigned: TicketRecord[]
+  high_priority: TicketRecord[]
+  nearing_due_tickets: TicketRecord[]
+  revision_requested_tickets: TicketRecord[]
+  action_required_tickets: TicketRecord[]
+}
+
+export interface PicTicketDetailData extends TicketRecord {
+  user_assignment_role?: 'primary' | 'secondary' | 'supervisor' | null
+  active_primary_pic?: { id: number; name: string } | null
+  active_secondary_pics?: Array<{ id: number; name: string }>
 }

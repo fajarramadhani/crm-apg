@@ -87,7 +87,7 @@ class AppServiceProvider extends ServiceProvider
         RateLimiter::for('mutation', fn (Request $request): Limit => Limit::perMinute(120)->by($request->user()?->id ?? $request->ip()));
 
         Gate::before(function ($user, $ability) {
-            if ((Str::startsWith($ability, 'report.') || Str::startsWith($ability, 'notification.') || Str::startsWith($ability, 'alert.') || Str::startsWith($ability, 'sla_escalation_policy.') || Str::startsWith($ability, 'knowledge_base.')) && $user->hasPermission($ability)) {
+            if ((Str::startsWith($ability, 'report.') || Str::startsWith($ability, 'notification.') || Str::startsWith($ability, 'alert.') || Str::startsWith($ability, 'sla_escalation_policy.') || Str::startsWith($ability, 'knowledge_base.') || Str::startsWith($ability, 'workflow.')) && $user->hasPermission($ability)) {
                 return true;
             }
 

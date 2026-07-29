@@ -1,369 +1,327 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiRequestError } from '../../api/client'
-import { Button, Card, Input, PageHeader, Select, Textarea, Toast } from '../../components/ui'
-import {
-  masterDataService,
-  type Application,
-  type ApplicationModule,
-  type TicketCategory,
-  type TicketPriority,
-} from '../../services/masterDataService'
-import { ticketService, type TicketPayload } from '../../services/ticketService'
+import { Button, Card, Input, PageHeader, Textarea, Toast } from '../../components/ui'
+import { ticketService, type TicketRecord } from '../../services/ticketService'
+import { Upload, Trash2, FileText, CheckCircle2, AlertCircle, ExternalLink } from 'lucide-react'
 
-const emptyForm = {
-  categoryId: '',
-  applicationId: '',
-  moduleId: '',
-  priorityId: '',
-  title: '',
-  description: '',
-  businessImpact: '',
-  urgency: 'normal',
-  expectedResult: '',
-  actualResult: '',
-  reproductionSteps: '',
-  requestPurpose: '',
-  changeReason: '',
-  expectedImpact: '',
-  recurringIndication: '',
-}
+const ALLOWED_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx']
+const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 
 export default function CreateTicket() {
   const navigate = useNavigate()
-  const [step, setStep] = useState(1)
-  const [form, setForm] = useState(emptyForm)
-  const [categories, setCategories] = useState<TicketCategory[]>([])
-  const [applications, setApplications] = useState<Application[]>([])
-  const [modules, setModules] = useState<ApplicationModule[]>([])
-  const [priorities, setPriorities] = useState<TicketPriority[]>([])
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [affectedUrl, setAffectedUrl] = useState('')
+  const [reference, setReference] = useState('')
   const [files, setFiles] = useState<File[]>([])
-  const [loading, setLoading] = useState(true)
+
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
+  const [createdTicket, setCreatedTicket] = useState<TicketRecord | null>(null)
+  const [toastMessage, setToastMessage] = useState('')
 
-  useEffect(() => {
-    Promise.all([
-      masterDataService.getTicketCategories(),
-      masterDataService.getApplications(),
-      masterDataService.getTicketPriorities(),
-    ])
-      .then(([categoryData, applicationData, priorityData]) => {
-        setCategories(categoryData)
-        setApplications(applicationData)
-        setPriorities(priorityData)
-        setForm((current) => ({
-          ...current,
-          categoryId: String(categoryData[0]?.id ?? ''),
-          priorityId: String(priorityData.find((p) => p.key === 'medium')?.id ?? ''),
-        }))
-      })
-      .catch(() => setError('Master data formulir tidak dapat dimuat.'))
-      .finally(() => setLoading(false))
-  }, [])
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return
+    const selectedFiles = Array.from(e.target.files)
+    setError('')
+    setFieldErrors((prev) => ({ ...prev, attachments: '' }))
 
-  useEffect(() => {
-    if (!form.applicationId) {
-      setModules([])
+    const invalidFiles: string[] = []
+    const oversizedFiles: string[] = []
+    const validFiles: File[] = []
+
+    selectedFiles.forEach((file) => {
+      const ext = file.name.split('.').pop()?.toLowerCase() || ''
+      if (!ALLOWED_EXTENSIONS.includes(ext)) {
+        invalidFiles.push(file.name)
+      } else if (file.size > MAX_FILE_SIZE_BYTES) {
+        oversizedFiles.push(file.name)
+      } else {
+        validFiles.push(file)
+      }
+    })
+
+    if (invalidFiles.length > 0) {
+      setError(`Format file tidak diperbolehkan: ${invalidFiles.join(', ')}. Format yang didukung: ${ALLOWED_EXTENSIONS.join(', ')}`)
       return
     }
-    masterDataService
-      .getApplicationModules(Number(form.applicationId))
-      .then(setModules)
-      .catch(() => setModules([]))
-  }, [form.applicationId])
 
-  const category = useMemo(
-    () => categories.find((item) => item.id === Number(form.categoryId)),
-    [categories, form.categoryId],
-  )
-  const update = (field: keyof typeof form, value: string) => setForm((current) => ({ ...current, [field]: value }))
-  const basicValid = Boolean(
-    form.categoryId && form.title.trim() && (category?.type !== 'incident' || form.applicationId),
-  )
-  const detailValid = Boolean(
-    form.description.trim() &&
-    (category?.type !== 'request' || form.requestPurpose.trim()) &&
-    (category?.type !== 'change' || form.changeReason.trim()) &&
-    (category?.type !== 'problem' || form.recurringIndication.trim()),
-  )
+    if (oversizedFiles.length > 0) {
+      setError(`Ukuran file melebihi 10MB: ${oversizedFiles.join(', ')}`)
+      return
+    }
 
-  const submit = async () => {
+    setFiles((prev) => [...prev, ...validFiles])
+    e.target.value = ''
+  }
+
+  const removeFile = (index: number) => {
+    setFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const validate = (): boolean => {
+    const errors: Record<string, string> = {}
+
+    if (!title.trim()) {
+      errors.title = 'Judul pengajuan tiket wajib diisi.'
+    } else if (title.length > 200) {
+      errors.title = 'Judul maksimal 200 karakter.'
+    }
+
+    if (!description.trim()) {
+      errors.description = 'Deskripsi pengajuan tiket wajib diisi.'
+    } else if (description.length > 10000) {
+      errors.description = 'Deskripsi maksimal 10.000 karakter.'
+    }
+
+    if (!affectedUrl.trim()) {
+      errors.affected_url = 'Link submission yang error wajib diisi.'
+    } else {
+      const lower = affectedUrl.trim().toLowerCase()
+      if (!lower.startsWith('http://') && !lower.startsWith('https://')) {
+        errors.affected_url = 'Link submission harus diawali dengan http:// atau https://'
+      }
+    }
+
+    if (files.length === 0) {
+      errors.attachments = 'Minimal 1 lampiran dokumen atau screenshot wajib diunggah.'
+    }
+
+    setFieldErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!validate()) return
+
     setSubmitting(true)
     setError('')
-    const payload: TicketPayload = {
-      ticket_category_id: Number(form.categoryId),
-      title: form.title,
-      description: form.description,
-      ...(form.applicationId && { application_id: Number(form.applicationId) }),
-      ...(form.moduleId && { application_module_id: Number(form.moduleId) }),
-      ...(form.priorityId && { requested_priority_id: Number(form.priorityId) }),
-      business_impact: form.businessImpact || undefined,
-      urgency: form.urgency,
-      expected_result: form.expectedResult || undefined,
-      actual_result: form.actualResult || undefined,
-      reproduction_steps: form.reproductionSteps || undefined,
-      request_purpose: form.requestPurpose || undefined,
-      change_reason: form.changeReason || undefined,
-      expected_impact: form.expectedImpact || undefined,
-      recurring_indication: form.recurringIndication || undefined,
+    setToastMessage('')
+
+    const formData = new FormData()
+    formData.append('title', title.trim())
+    formData.append('description', description.trim())
+    formData.append('affected_url', affectedUrl.trim())
+    if (reference.trim()) {
+      formData.append('reference', reference.trim())
     }
+
+    files.forEach((file) => {
+      formData.append('attachments[]', file)
+    })
+
     try {
-      const ticket = await ticketService.create(payload)
-      for (const file of files)
-        await ticketService.upload(ticket.id, file, file.type.startsWith('image/') ? 'screenshot' : 'evidence')
-      navigate(`/user/tickets/${ticket.id}`, { replace: true })
+      const ticket = await ticketService.createRequesterTicket(formData)
+      setCreatedTicket(ticket)
+      setToastMessage(`Tiket #${ticket.ticket_number} berhasil dibuat!`)
     } catch (cause) {
       const apiError = cause as ApiRequestError
-      setError(apiError.errors ? Object.values(apiError.errors).flat()[0] : apiError.message)
+      if (apiError.errors) {
+        const mappedErrors: Record<string, string> = {}
+        Object.entries(apiError.errors).forEach(([key, messages]) => {
+          mappedErrors[key] = Array.isArray(messages) ? messages[0] : messages
+        })
+        setFieldErrors(mappedErrors)
+        setError(Object.values(mappedErrors)[0] || 'Gagal mengajukan tiket.')
+      } else {
+        setError(apiError.message || 'Terjadi kesalahan saat mengajukan tiket.')
+      }
+    } finally {
       setSubmitting(false)
     }
   }
 
-  if (loading)
+  if (createdTicket) {
     return (
-      <div className="py-20 text-center text-sm text-gray-500" role="status">
-        Memuat formulir tiket...
+      <div className="space-y-6 max-w-3xl mx-auto">
+        <PageHeader title="Tiket Berhasil Diajukan" subtitle="Tiket Anda telah tercatat dan akan diproses oleh Supervisor IT" />
+        <Card className="p-8 text-center space-y-6 bg-white border border-emerald-100 shadow-lg rounded-xl">
+          <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
+            <CheckCircle2 className="w-10 h-10" />
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-gray-900">Nomor Tiket: {createdTicket.ticket_number}</h3>
+            <p className="text-gray-600 mt-2 max-w-lg mx-auto">
+              Terima kasih. Pengajuan Anda telah berhasil diterima dengan status <span className="font-semibold text-emerald-700">Diajukan</span>. Supervisor IT akan menganalisis dan memproses tiket Anda.
+            </p>
+          </div>
+          <div className="p-4 bg-gray-50 rounded-lg text-left text-sm space-y-2 border border-gray-100 max-w-md mx-auto">
+            <div><span className="font-semibold text-gray-700">Judul:</span> {createdTicket.title}</div>
+            <div><span className="font-semibold text-gray-700">Link Error:</span> <a href={createdTicket.affected_url || '#'} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{createdTicket.affected_url}</a></div>
+            {createdTicket.reference && <div><span className="font-semibold text-gray-700">Referensi:</span> {createdTicket.reference}</div>}
+          </div>
+          <div className="flex justify-center gap-4 pt-4">
+            <Button variant="secondary" onClick={() => navigate('/tickets')}>
+              Lihat Daftar Tiket
+            </Button>
+            <Button onClick={() => navigate(`/tickets/${createdTicket.id}`)}>
+              Detail Tiket <ExternalLink className="w-4 h-4 ml-2 inline" />
+            </Button>
+          </div>
+        </Card>
       </div>
     )
+  }
 
   return (
-    <div className="max-w-3xl">
-      {error && <Toast message={error} type="error" onClose={() => setError('')} />}
+    <div className="space-y-6 max-w-4xl mx-auto pb-12">
+      <Toast message={toastMessage} onClose={() => setToastMessage('')} />
       <PageHeader
-        title="Buat Request / Tiket IT"
-        subtitle="Sampaikan permintaan atau insiden IT Anda"
-        actions={
-          <Button variant="ghost" onClick={() => navigate('/user/dashboard')}>
-            ← Kembali
-          </Button>
-        }
+        title="Form Pengajuan Tiket"
+        subtitle="Sampaikan kendala atau permasalahan sistem Anda kepada tim IT"
       />
-      <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
-        {[1, 2, 3].map((item) => (
-          <div key={item} className="flex items-center gap-2 shrink-0">
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${item === step ? 'bg-[#1E3A8A] text-white' : item < step ? 'bg-emerald-500 text-white' : 'bg-gray-200 text-gray-500'}`}
-            >
-              {item < step ? '✓' : item}
-            </div>
-            <span className={`text-sm ${item === step ? 'font-medium text-gray-900' : 'text-gray-400'}`}>
-              {item === 1 ? 'Informasi Dasar' : item === 2 ? 'Detail' : 'Konfirmasi'}
-            </span>
-            {item < 3 && <div className="w-8 h-px bg-gray-300" />}
-          </div>
-        ))}
-      </div>
-      <Card className="p-6">
-        {step === 1 && (
-          <div className="space-y-5">
-            <h3 className="text-base font-semibold border-b border-gray-100 pb-3">Informasi Dasar Tiket</h3>
-            <Select
-              label="Kategori Tiket *"
-              value={form.categoryId}
-              onChange={(event) => update('categoryId', event.target.value)}
-              options={categories.map((item) => ({
-                value: String(item.id),
-                label: `${item.name} — ${item.description || item.type}`,
-              }))}
-            />
+
+      {error && (
+        <div className="p-4 bg-red-50 border-l-4 border-red-500 rounded-r-md flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+          <div className="text-sm text-red-700">{error}</div>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card className="p-6 bg-white shadow-sm border border-gray-200 rounded-xl space-y-6">
+          {/* Field 1: Judul Pengajuan */}
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-800">
+              Judul Pengajuan Tiket <span className="text-red-500">*</span>
+            </label>
             <Input
-              label="Judul Tiket *"
-              value={form.title}
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value)
+                setFieldErrors((prev) => ({ ...prev, title: '' }))
+              }}
+              placeholder="Contoh: Portal asuransi gagal memproses submission"
+              disabled={submitting}
               maxLength={200}
-              onChange={(event) => update('title', event.target.value)}
-              placeholder="Deskripsikan kebutuhan secara singkat"
+              className={fieldErrors.title ? 'border-red-500 focus:ring-red-500' : ''}
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Select
-                label={category?.type === 'incident' ? 'Aplikasi Terdampak *' : 'Aplikasi Terkait'}
-                value={form.applicationId}
-                onChange={(event) => {
-                  update('applicationId', event.target.value)
-                  update('moduleId', '')
-                }}
-                options={[
-                  { value: '', label: '— Pilih aplikasi —' },
-                  ...applications.map((item) => ({ value: String(item.id), label: item.name })),
-                ]}
-              />
-              <Select
-                label="Modul Aplikasi"
-                value={form.moduleId}
-                onChange={(event) => update('moduleId', event.target.value)}
-                options={[
-                  { value: '', label: '— Pilih modul —' },
-                  ...modules.map((item) => ({ value: String(item.id), label: item.name })),
-                ]}
-                disabled={!form.applicationId}
-              />
-              <Select
-                label="Saran Prioritas"
-                value={form.priorityId}
-                onChange={(event) => update('priorityId', event.target.value)}
-                options={[
-                  { value: '', label: '— Tanpa saran —' },
-                  ...priorities.map((item) => ({ value: String(item.id), label: item.name })),
-                ]}
-              />
-              <Select
-                label="Urgensi"
-                value={form.urgency}
-                onChange={(event) => update('urgency', event.target.value)}
-                options={[
-                  { value: 'low', label: 'Low' },
-                  { value: 'normal', label: 'Normal' },
-                  { value: 'urgent', label: 'Urgent' },
-                  { value: 'critical', label: 'Critical' },
-                ]}
-              />
-            </div>
-            <p className="text-xs text-gray-500">Divisi pelapor dan requester diambil aman dari profil login Anda.</p>
-            <div className="flex justify-end">
-              <Button variant="primary" disabled={!basicValid} onClick={() => setStep(2)}>
-                Lanjut →
-              </Button>
-            </div>
+            {fieldErrors.title && <p className="text-xs text-red-600 mt-1">{fieldErrors.title}</p>}
+            <p className="text-xs text-gray-500">Tuliskan judul singkat yang mengabarkan masalah utama (maks 200 karakter).</p>
           </div>
-        )}
-        {step === 2 && (
-          <div className="space-y-5">
-            <h3 className="text-base font-semibold border-b border-gray-100 pb-3">Detail {category?.name}</h3>
+
+          {/* Field 2: Deskripsi */}
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-800">
+              Deskripsi Kendala <span className="text-red-500">*</span>
+            </label>
             <Textarea
-              label="Deskripsi *"
-              rows={4}
-              value={form.description}
-              onChange={(event) => update('description', event.target.value)}
+              value={description}
+              onChange={(e) => {
+                setDescription(e.target.value)
+                setFieldErrors((prev) => ({ ...prev, description: '' }))
+              }}
+              placeholder="Jelaskan masalah yang terjadi dan langkah terakhir sebelum error muncul."
+              rows={6}
+              disabled={submitting}
+              maxLength={10000}
+              className={fieldErrors.description ? 'border-red-500 focus:ring-red-500' : ''}
             />
-            {category?.type === 'incident' && (
-              <>
-                <Textarea
-                  label="Langkah Reproduksi"
-                  rows={3}
-                  value={form.reproductionSteps}
-                  onChange={(event) => update('reproductionSteps', event.target.value)}
-                />
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <Textarea
-                    label="Hasil yang Diharapkan"
-                    rows={3}
-                    value={form.expectedResult}
-                    onChange={(event) => update('expectedResult', event.target.value)}
-                  />
-                  <Textarea
-                    label="Hasil Aktual"
-                    rows={3}
-                    value={form.actualResult}
-                    onChange={(event) => update('actualResult', event.target.value)}
-                  />
-                </div>
-              </>
-            )}
-            {category?.type === 'request' && (
-              <Textarea
-                label="Tujuan Kebutuhan *"
-                rows={3}
-                value={form.requestPurpose}
-                onChange={(event) => update('requestPurpose', event.target.value)}
-              />
-            )}
-            {category?.type === 'change' && (
-              <>
-                <Textarea
-                  label="Alasan Perubahan *"
-                  rows={3}
-                  value={form.changeReason}
-                  onChange={(event) => update('changeReason', event.target.value)}
-                />
-                <Textarea
-                  label="Dampak yang Diperkirakan"
-                  rows={3}
-                  value={form.expectedImpact}
-                  onChange={(event) => update('expectedImpact', event.target.value)}
-                />
-              </>
-            )}
-            {category?.type === 'problem' && (
-              <Textarea
-                label="Indikasi Masalah Berulang *"
-                rows={3}
-                value={form.recurringIndication}
-                onChange={(event) => update('recurringIndication', event.target.value)}
-              />
-            )}
-            <Textarea
-              label="Dampak Bisnis"
-              rows={2}
-              value={form.businessImpact}
-              onChange={(event) => update('businessImpact', event.target.value)}
+            {fieldErrors.description && <p className="text-xs text-red-600 mt-1">{fieldErrors.description}</p>}
+            <p className="text-xs text-gray-500">Jelaskan secara rinci kendala yang dialami dan dampaknya bagi pengguna (maks 10.000 karakter).</p>
+          </div>
+
+          {/* Field 3: Link Submission Error */}
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-800">
+              Link Submission yang Error <span className="text-red-500">*</span>
+            </label>
+            <Input
+              type="url"
+              value={affectedUrl}
+              onChange={(e) => {
+                setAffectedUrl(e.target.value)
+                setFieldErrors((prev) => ({ ...prev, affected_url: '' }))
+              }}
+              placeholder="https://portal-asuransi.example/submission/123"
+              disabled={submitting}
+              className={fieldErrors.affected_url ? 'border-red-500 focus:ring-red-500' : ''}
             />
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="attachments">
-                Lampiran (maks. 10 file, masing-masing 10 MB)
-              </label>
+            {fieldErrors.affected_url && <p className="text-xs text-red-600 mt-1">{fieldErrors.affected_url}</p>}
+            <p className="text-xs text-gray-500">Masukkan tautan/URL halaman web di mana error atau kendala terjadi (diawali http:// atau https://).</p>
+          </div>
+
+          {/* Field 4: Referensi */}
+          <div className="space-y-1">
+            <label className="block text-sm font-semibold text-gray-800">
+              Referensi <span className="text-gray-400 font-normal">(Opsional)</span>
+            </label>
+            <Input
+              value={reference}
+              onChange={(e) => setReference(e.target.value)}
+              placeholder="Nomor submission, nomor polis, nomor transaksi, atau referensi lain"
+              disabled={submitting}
+              maxLength={255}
+            />
+            <p className="text-xs text-gray-500">Dapat diisi nomor dokumen terkait seperti nomor polis, nomor klaim, atau nomor transaksi untuk mempermudah pencarian.</p>
+          </div>
+
+          {/* Field 5: Lampiran Dokumen atau Screenshot */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-800">
+              Lampiran Dokumen atau Screenshot <span className="text-red-500">*</span>
+            </label>
+
+            <div className="border-2 border-dashed border-gray-300 hover:border-blue-500 rounded-lg p-6 text-center transition-colors bg-gray-50/50">
+              <Upload className="w-10 h-10 mx-auto text-gray-400 mb-2" />
+              <p className="text-sm font-medium text-gray-700">Klik atau tarik file ke sini untuk mengunggah</p>
+              <p className="text-xs text-gray-500 mt-1">
+                Format yang didukung: JPG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX (Maks 10MB per file)
+              </p>
               <input
-                id="attachments"
                 type="file"
                 multiple
-                accept=".png,.jpg,.jpeg,.pdf,.txt,.csv,.doc,.docx,.xls,.xlsx"
-                onChange={(event) => setFiles(Array.from(event.target.files || []).slice(0, 10))}
-                className="block w-full text-sm border border-dashed border-gray-300 rounded-xl p-4"
+                accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx"
+                onChange={handleFileChange}
+                disabled={submitting}
+                className="mt-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
               />
-              <p className="text-xs text-gray-500 mt-2">
-                {files.length ? `${files.length} file dipilih` : 'PNG, JPG, PDF, TXT, CSV, DOC/DOCX, XLS/XLSX.'}
-              </p>
             </div>
-            <div className="flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(1)}>
-                ← Kembali
-              </Button>
-              <Button variant="primary" disabled={!detailValid} onClick={() => setStep(3)}>
-                Lanjut →
-              </Button>
-            </div>
+            {fieldErrors.attachments && <p className="text-xs text-red-600 mt-1">{fieldErrors.attachments}</p>}
+
+            {/* Preview files */}
+            {files.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <p className="text-xs font-semibold text-gray-700">File Terpilih ({files.length}):</p>
+                <div className="divide-y divide-gray-100 border border-gray-200 rounded-md bg-white">
+                  {files.map((file, idx) => (
+                    <div key={idx} className="p-3 flex items-center justify-between hover:bg-gray-50">
+                      <div className="flex items-center gap-3 overflow-hidden">
+                        <FileText className="w-5 h-5 text-blue-600 shrink-0" />
+                        <div className="truncate">
+                          <p className="text-sm font-medium text-gray-800 truncate">{file.name}</p>
+                          <p className="text-xs text-gray-400">{(file.size / 1024).toFixed(1)} KB</p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(idx)}
+                        disabled={submitting}
+                        className="text-red-500 hover:text-red-700 p-1.5 rounded-md hover:bg-red-50 transition-colors"
+                        title="Hapus file"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
-        )}
-        {step === 3 && (
-          <div className="space-y-5">
-            <h3 className="text-base font-semibold border-b border-gray-100 pb-3">Konfirmasi Tiket</h3>
-            <div className="bg-gray-50 rounded-xl p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-              <div>
-                <p className="text-xs text-gray-500">Kategori</p>
-                <p className="font-medium">{category?.name}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Aplikasi</p>
-                <p className="font-medium">
-                  {applications.find((item) => item.id === Number(form.applicationId))?.name || 'Tidak ada'}
-                </p>
-              </div>
-              <div className="sm:col-span-2">
-                <p className="text-xs text-gray-500">Judul</p>
-                <p className="font-medium">{form.title}</p>
-              </div>
-              <div className="sm:col-span-2">
-                <p className="text-xs text-gray-500">Deskripsi</p>
-                <p className="whitespace-pre-wrap">{form.description}</p>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500">Lampiran</p>
-                <p className="font-medium">{files.length} file</p>
-              </div>
-            </div>
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800">
-              Tiket akan langsung berstatus Pending Validation dan masuk ke antrean Supervisor divisi Anda.
-            </div>
-            <div className="flex justify-between">
-              <Button variant="secondary" onClick={() => setStep(2)}>
-                ← Kembali
-              </Button>
-              <Button variant="primary" disabled={submitting} onClick={() => void submit()}>
-                {submitting ? 'Mengirim...' : 'Kirim Tiket'}
-              </Button>
-            </div>
-          </div>
-        )}
-      </Card>
+        </Card>
+
+        <div className="flex justify-end gap-3">
+          <Button type="button" variant="secondary" onClick={() => navigate('/tickets')} disabled={submitting}>
+            Batal
+          </Button>
+          <Button type="submit" disabled={submitting} className="min-w-[140px]">
+            {submitting ? 'Mengirim...' : 'Kirim Tiket'}
+          </Button>
+        </div>
+      </form>
     </div>
   )
 }

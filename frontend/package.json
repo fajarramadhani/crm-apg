@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "stage9:browser": "node scripts/stage9-browser-validation.mjs"
   },
   "dependencies": {
     "lucide-react": "^1.24.0",

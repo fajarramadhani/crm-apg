@@ -13,11 +13,21 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   supervisor: [
-    { path: '/supervisor/validation-queue', label: 'Antrean Validasi', icon: '✅' },
+    { path: '/supervisor-it/dashboard', label: 'Supervisor Control Center', icon: '🎛️' },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: '📋' },
+    { path: '/supervisor/validation-queue', label: 'Antrean Validasi (Legacy)', icon: '✅' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+  ],
+  supervisor_it: [
+    { path: '/supervisor-it/dashboard', label: 'Dashboard Control Center', icon: '🎛️' },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket Supervisor', icon: '📋' },
+    { path: '/pic/dashboard', label: 'PIC Workspace (Acting)', icon: '💻' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   it_lead: [
-    { path: '/user/tickets', label: 'Daftar Tiket', icon: '📋' },
+    { path: '/supervisor-it/dashboard', label: 'Supervisor Control Center', icon: '🎛️' },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: '📋' },
+    { path: '/pic/dashboard', label: 'PIC Workspace', icon: '💻' },
     { path: '/itlead/triage', label: 'Antrean Triage', icon: '🎯' },
     { path: '/itlead/plan-review', label: 'Plan Review', icon: '✓' },
     { path: '/itlead/development', label: 'Development', icon: '⚙' },
@@ -29,10 +39,21 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   pic: [
-    { path: '/pic/dashboard', label: 'Dashboard', icon: '🏠' },
-    { path: '/pic/workspace', label: 'Workspace Tiket', icon: '💻' },
-    { path: '/pic/rca', label: 'Root Cause Analysis', icon: '🔍' },
-    { path: '/pic/release-preparation', label: 'Persiapan Release', icon: '🚦' },
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+  ],
+  pic_it_support: [
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+  ],
+  pic_it_develop: [
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   qa: [
@@ -53,6 +74,7 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
   admin: [
     { path: '/admin/divisions', label: 'Divisi & Aplikasi', icon: '🏢' },
     { path: '/admin/sla-rules', label: 'Aturan SLA', icon: '📏' },
+    { path: '/admin/workflows', label: 'Workflow', icon: '⚙' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
 }

@@ -133,7 +133,7 @@ export default function TicketHistory() {
                   </div>
                 </TD>
                 <TD>
-                  <span className="text-xs">{ticket.category.name}</span>
+                  <span className="text-xs">{ticket.category?.name || '—'}</span>
                 </TD>
                 <TD>
                   {ticket.requested_priority ? (

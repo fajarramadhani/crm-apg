@@ -16,18 +16,22 @@ class TicketResource extends JsonResource
             ? ($technical ? $this->attachments : $this->attachments->filter(fn ($attachment) => $attachment->defect_id === null && $attachment->uat_finding_id === null && (! in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation', 'qa_evidence', 'defect_evidence', 'retest_evidence', 'uat_evidence', 'uat_finding_evidence', 'uat_retest_evidence', 'uat_signoff_document'], true) || ($attachment->visibility ?? 'internal') === 'requester')))
             : null;
 
-        $defectCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->count() : $this->qaDefects()->count();
-        $defectOpenCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->count();
+        $defectCount = isset($this->defect_count) ? $this->defect_count : ($this->relationLoaded('qaDefects') ? $this->qaDefects->count() : $this->qaDefects()->count());
+        $defectOpenCount = isset($this->defect_open_count) ? $this->defect_open_count : ($this->relationLoaded('qaDefects') ? $this->qaDefects->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->count());
 
-        $uatFindingCount = $this->relationLoaded('uatFindings') ? $this->uatFindings->count() : $this->uatFindings()->count();
-        $uatFindingOpenCount = $this->relationLoaded('uatFindings') ? $this->uatFindings->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->count();
+        $uatFindingCount = isset($this->uat_finding_count) ? $this->uat_finding_count : ($this->relationLoaded('uatFindings') ? $this->uatFindings->count() : $this->uatFindings()->count());
+        $uatFindingOpenCount = isset($this->uat_finding_open_count) ? $this->uat_finding_open_count : ($this->relationLoaded('uatFindings') ? $this->uatFindings->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->count());
 
         return [
             'id' => $this->id, 'ticket_number' => $this->ticket_number, 'title' => $this->title, 'description' => $this->description,
-            'business_impact' => $this->business_impact, 'urgency' => $this->urgency, 'incident_occurred_at' => $this->incident_occurred_at?->toISOString(), 'affected_url' => $this->affected_url,
+            'business_impact' => $this->business_impact, 'urgency' => $this->urgency, 'incident_occurred_at' => $this->incident_occurred_at?->toISOString(), 'affected_url' => $this->affected_url, 'reference' => $this->reference,
             'expected_result' => $this->expected_result, 'actual_result' => $this->actual_result, 'reproduction_steps' => $this->reproduction_steps, 'request_purpose' => $this->request_purpose,
             'target_needed_at' => $this->target_needed_at?->toISOString(), 'change_reason' => $this->change_reason, 'expected_impact' => $this->expected_impact, 'recurring_indication' => $this->recurring_indication,
             'status' => $this->status->value,
+            'workflow_type' => $this->workflow_mode === 'dynamic' ? 'dynamic' : 'legacy',
+            'workflow_mode' => $this->workflow_mode,
+            'workflow_version' => $this->workflow_version,
+            'current_workflow_stage' => $this->current_workflow_stage,
             'requester' => $this->whenLoaded('requester', fn () => ['id' => $this->requester->id, 'name' => $this->requester->name]),
             'division' => $this->whenLoaded('division', fn () => ['id' => $this->division->id, 'code' => $this->division->code, 'name' => $this->division->name]),
             'current_division' => $this->whenLoaded('currentDivision', fn () => ['id' => $this->currentDivision->id, 'code' => $this->currentDivision->code, 'name' => $this->currentDivision->name]),
@@ -39,6 +43,13 @@ class TicketResource extends JsonResource
             'final_priority' => $this->whenLoaded('finalPriority', fn () => $this->finalPriority ? ['id' => $this->finalPriority->id, 'key' => $this->finalPriority->key, 'name' => $this->finalPriority->name] : null),
             'sla_policy' => $this->whenLoaded('slaPolicy', fn () => $this->slaPolicy ? ['id' => $this->slaPolicy->id, 'response_minutes' => $this->slaPolicy->response_minutes, 'resolution_minutes' => $this->slaPolicy->resolution_minutes] : null),
             'assignee' => $this->whenLoaded('currentAssignee', fn () => $this->currentAssignee ? ['id' => $this->currentAssignee->id, 'name' => $this->currentAssignee->name] : null),
+            'assignments' => $this->when($technical && $this->relationLoaded('assignments'), fn () => $this->assignments->map(fn ($assignment) => [
+                'id' => $assignment->id,
+                'assigned_to' => $assignment->assigned_to,
+                'assignment_type' => $assignment->assignment_type,
+                'is_current' => (bool) $assignment->is_current,
+                'assignee' => $assignment->relationLoaded('assignee') && $assignment->assignee ? ['id' => $assignment->assignee->id, 'name' => $assignment->assignee->name] : null,
+            ])->values()->all()),
             'response_due_at' => $this->response_due_at?->toISOString(), 'resolution_due_at' => $this->resolution_due_at?->toISOString(), 'sla_timezone' => $this->sla_timezone,
             'triage_started_at' => $this->triage_started_at?->toISOString(), 'assigned_at' => $this->assigned_at?->toISOString(),
             'analysis_started_at' => $this->analysis_started_at?->toISOString(), 'analysis_completed_at' => $this->analysis_completed_at?->toISOString(), 'plan_submitted_at' => $this->plan_submitted_at?->toISOString(), 'plan_approved_at' => $this->plan_approved_at?->toISOString(),

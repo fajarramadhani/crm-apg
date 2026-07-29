@@ -170,7 +170,7 @@ class AuthenticationAndAuthorizationTest extends TestCase
             $this->assertSame($expectedPermissions, $user->permissions(), "Permission mismatch for {$roleKey}");
         }
 
-        $this->assertCount(8, config('permissions.roles'));
+        $this->assertCount(11, config('permissions.roles'));
     }
 
     public function test_testing_user_command_provisions_one_named_account_without_overwriting_it(): void

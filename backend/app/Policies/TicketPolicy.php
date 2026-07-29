@@ -8,12 +8,20 @@ use App\Models\User;
 
 class TicketPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->hasPermission('ticket.all.view')
+            || $user->hasPermission('ticket.own.view')
+            || $user->hasPermission('ticket.division.view')
+            || $user->hasPermission('ticket.assigned.view');
+    }
+
     public function view(User $user, Ticket $ticket): bool
     {
         return $user->hasPermission('ticket.all.view')
             || ($user->hasPermission('ticket.own.view') && $ticket->requester_id === $user->id)
             || ($user->hasPermission('ticket.division.view') && $ticket->current_division_id === $user->division_id)
-            || ($user->hasPermission('ticket.assigned.view') && $ticket->current_assignee_id === $user->id)
+            || ($user->hasPermission('ticket.assigned.view') && ($ticket->current_assignee_id === $user->id || $ticket->assignments()->where('assigned_to', $user->id)->where('is_current', true)->exists()))
             || ($user->hasPermission('ticket.assigned.view') && $ticket->qa_assignee_id === $user->id)
             || ($user->hasPermission('ticket.uat_assignment.view') && $ticket->uat_assignee_id === $user->id);
     }

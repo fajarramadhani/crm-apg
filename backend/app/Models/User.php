@@ -46,6 +46,11 @@ class User extends Authenticatable
         return $this->hasMany(TicketAssignment::class, 'assigned_to');
     }
 
+    public function assignedTickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'current_assignee_id');
+    }
+
     public function qaAssignments(): HasMany
     {
         return $this->hasMany(TicketQaAssignment::class, 'qa_user_id');
@@ -104,6 +109,39 @@ class User extends Authenticatable
     public function hasRole(string|array $roles): bool
     {
         return in_array($this->role?->key, (array) $roles, true);
+    }
+
+    public function isSupervisorIt(): bool
+    {
+        return $this->hasRole('supervisor_it');
+    }
+
+    public function isPicSupport(): bool
+    {
+        return $this->hasRole('pic_it_support');
+    }
+
+    public function isPicDevelop(): bool
+    {
+        return $this->hasRole('pic_it_develop');
+    }
+
+    public function isPic(): bool
+    {
+        return $this->hasRole(['pic', 'pic_it_support', 'pic_it_develop']);
+    }
+
+    public function isEligibleTicketAssignee(): bool
+    {
+        return $this->is_active && $this->hasRole(['supervisor_it', 'pic_it_support', 'pic_it_develop']);
+    }
+
+    public function scopeEligibleTicketAssignees($query)
+    {
+        return $query->where('is_active', true)
+            ->whereHas('role', function ($q): void {
+                $q->whereIn('key', ['supervisor_it', 'pic_it_support', 'pic_it_develop']);
+            });
     }
 
     public function hasPermission(string $permission): bool

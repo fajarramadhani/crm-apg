@@ -31,11 +31,17 @@ class MasterDataSeeder extends Seeder
         }
 
         $it = Division::where('code', 'IT')->firstOrFail();
-        foreach ([['TIC_HUB', 'Tic Hub'], ['CMS_MULTI', 'CMS Multi Company'], ['APG_PROFILE', 'Company Profile APG'], ['BPR_BONDING', 'BPR Bonding'], ['DWP_INSURANCE', 'DWP Insurance']] as [$code,$name]) {
+        foreach ([['TIC_HUB', 'Sistem Internal'], ['EXTERNAL_SYSTEM', 'Sistem Asuransi atau Eksternal']] as [$code,$name]) {
             Application::updateOrCreate(['code' => $code], ['name' => $name, 'description' => 'Automated test fixture', 'owner_division_id' => $it->id, 'is_active' => true]);
         }
 
-        foreach ([['INCIDENT', 'Incident', 'incident'], ['REQUEST', 'Request', 'request'], ['CHANGE', 'Change', 'change'], ['PROBLEM', 'Problem', 'problem']] as [$code,$name,$type]) {
+        foreach ([
+            ['INCIDENT', 'Bug Sistem Internal', 'incident'],
+            ['EXTERNAL_INCIDENT', 'Bug Sistem dari Asuransi', 'incident'],
+            ['REQUEST', 'Request', 'request'],
+            ['CHANGE', 'Change', 'change'],
+            ['PROBLEM', 'Problem', 'problem'],
+        ] as [$code,$name,$type]) {
             TicketCategory::updateOrCreate(['code' => $code], ['name' => $name, 'type' => $type, 'description' => 'Automated test fixture', 'is_active' => true]);
         }
 

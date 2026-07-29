@@ -20,7 +20,6 @@ const DevelopmentMonitoring = lazy(() => import('./pages/itlead/DevelopmentMonit
 const DeploymentQueue = lazy(() => import('./pages/itlead/DeploymentQueue'))
 const UatAssignmentQueue = lazy(() => import('./pages/itlead/UatAssignmentQueue'))
 const ReleasePreparation = lazy(() => import('./pages/itlead/ReleasePreparation'))
-const PICDashboard = lazy(() => import('./pages/pic/PICDashboard'))
 const Workspace = lazy(() => import('./pages/pic/Workspace'))
 const InternalTestingPIC = lazy(() => import('./pages/pic/InternalTesting'))
 const ReleasePreparationPIC = lazy(() => import('./pages/pic/ReleasePreparation'))
@@ -48,11 +47,26 @@ const KnowledgeBaseForm = lazy(() => import('./pages/knowledgeBase/KnowledgeBase
 const KnowledgeBaseReview = lazy(() => import('./pages/knowledgeBase/KnowledgeBaseReview'))
 const KnowledgeBaseTags = lazy(() => import('./pages/settings/KnowledgeBaseTags'))
 
+const WorkflowList = lazy(() => import('./pages/admin/workflows/WorkflowList'))
+const WorkflowForm = lazy(() => import('./pages/admin/workflows/WorkflowForm'))
+const WorkflowDetail = lazy(() => import('./pages/admin/workflows/WorkflowDetail'))
+
+const SupervisorItDashboard = lazy(() => import('./pages/supervisorIt/SupervisorDashboard'))
+const SupervisorTicketList = lazy(() => import('./pages/supervisorIt/SupervisorTicketList'))
+const SupervisorTicketDetail = lazy(() => import('./pages/supervisorIt/SupervisorTicketDetail'))
+
+const PicUnifiedDashboard = lazy(() => import('./pages/pic/PicUnifiedDashboard').then((m) => ({ default: m.PicUnifiedDashboard })))
+const PicTicketList = lazy(() => import('./pages/pic/PicTicketList').then((m) => ({ default: m.PicTicketList })))
+const PicTicketDetail = lazy(() => import('./pages/pic/PicTicketDetail').then((m) => ({ default: m.PicTicketDetail })))
+
 export const DEFAULT_ROUTES: Record<Role, string> = {
   requester: '/user/tickets',
-  supervisor: '/supervisor/validation-queue',
-  it_lead: '/itlead/triage',
+  supervisor: '/supervisor-it/dashboard',
+  supervisor_it: '/supervisor-it/dashboard',
+  it_lead: '/supervisor-it/dashboard',
   pic: '/pic/dashboard',
+  pic_it_support: '/pic/dashboard',
+  pic_it_develop: '/pic/dashboard',
   qa: '/qa/dashboard',
   manager: '/manager/approvals',
   executive: '/executive/reports',
@@ -152,7 +166,10 @@ function AppRoutes() {
         <Route path="/requester/tickets/:id" element={guard(allRoles, <TicketDetail />)} />
         <Route path="/requester/create-ticket" element={<Navigate to="/user/create-ticket" replace />} />
         <Route path="/requester/confirmations" element={<Navigate to="/user/confirmations" replace />} />
-        <Route path="/requester/dashboard" element={<Navigate to="/user/tickets" replace />} />
+        {/* Supervisor IT Control Center Routes */}
+        <Route path="/supervisor-it/dashboard" element={guard(allRoles, <SupervisorItDashboard />)} />
+        <Route path="/supervisor-it/tickets" element={guard(allRoles, <SupervisorTicketList />)} />
+        <Route path="/supervisor-it/tickets/:id" element={guard(allRoles, <SupervisorTicketDetail />)} />
 
         <Route
           path="/supervisor/dashboard"
@@ -274,13 +291,42 @@ function AppRoutes() {
         <Route path="/it-lead/alerts" element={guard(['it_lead'], <Navigate to="/itlead/alerts" replace />)} />
         <Route path="/it-lead/reports" element={guard(['it_lead'], <Navigate to="/itlead/reports" replace />)} />
 
-        <Route path="/pic/dashboard" element={guard(['pic'], <PICDashboard />)} />
-        <Route path="/pic/workspace" element={guard(['pic'], <Workspace />)} />
-        <Route path="/pic/rca" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />
-        <Route path="/pic/assignments" element={guard(['pic'], <Navigate to="/pic/workspace" replace />)} />
-        <Route path="/pic/testing" element={guard(['pic'], <InternalTestingPIC />)} />
-        <Route path="/pic/release-preparation" element={guard(['pic'], <ReleasePreparationPIC />)} />
-        <Route path="/pic/reports" element={guard(['pic'], <AnalyticsDashboard role="pic" />)} />
+        <Route
+          path="/pic/dashboard"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <PicUnifiedDashboard />)}
+        />
+        <Route
+          path="/pic/tickets"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <PicTicketList />)}
+        />
+        <Route
+          path="/pic/tickets/:id"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <PicTicketDetail />)}
+        />
+        <Route
+          path="/pic/workspace"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <Workspace />)}
+        />
+        <Route
+          path="/pic/rca"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <Navigate to="/pic/workspace" replace />)}
+        />
+        <Route
+          path="/pic/assignments"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <Navigate to="/pic/tickets" replace />)}
+        />
+        <Route
+          path="/pic/testing"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <InternalTestingPIC />)}
+        />
+        <Route
+          path="/pic/release-preparation"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <ReleasePreparationPIC />)}
+        />
+        <Route
+          path="/pic/reports"
+          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <AnalyticsDashboard role="pic" />)}
+        />
 
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />
         <Route path="/qa/testing" element={guard(['qa'], <TestingForm />)} />
@@ -328,6 +374,10 @@ function AppRoutes() {
         <Route path="/admin/users" element={guard(['admin'], <Navigate to="/admin/divisions" replace />)} />
         <Route path="/admin/divisions" element={guard(['admin'], <DivisionManagement />)} />
         <Route path="/admin/sla-rules" element={guard(['admin'], <SLARules />)} />
+        <Route path="/admin/workflows" element={guard(['admin'], <WorkflowList />)} />
+        <Route path="/admin/workflows/new" element={guard(['admin'], <WorkflowForm />)} />
+        <Route path="/admin/workflows/:id" element={guard(['admin'], <WorkflowDetail />)} />
+        <Route path="/admin/workflows/:id/edit" element={guard(['admin'], <WorkflowForm />)} />
         <Route path="/admin/escalation" element={guard(['admin'], <Navigate to="/admin/sla-rules" replace />)} />
         <Route path="/admin/audit-log" element={guard(['admin'], <Navigate to="/admin/divisions" replace />)} />
         <Route

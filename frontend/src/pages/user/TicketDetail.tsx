@@ -205,7 +205,9 @@ export default function TicketDetail() {
               {(ticket.final_priority || ticket.requested_priority) && (
                 <PriorityBadge priority={(ticket.final_priority?.key || ticket.requested_priority?.key) as Priority} />
               )}
-              <span className="text-xs rounded-full bg-gray-100 px-3 py-1">{ticket.category.name}</span>
+              {ticket.category?.name && (
+                <span className="text-xs rounded-full bg-gray-100 px-3 py-1">{ticket.category.name}</span>
+              )}
             </div>
             {editing ? (
               <div className="space-y-4">
@@ -247,6 +249,24 @@ export default function TicketDetail() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4">
                   <Info label="Requester" value={ticket.requester.name} />
                   <Info label="Divisi" value={ticket.division.name} />
+                  <Info
+                    label="Link Error"
+                    value={
+                      ticket.affected_url ? (
+                        <a
+                          href={ticket.affected_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline break-all"
+                        >
+                          {ticket.affected_url}
+                        </a>
+                      ) : (
+                        '—'
+                      )
+                    }
+                  />
+                  <Info label="Referensi" value={ticket.reference || '—'} />
                   <Info label="Divisi Penanganan" value={ticket.current_division.name} />
                   <Info label="Aplikasi" value={ticket.application?.name || '—'} />
                   <Info label="PIC" value={ticket.assignee?.name || '—'} />
@@ -359,11 +379,11 @@ export default function TicketDetail() {
   )
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <p className="text-xs text-gray-500">{label}</p>
-      <p className="font-medium text-gray-900">{value}</p>
+      <div className="font-medium text-gray-900">{value}</div>
     </div>
   )
 }
