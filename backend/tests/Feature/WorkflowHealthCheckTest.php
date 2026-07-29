@@ -11,6 +11,12 @@ class WorkflowHealthCheckTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        WorkflowDefinition::query()->delete();
+    }
+
     public function test_fails_when_there_is_no_active_workflow(): void
     {
         $this->artisan('crm:workflow-check')->assertFailed();

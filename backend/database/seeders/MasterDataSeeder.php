@@ -47,7 +47,7 @@ class MasterDataSeeder extends Seeder
 
         $calendar = WorkingCalendar::updateOrCreate(['code' => 'JKT_WEEKDAY'], ['name' => 'Senin–Jumat 08:00–17:00', 'timezone' => 'Asia/Jakarta', 'workday_start' => '08:00', 'workday_end' => '17:00', 'working_days' => [1, 2, 3, 4, 5], 'is_active' => true]);
         foreach ([['critical', 'Critical', 1, 240], ['high', 'High', 2, 480], ['medium', 'Medium', 3, 960], ['low', 'Low', 4, 2400]] as [$key,$name,$level,$minutes]) {
-            $priority = TicketPriority::updateOrCreate(['key' => $key], ['name' => $name, 'level' => $level, 'description' => 'Automated test fixture', 'is_active' => true]);
+            $priority = TicketPriority::updateOrCreate(['key' => $key, 'level' => $level], ['name' => $name, 'description' => 'Automated test fixture', 'is_active' => true]);
             SlaPolicy::updateOrCreate(['priority_id' => $priority->id, 'working_calendar_id' => $calendar->id, 'is_active' => true], ['response_minutes' => null, 'resolution_minutes' => $minutes]);
         }
     }
