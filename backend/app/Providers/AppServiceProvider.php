@@ -44,7 +44,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production')) {
+        if (! app()->runningInConsole() && app()->environment('production')) {
             $unsafe = config('app.debug')
                 || blank(config('app.key'))
                 || ! config('session.secure')
