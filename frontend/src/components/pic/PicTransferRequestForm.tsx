@@ -6,10 +6,7 @@ interface PicTransferRequestFormProps {
   onClose: () => void
 }
 
-export const PicTransferRequestForm: React.FC<PicTransferRequestFormProps> = ({
-  onSubmit,
-  onClose,
-}) => {
+export const PicTransferRequestForm: React.FC<PicTransferRequestFormProps> = ({ onSubmit, onClose }) => {
   const [reason, setReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -63,7 +60,8 @@ export const PicTransferRequestForm: React.FC<PicTransferRequestFormProps> = ({
       </div>
 
       <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
-        Pengalihan tidak otomatis memindahkan penugasan tiket. Permintaan akan dievaluasi dan diputuskan oleh Supervisor IT.
+        Pengalihan tidak otomatis memindahkan penugasan tiket. Permintaan akan dievaluasi dan diputuskan oleh Supervisor
+        IT.
       </div>
 
       <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">

@@ -243,7 +243,8 @@ export default function SupervisorTicketDetail() {
     )
   }
 
-  const auditTimelineItems: AuditTimelineItem[] = (ticket as unknown as Record<string, unknown>).audit_timeline as AuditTimelineItem[] || []
+  const auditTimelineItems: AuditTimelineItem[] =
+    ((ticket as unknown as Record<string, unknown>).audit_timeline as AuditTimelineItem[]) || []
 
   return (
     <div className="space-y-6 pb-16">

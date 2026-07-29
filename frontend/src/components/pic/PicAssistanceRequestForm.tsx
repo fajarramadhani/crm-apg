@@ -6,10 +6,7 @@ interface PicAssistanceRequestFormProps {
   onClose: () => void
 }
 
-export const PicAssistanceRequestForm: React.FC<PicAssistanceRequestFormProps> = ({
-  onSubmit,
-  onClose,
-}) => {
+export const PicAssistanceRequestForm: React.FC<PicAssistanceRequestFormProps> = ({ onSubmit, onClose }) => {
   const [reason, setReason] = useState('')
   const [expertise, setExpertise] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -80,7 +77,8 @@ export const PicAssistanceRequestForm: React.FC<PicAssistanceRequestFormProps> =
       </div>
 
       <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-800 dark:text-blue-300">
-        Permintaan bantuan ini akan diteruskan ke Supervisor IT untuk penambahan PIC pendamping. Assignment tidak akan berubah secara otomatis.
+        Permintaan bantuan ini akan diteruskan ke Supervisor IT untuk penambahan PIC pendamping. Assignment tidak akan
+        berubah secara otomatis.
       </div>
 
       <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">

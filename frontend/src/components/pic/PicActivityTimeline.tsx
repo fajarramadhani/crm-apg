@@ -1,16 +1,7 @@
 import React from 'react'
 import type { PicTicketDetailData } from '../../services/ticketService'
 import { STATUS_LABELS } from '../../presentation'
-import {
-  Clock,
-  MessageSquare,
-  Paperclip,
-  HelpCircle,
-  ExternalLink,
-  Users,
-  ArrowRightLeft,
-  Lock,
-} from 'lucide-react'
+import { Clock, MessageSquare, Paperclip, HelpCircle, ExternalLink, Users, ArrowRightLeft, Lock } from 'lucide-react'
 
 interface PicActivityTimelineProps {
   ticket: PicTicketDetailData
@@ -53,7 +44,7 @@ export const PicActivityTimeline: React.FC<PicActivityTimelineProps> = ({ ticket
     })),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
-  const getIcon = (item: typeof timelineItems[0]) => {
+  const getIcon = (item: (typeof timelineItems)[0]) => {
     if (item.type === 'attachment') return <Paperclip className="w-4 h-4 text-purple-500" />
     if (item.type === 'comment') {
       if (item.title.includes('INFO_REQUEST')) return <HelpCircle className="w-4 h-4 text-amber-500" />

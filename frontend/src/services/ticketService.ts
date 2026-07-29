@@ -1151,12 +1151,10 @@ export const ticketService = {
 
   // Stage 6 PIC Workspace Endpoints
   getPicDashboard: () => data(apiClient.get<ApiResponse<PicDashboardSummaryData>>('/pic/dashboard')),
-  getPicTickets: (filters: Record<string, any> = {}) =>
-    apiClient.get<TicketPage>(`/pic/tickets?${query(filters)}`),
+  getPicTickets: (filters: Record<string, any> = {}) => apiClient.get<TicketPage>(`/pic/tickets?${query(filters)}`),
   getPicTicketDetail: (id: number | string) =>
     data(apiClient.get<ApiResponse<PicTicketDetailData>>(`/pic/tickets/${id}`)),
-  startPicTicket: (id: number | string) =>
-    data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/start`)),
+  startPicTicket: (id: number | string) => data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/start`)),
   addPicWorkNote: (id: number | string, payload: { content: string; visibility?: 'internal' | 'requester_visible' }) =>
     data(
       apiClient.post<ApiResponse<{ id: number; comment: string; is_internal: boolean; created_at: string }>>(

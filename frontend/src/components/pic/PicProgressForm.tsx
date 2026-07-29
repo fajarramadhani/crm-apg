@@ -7,11 +7,7 @@ interface PicProgressFormProps {
   onClose: () => void
 }
 
-export const PicProgressForm: React.FC<PicProgressFormProps> = ({
-  currentProgress,
-  onSubmit,
-  onClose,
-}) => {
+export const PicProgressForm: React.FC<PicProgressFormProps> = ({ currentProgress, onSubmit, onClose }) => {
   const [progress, setProgress] = useState(currentProgress ?? 0)
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -47,11 +43,7 @@ export const PicProgressForm: React.FC<PicProgressFormProps> = ({
         </h3>
       </div>
 
-      {error && (
-        <div className="p-3 text-xs bg-red-50 text-red-600 rounded-lg border border-red-200">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-3 text-xs bg-red-50 text-red-600 rounded-lg border border-red-200">{error}</div>}
 
       <div>
         <div className="flex justify-between items-center mb-2">
@@ -93,7 +85,8 @@ export const PicProgressForm: React.FC<PicProgressFormProps> = ({
       <div className="p-3 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg text-xs text-blue-700 dark:text-blue-300 flex items-start gap-2">
         <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
         <span>
-          <strong>Catatan:</strong> Pengisian 100% tidak otomatis menutup tiket. Tiket baru akan dianggap selesai setelah mendapat approval resmi dari Supervisor IT.
+          <strong>Catatan:</strong> Pengisian 100% tidak otomatis menutup tiket. Tiket baru akan dianggap selesai
+          setelah mendapat approval resmi dari Supervisor IT.
         </span>
       </div>
 

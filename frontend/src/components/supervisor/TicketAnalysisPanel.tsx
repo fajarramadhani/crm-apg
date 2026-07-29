@@ -29,7 +29,9 @@ export const TicketAnalysisPanel: React.FC<TicketAnalysisPanelProps> = ({
   const [problemSource, setProblemSource] = useState<string>('')
   const [priorityId, setPriorityId] = useState<string>(ticket.final_priority?.id?.toString() || '')
   const [targetDate, setTargetDate] = useState<string>(
-    ticket.resolution_due_at ? ticket.resolution_due_at.substring(0, 10) : new Date(Date.now() + 3 * 86400000).toISOString().substring(0, 10)
+    ticket.resolution_due_at
+      ? ticket.resolution_due_at.substring(0, 10)
+      : new Date(Date.now() + 3 * 86400000).toISOString().substring(0, 10),
   )
   const [notes, setNotes] = useState<string>('')
 
@@ -295,7 +297,9 @@ export const TicketAnalysisPanel: React.FC<TicketAnalysisPanelProps> = ({
           onClick={() => handleSubmit(true)}
           className="inline-flex items-center gap-2 rounded-lg bg-blue-700 px-5 py-2 text-xs font-bold text-white hover:bg-blue-800 transition-colors shadow-sm"
         >
-          {loading && <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />}
+          {loading && (
+            <span className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+          )}
           Simpan & Assign PIC
         </button>
       </div>

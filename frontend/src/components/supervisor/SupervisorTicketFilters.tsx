@@ -48,8 +48,18 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
             onChange={(e) => handleChange('search', e.target.value)}
             className="w-full rounded-lg border border-gray-300 pl-10 pr-4 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
-          <svg className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          <svg
+            className="absolute left-3 top-2.5 h-4 w-4 text-gray-400"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            />
           </svg>
         </div>
 
@@ -116,7 +126,9 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
           >
             <option value="">Semua Divisi</option>
             {divisions.map((d) => (
-              <option key={d.id} value={d.id}>{d.name}</option>
+              <option key={d.id} value={d.id}>
+                {d.name}
+              </option>
             ))}
           </select>
         </div>
@@ -130,7 +142,9 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
           >
             <option value="">Semua Sistem</option>
             {applications.map((a) => (
-              <option key={a.id} value={a.id}>{a.name}</option>
+              <option key={a.id} value={a.id}>
+                {a.name}
+              </option>
             ))}
           </select>
         </div>
@@ -144,7 +158,9 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
           >
             <option value="">Semua Kategori</option>
             {categories.map((c) => (
-              <option key={c.id} value={c.id}>{c.name}</option>
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
             ))}
           </select>
         </div>
@@ -158,7 +174,9 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
           >
             <option value="">Semua Prioritas</option>
             {priorities.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
             ))}
           </select>
         </div>
@@ -172,7 +190,9 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
           >
             <option value="">Semua PIC</option>
             {assignees.map((u) => (
-              <option key={u.id} value={u.id}>{u.name}</option>
+              <option key={u.id} value={u.id}>
+                {u.name}
+              </option>
             ))}
           </select>
         </div>

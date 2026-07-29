@@ -128,7 +128,10 @@ export const PicTicketDetail: React.FC = () => {
   }
 
   const isPrimary = ticket.user_assignment_role === 'primary'
-  const isLegacy = Boolean(ticket.solution_plan_summary?.status === 'approved' || (ticket.allowed_actions && ticket.allowed_actions.includes('start_qa')))
+  const isLegacy = Boolean(
+    ticket.solution_plan_summary?.status === 'approved' ||
+    (ticket.allowed_actions && ticket.allowed_actions.includes('start_qa')),
+  )
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
@@ -170,9 +173,7 @@ export const PicTicketDetail: React.FC = () => {
                 {STATUS_LABELS[ticket.status] ?? ticket.status}
               </span>
             </div>
-            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-2">
-              {ticket.title}
-            </h1>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100 mt-2">{ticket.title}</h1>
           </div>
 
           {/* Quick Action Panel */}
@@ -315,9 +316,7 @@ export const PicTicketDetail: React.FC = () => {
                   <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                     Referensi / Catatan Tambahan
                   </span>
-                  <div className="text-xs text-slate-700 dark:text-slate-300">
-                    {ticket.reference}
-                  </div>
+                  <div className="text-xs text-slate-700 dark:text-slate-300">{ticket.reference}</div>
                 </div>
               )}
             </div>
@@ -343,9 +342,7 @@ export const PicTicketDetail: React.FC = () => {
               </div>
               <div>
                 <span className="block text-slate-400">Kategori:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">
-                  {ticket.category?.name ?? '-'}
-                </span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{ticket.category?.name ?? '-'}</span>
               </div>
             </div>
           </div>

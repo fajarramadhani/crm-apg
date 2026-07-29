@@ -139,7 +139,9 @@ export const workflowService = {
             .map(([k, v]) => [k, String(v)]),
         ).toString()
       : ''
-    return apiClient.get<ApiResponse<{ workflows: Workflow[]; meta: any }>>(`/admin/workflows${query}`).then((res) => res.data)
+    return apiClient
+      .get<ApiResponse<{ workflows: Workflow[]; meta: any }>>(`/admin/workflows${query}`)
+      .then((res) => res.data)
   },
 
   createWorkflow: (payload: { code: string; name: string; description?: string; version?: number }) =>
@@ -151,8 +153,7 @@ export const workflowService = {
   updateWorkflow: (id: number | string, payload: { name?: string; description?: string }) =>
     resource(apiClient.put<ApiResponse<{ workflow: Workflow }>>(`/admin/workflows/${id}`, payload), 'workflow'),
 
-  deleteWorkflow: (id: number | string) =>
-    data(apiClient.delete<ApiResponse<any>>(`/admin/workflows/${id}`)),
+  deleteWorkflow: (id: number | string) => data(apiClient.delete<ApiResponse<any>>(`/admin/workflows/${id}`)),
 
   validateWorkflow: (id: number | string) =>
     data(apiClient.post<ApiResponse<{ valid: boolean; errors: string[] }>>(`/admin/workflows/${id}/validate`)),
@@ -173,34 +174,72 @@ export const workflowService = {
     resource(apiClient.get<ApiResponse<{ preview: unknown }>>(`/admin/workflows/${id}/preview`), 'preview'),
 
   getApproval: (id: number | string) =>
-    resource(apiClient.get<ApiResponse<{ approval: WorkflowApproval | null }>>(`/admin/workflows/${id}/approval`), 'approval'),
+    resource(
+      apiClient.get<ApiResponse<{ approval: WorkflowApproval | null }>>(`/admin/workflows/${id}/approval`),
+      'approval',
+    ),
 
   updateApproval: (id: number | string, payload: WorkflowApprovalPayload) =>
-    resource(apiClient.put<ApiResponse<{ approval: WorkflowApproval }>>(`/admin/workflows/${id}/approval`, payload), 'approval'),
+    resource(
+      apiClient.put<ApiResponse<{ approval: WorkflowApproval }>>(`/admin/workflows/${id}/approval`, payload),
+      'approval',
+    ),
 
   // Stages
   createStage: (workflowId: number | string, payload: WorkflowStagePayload) =>
-    resource(apiClient.post<ApiResponse<{ stage: WorkflowStage }>>(`/admin/workflows/${workflowId}/stages`, payload), 'stage'),
+    resource(
+      apiClient.post<ApiResponse<{ stage: WorkflowStage }>>(`/admin/workflows/${workflowId}/stages`, payload),
+      'stage',
+    ),
 
-  updateStage: (workflowId: number | string, stageId: number | string, payload: Partial<Omit<WorkflowStagePayload, 'stage_key'>>) =>
-    resource(apiClient.put<ApiResponse<{ stage: WorkflowStage }>>(`/admin/workflows/${workflowId}/stages/${stageId}`, payload), 'stage'),
+  updateStage: (
+    workflowId: number | string,
+    stageId: number | string,
+    payload: Partial<Omit<WorkflowStagePayload, 'stage_key'>>,
+  ) =>
+    resource(
+      apiClient.put<ApiResponse<{ stage: WorkflowStage }>>(`/admin/workflows/${workflowId}/stages/${stageId}`, payload),
+      'stage',
+    ),
 
   deleteStage: (workflowId: number | string, stageId: number | string) =>
     data(apiClient.delete<ApiResponse<any>>(`/admin/workflows/${workflowId}/stages/${stageId}`)),
 
   // Stage Fields
   createField: (workflowId: number | string, stageId: number | string, payload: WorkflowFieldPayload) =>
-    resource(apiClient.post<ApiResponse<{ field: WorkflowField }>>(`/admin/workflows/${workflowId}/stages/${stageId}/fields`, payload), 'field'),
+    resource(
+      apiClient.post<ApiResponse<{ field: WorkflowField }>>(
+        `/admin/workflows/${workflowId}/stages/${stageId}/fields`,
+        payload,
+      ),
+      'field',
+    ),
 
   deleteField: (workflowId: number | string, stageId: number | string, fieldId: number | string) =>
     data(apiClient.delete<ApiResponse<any>>(`/admin/workflows/${workflowId}/stages/${stageId}/fields/${fieldId}`)),
 
   // Transitions
   createTransition: (workflowId: number | string, payload: WorkflowTransitionPayload) =>
-    resource(apiClient.post<ApiResponse<{ transition: WorkflowTransition }>>(`/admin/workflows/${workflowId}/transitions`, payload), 'transition'),
+    resource(
+      apiClient.post<ApiResponse<{ transition: WorkflowTransition }>>(
+        `/admin/workflows/${workflowId}/transitions`,
+        payload,
+      ),
+      'transition',
+    ),
 
-  updateTransition: (workflowId: number | string, transitionId: number | string, payload: Pick<WorkflowTransitionPayload, 'name' | 'requires_notes' | 'permissions' | 'notifications'>) =>
-    resource(apiClient.put<ApiResponse<{ transition: WorkflowTransition }>>(`/admin/workflows/${workflowId}/transitions/${transitionId}`, payload), 'transition'),
+  updateTransition: (
+    workflowId: number | string,
+    transitionId: number | string,
+    payload: Pick<WorkflowTransitionPayload, 'name' | 'requires_notes' | 'permissions' | 'notifications'>,
+  ) =>
+    resource(
+      apiClient.put<ApiResponse<{ transition: WorkflowTransition }>>(
+        `/admin/workflows/${workflowId}/transitions/${transitionId}`,
+        payload,
+      ),
+      'transition',
+    ),
 
   deleteTransition: (workflowId: number | string, transitionId: number | string) =>
     data(apiClient.delete<ApiResponse<any>>(`/admin/workflows/${workflowId}/transitions/${transitionId}`)),

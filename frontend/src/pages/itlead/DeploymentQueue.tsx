@@ -69,12 +69,7 @@ export default function DeploymentQueue() {
     selected && act(() => ticketService.startMonitoring(selected.id), 'Monitoring dimulai')
 
   const handleClose = () =>
-    selected &&
-    act(
-      () =>
-        ticketService.closeTicket(selected.id, { notes: 'Closed via UI' }),
-      'Tiket ditutup',
-    )
+    selected && act(() => ticketService.closeTicket(selected.id, { notes: 'Closed via UI' }), 'Tiket ditutup')
 
   return (
     <div>

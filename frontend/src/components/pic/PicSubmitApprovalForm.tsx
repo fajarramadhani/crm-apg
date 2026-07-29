@@ -2,18 +2,11 @@ import React, { useState } from 'react'
 import { Send, CheckSquare, AlertCircle } from 'lucide-react'
 
 interface PicSubmitApprovalFormProps {
-  onSubmit: (data: {
-    result_summary: string
-    internal_notes?: string
-    requester_summary?: string
-  }) => Promise<void>
+  onSubmit: (data: { result_summary: string; internal_notes?: string; requester_summary?: string }) => Promise<void>
   onClose: () => void
 }
 
-export const PicSubmitApprovalForm: React.FC<PicSubmitApprovalFormProps> = ({
-  onSubmit,
-  onClose,
-}) => {
+export const PicSubmitApprovalForm: React.FC<PicSubmitApprovalFormProps> = ({ onSubmit, onClose }) => {
   const [resultSummary, setResultSummary] = useState('')
   const [internalNotes, setInternalNotes] = useState('')
   const [requesterSummary, setRequesterSummary] = useState('')
@@ -101,7 +94,8 @@ export const PicSubmitApprovalForm: React.FC<PicSubmitApprovalFormProps> = ({
       <div className="p-3 bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 rounded-lg text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2">
         <CheckSquare className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
         <span>
-          Tiket akan masuk ke status <strong>Menunggu Pemeriksaan Akhir</strong>. Supervisor IT akan meninjau hasil perbaikan Anda sebelum menyetujui tiket secara final.
+          Tiket akan masuk ke status <strong>Menunggu Pemeriksaan Akhir</strong>. Supervisor IT akan meninjau hasil
+          perbaikan Anda sebelum menyetujui tiket secara final.
         </span>
       </div>
 

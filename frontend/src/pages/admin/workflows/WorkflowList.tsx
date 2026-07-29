@@ -27,7 +27,10 @@ export default function WorkflowList() {
     void load()
   }, [load])
 
-  const handleAction = async (id: number, action: 'publish' | 'activate' | 'deactivate' | 'createVersion' | 'delete') => {
+  const handleAction = async (
+    id: number,
+    action: 'publish' | 'activate' | 'deactivate' | 'createVersion' | 'delete',
+  ) => {
     if (action === 'delete' && !window.confirm('Apakah Anda yakin ingin menghapus workflow ini?')) {
       return
     }
@@ -61,13 +64,7 @@ export default function WorkflowList() {
 
   return (
     <div>
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
       <div className="flex justify-between items-center mb-6">
         <PageHeader
@@ -119,10 +116,10 @@ export default function WorkflowList() {
                           wf.config_status === 'active'
                             ? 'bg-green-100 text-green-800'
                             : wf.config_status === 'published'
-                            ? 'bg-blue-100 text-blue-800'
-                            : wf.config_status === 'draft'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-gray-100 text-gray-800'
+                              ? 'bg-blue-100 text-blue-800'
+                              : wf.config_status === 'draft'
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-gray-100 text-gray-800'
                         }`}
                       >
                         {wf.config_status.toUpperCase()}
@@ -132,7 +129,9 @@ export default function WorkflowList() {
                     <td className="px-6 py-4">{wf.transitions_count ?? 0}</td>
                     <td className="px-6 py-4 text-right space-x-2">
                       <Link to={`/admin/workflows/${wf.id}`}>
-                        <Button variant="secondary" size="sm">Detail & Edit</Button>
+                        <Button variant="secondary" size="sm">
+                          Detail & Edit
+                        </Button>
                       </Link>
 
                       {wf.config_status === 'draft' && (

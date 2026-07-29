@@ -17,8 +17,14 @@ export const PicTicketList: React.FC = () => {
   const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([])
 
   useEffect(() => {
-    masterDataService.getApplications().then(setApplications).catch(() => {})
-    masterDataService.getTicketCategories().then(setCategories).catch(() => {})
+    masterDataService
+      .getApplications()
+      .then(setApplications)
+      .catch(() => {})
+    masterDataService
+      .getTicketCategories()
+      .then(setCategories)
+      .catch(() => {})
   }, [])
 
   const initialFilters: PicFilterValues = {

@@ -1,14 +1,6 @@
 import React from 'react'
 import type { PicDashboardStats } from '../../types'
-import {
-  Inbox,
-  Clock,
-  HelpCircle,
-  ExternalLink,
-  AlertTriangle,
-  AlertCircle,
-  CheckSquare,
-} from 'lucide-react'
+import { Inbox, Clock, HelpCircle, ExternalLink, AlertTriangle, AlertCircle, CheckSquare } from 'lucide-react'
 
 interface PicDashboardSummaryProps {
   stats: PicDashboardStats
@@ -16,11 +8,7 @@ interface PicDashboardSummaryProps {
   onSelectFilter?: (filterKey: string) => void
 }
 
-export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({
-  stats,
-  activeFilter,
-  onSelectFilter,
-}) => {
+export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({ stats, activeFilter, onSelectFilter }) => {
   const cards = [
     {
       key: 'new_assigned',
@@ -34,35 +22,40 @@ export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({
       title: 'Sedang Ditangani',
       count: stats.in_progress,
       icon: Clock,
-      color: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
+      color:
+        'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
     },
     {
       key: 'waiting_info',
       title: 'Menunggu Informasi',
       count: stats.waiting_info,
       icon: HelpCircle,
-      color: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+      color:
+        'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800',
     },
     {
       key: 'waiting_external',
       title: 'Menunggu Eksternal',
       count: stats.waiting_external,
       icon: ExternalLink,
-      color: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800',
+      color:
+        'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800',
     },
     {
       key: 'need_revision',
       title: 'Perlu Perbaikan',
       count: stats.need_revision,
       icon: AlertTriangle,
-      color: 'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400 border-orange-200 dark:border-orange-800',
+      color:
+        'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400 border-orange-200 dark:border-orange-800',
     },
     {
       key: 'nearing_due',
       title: 'Mendekati Target',
       count: stats.nearing_due,
       icon: AlertCircle,
-      color: 'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
+      color:
+        'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
     },
     {
       key: 'overdue',
@@ -76,7 +69,8 @@ export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({
       title: 'Menunggu Supervisor',
       count: stats.pending_supervisor_check,
       icon: CheckSquare,
-      color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+      color:
+        'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
     },
   ]
 
@@ -95,9 +89,7 @@ export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({
             }`}
           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-80">
-                {card.title}
-              </span>
+              <span className="text-xs font-semibold uppercase tracking-wider opacity-80">{card.title}</span>
               <IconComponent className="w-5 h-5 opacity-80" />
             </div>
             <div className="text-2xl font-bold">{card.count}</div>

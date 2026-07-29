@@ -41,7 +41,11 @@ export const TicketAssignmentPanel: React.FC<TicketAssignmentPanelProps> = ({
       if (currentPrimary) {
         await onReassign(currentUserId, 'Pengambilalihan oleh supervisor', 'Supervisor menangani sendiri tiket ini')
       } else {
-        await onAssignPrimary(currentUserId, 'Penunjukan supervisor sebagai PIC utama', 'Supervisor menangani sendiri tiket ini')
+        await onAssignPrimary(
+          currentUserId,
+          'Penunjukan supervisor sebagai PIC utama',
+          'Supervisor menangani sendiri tiket ini',
+        )
       }
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Gagal assign diri sendiri')
@@ -133,7 +137,11 @@ export const TicketAssignmentPanel: React.FC<TicketAssignmentPanelProps> = ({
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-bold text-gray-900">{currentPrimary.name}</p>
-                {isSelfPrimary && <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">Supervisor (Anda)</span>}
+                {isSelfPrimary && (
+                  <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-full">
+                    Supervisor (Anda)
+                  </span>
+                )}
               </div>
               <button
                 type="button"
@@ -151,20 +159,26 @@ export const TicketAssignmentPanel: React.FC<TicketAssignmentPanelProps> = ({
         <div className="rounded-lg bg-gray-50 p-4 border border-gray-100 space-y-2">
           <span className="text-xs font-semibold text-gray-700 uppercase">PIC Pendamping (Secondary)</span>
           <div className="flex flex-wrap gap-2 pt-1">
-            {ticket.assignments && ticket.assignments.filter((a: any) => a.assignment_type === 'secondary' && a.is_current).length > 0 ? (
-              ticket.assignments.filter((a: any) => a.assignment_type === 'secondary' && a.is_current).map((sec: any) => (
-                <span key={sec.id} className="inline-flex items-center gap-1.5 rounded-md bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-800 border border-gray-300">
-                  <span>{sec.assignee?.name || `User #${sec.assigned_to}`}</span>
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveSecondarySubmit(sec.assigned_to)}
-                    className="ml-1 text-red-600 hover:text-red-800 font-bold"
-                    title="Hapus Secondary PIC"
+            {ticket.assignments &&
+            ticket.assignments.filter((a: any) => a.assignment_type === 'secondary' && a.is_current).length > 0 ? (
+              ticket.assignments
+                .filter((a: any) => a.assignment_type === 'secondary' && a.is_current)
+                .map((sec: any) => (
+                  <span
+                    key={sec.id}
+                    className="inline-flex items-center gap-1.5 rounded-md bg-gray-200 px-2.5 py-1 text-xs font-semibold text-gray-800 border border-gray-300"
                   >
-                    ×
-                  </button>
-                </span>
-              ))
+                    <span>{sec.assignee?.name || `User #${sec.assigned_to}`}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveSecondarySubmit(sec.assigned_to)}
+                      className="ml-1 text-red-600 hover:text-red-800 font-bold"
+                      title="Hapus Secondary PIC"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))
             ) : (
               <p className="text-xs text-gray-500">Gunakan form di bawah untuk menambah PIC pendamping.</p>
             )}

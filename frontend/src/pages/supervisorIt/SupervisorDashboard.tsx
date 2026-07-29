@@ -59,9 +59,7 @@ export default function SupervisorDashboard() {
       </div>
 
       {error && (
-        <div className="rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700 border border-red-200">
-          {error}
-        </div>
+        <div className="rounded-xl bg-red-50 p-4 text-sm font-semibold text-red-700 border border-red-200">{error}</div>
       )}
 
       {/* 9 Summary Cards */}

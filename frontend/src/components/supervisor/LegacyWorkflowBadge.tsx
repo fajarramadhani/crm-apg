@@ -1,7 +1,7 @@
 import React from 'react'
 
 interface LegacyWorkflowBadgeProps {
-  isLegacy?: boolean;
+  isLegacy?: boolean
 }
 
 export const LegacyWorkflowBadge: React.FC<LegacyWorkflowBadgeProps> = ({ isLegacy }) => {

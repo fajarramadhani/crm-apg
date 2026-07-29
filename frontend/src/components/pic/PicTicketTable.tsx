@@ -23,9 +23,7 @@ export const PicTicketTable: React.FC<PicTicketTableProps> = ({ tickets, loading
     return (
       <div className="p-12 text-center text-slate-500 border border-dashed rounded-xl bg-slate-50 dark:bg-slate-900/50">
         <p className="text-base font-medium">Tidak ada tiket yang ditugaskan.</p>
-        <p className="text-xs text-slate-400 mt-1">
-          Tiket yang di-assign oleh Supervisor IT akan tampil di sini.
-        </p>
+        <p className="text-xs text-slate-400 mt-1">Tiket yang di-assign oleh Supervisor IT akan tampil di sini.</p>
       </div>
     )
   }
@@ -92,28 +90,18 @@ export const PicTicketTable: React.FC<PicTicketTableProps> = ({ tickets, loading
             return (
               <tr key={ticket.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-900/40 transition">
                 <td className="px-4 py-3">
-                  <div className="font-semibold text-slate-900 dark:text-slate-100">
-                    {ticket.ticket_number}
-                  </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 max-w-xs">
-                    {ticket.title}
-                  </div>
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">{ticket.ticket_number}</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400 line-clamp-1 max-w-xs">{ticket.title}</div>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="font-medium text-slate-800 dark:text-slate-200">
-                    {ticket.requester?.name ?? '-'}
-                  </div>
-                  <div className="text-xs text-slate-400">
-                    {ticket.branch?.name ?? ticket.division?.name ?? '-'}
-                  </div>
+                  <div className="font-medium text-slate-800 dark:text-slate-200">{ticket.requester?.name ?? '-'}</div>
+                  <div className="text-xs text-slate-400">{ticket.branch?.name ?? ticket.division?.name ?? '-'}</div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="text-xs font-semibold text-slate-700 dark:text-slate-300">
                     {ticket.application?.name ?? '-'}
                   </div>
-                  <div className="text-xs text-slate-400">
-                    {ticket.category?.name ?? '-'}
-                  </div>
+                  <div className="text-xs text-slate-400">{ticket.category?.name ?? '-'}</div>
                 </td>
                 <td className="px-4 py-3">{renderAssignmentRoleBadge(ticket)}</td>
                 <td className="px-4 py-3">
@@ -135,7 +123,9 @@ export const PicTicketTable: React.FC<PicTicketTableProps> = ({ tickets, loading
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <div className={`text-xs font-medium ${isOverdue ? 'text-red-600 font-semibold flex items-center gap-1' : 'text-slate-600 dark:text-slate-400'}`}>
+                  <div
+                    className={`text-xs font-medium ${isOverdue ? 'text-red-600 font-semibold flex items-center gap-1' : 'text-slate-600 dark:text-slate-400'}`}
+                  >
                     {isOverdue && <AlertTriangle className="w-3 h-3 text-red-500" />}
                     {ticket.resolution_due_at
                       ? new Date(ticket.resolution_due_at).toLocaleDateString('id-ID', {
@@ -167,20 +157,14 @@ export const PicTicketTable: React.FC<PicTicketTableProps> = ({ tickets, loading
         {tickets.map((ticket) => (
           <div key={ticket.id} className="p-4 space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                {ticket.ticket_number}
-              </span>
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">{ticket.ticket_number}</span>
               {renderAssignmentRoleBadge(ticket)}
             </div>
-            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              {ticket.title}
-            </h4>
+            <h4 className="text-sm font-semibold text-slate-800 dark:text-slate-200">{ticket.title}</h4>
             <div className="grid grid-cols-2 gap-2 text-xs text-slate-500">
               <div>
                 <span className="block text-slate-400">Requester:</span>
-                <span className="font-medium text-slate-700 dark:text-slate-300">
-                  {ticket.requester?.name ?? '-'}
-                </span>
+                <span className="font-medium text-slate-700 dark:text-slate-300">{ticket.requester?.name ?? '-'}</span>
               </div>
               <div>
                 <span className="block text-slate-400">Sistem:</span>

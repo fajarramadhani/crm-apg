@@ -11,10 +11,7 @@ interface PicWaitingExternalFormProps {
   onClose: () => void
 }
 
-export const PicWaitingExternalForm: React.FC<PicWaitingExternalFormProps> = ({
-  onSubmit,
-  onClose,
-}) => {
+export const PicWaitingExternalForm: React.FC<PicWaitingExternalFormProps> = ({ onSubmit, onClose }) => {
   const [externalPartyName, setExternalPartyName] = useState('')
   const [referenceNumber, setReferenceNumber] = useState('')
   const [followUpDate, setFollowUpDate] = useState('')

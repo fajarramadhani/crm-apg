@@ -18,7 +18,8 @@ export const LegacyPicWorkspaceNotice: React.FC<LegacyPicWorkspaceNoticeProps> =
             </span>
           </div>
           <p className="mt-0.5 text-amber-800 dark:text-amber-300">
-            Tiket ini dibuat dengan alur kerja legacy (Solution Planning / QA Defect / UAT Rework lama). Data QA, UAT, dan Release lama tetap tersimpan utuh.
+            Tiket ini dibuat dengan alur kerja legacy (Solution Planning / QA Defect / UAT Rework lama). Data QA, UAT,
+            dan Release lama tetap tersimpan utuh.
           </p>
         </div>
       </div>

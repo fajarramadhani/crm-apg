@@ -44,7 +44,9 @@ export default function CreateTicket() {
     })
 
     if (invalidFiles.length > 0) {
-      setError(`Format file tidak diperbolehkan: ${invalidFiles.join(', ')}. Format yang didukung: ${ALLOWED_EXTENSIONS.join(', ')}`)
+      setError(
+        `Format file tidak diperbolehkan: ${invalidFiles.join(', ')}. Format yang didukung: ${ALLOWED_EXTENSIONS.join(', ')}`,
+      )
       return
     }
 
@@ -137,7 +139,10 @@ export default function CreateTicket() {
   if (createdTicket) {
     return (
       <div className="space-y-6 max-w-3xl mx-auto">
-        <PageHeader title="Tiket Berhasil Diajukan" subtitle="Tiket Anda telah tercatat dan akan diproses oleh Supervisor IT" />
+        <PageHeader
+          title="Tiket Berhasil Diajukan"
+          subtitle="Tiket Anda telah tercatat dan akan diproses oleh Supervisor IT"
+        />
         <Card className="p-8 text-center space-y-6 bg-white border border-emerald-100 shadow-lg rounded-xl">
           <div className="mx-auto w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600">
             <CheckCircle2 className="w-10 h-10" />
@@ -145,13 +150,31 @@ export default function CreateTicket() {
           <div>
             <h3 className="text-2xl font-bold text-gray-900">Nomor Tiket: {createdTicket.ticket_number}</h3>
             <p className="text-gray-600 mt-2 max-w-lg mx-auto">
-              Terima kasih. Pengajuan Anda telah berhasil diterima dengan status <span className="font-semibold text-emerald-700">Diajukan</span>. Supervisor IT akan menganalisis dan memproses tiket Anda.
+              Terima kasih. Pengajuan Anda telah berhasil diterima dengan status{' '}
+              <span className="font-semibold text-emerald-700">Diajukan</span>. Supervisor IT akan menganalisis dan
+              memproses tiket Anda.
             </p>
           </div>
           <div className="p-4 bg-gray-50 rounded-lg text-left text-sm space-y-2 border border-gray-100 max-w-md mx-auto">
-            <div><span className="font-semibold text-gray-700">Judul:</span> {createdTicket.title}</div>
-            <div><span className="font-semibold text-gray-700">Link Error:</span> <a href={createdTicket.affected_url || '#'} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">{createdTicket.affected_url}</a></div>
-            {createdTicket.reference && <div><span className="font-semibold text-gray-700">Referensi:</span> {createdTicket.reference}</div>}
+            <div>
+              <span className="font-semibold text-gray-700">Judul:</span> {createdTicket.title}
+            </div>
+            <div>
+              <span className="font-semibold text-gray-700">Link Error:</span>{' '}
+              <a
+                href={createdTicket.affected_url || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {createdTicket.affected_url}
+              </a>
+            </div>
+            {createdTicket.reference && (
+              <div>
+                <span className="font-semibold text-gray-700">Referensi:</span> {createdTicket.reference}
+              </div>
+            )}
           </div>
           <div className="flex justify-center gap-4 pt-4">
             <Button variant="secondary" onClick={() => navigate('/tickets')}>
@@ -200,7 +223,9 @@ export default function CreateTicket() {
               className={fieldErrors.title ? 'border-red-500 focus:ring-red-500' : ''}
             />
             {fieldErrors.title && <p className="text-xs text-red-600 mt-1">{fieldErrors.title}</p>}
-            <p className="text-xs text-gray-500">Tuliskan judul singkat yang mengabarkan masalah utama (maks 200 karakter).</p>
+            <p className="text-xs text-gray-500">
+              Tuliskan judul singkat yang mengabarkan masalah utama (maks 200 karakter).
+            </p>
           </div>
 
           {/* Field 2: Deskripsi */}
@@ -221,7 +246,9 @@ export default function CreateTicket() {
               className={fieldErrors.description ? 'border-red-500 focus:ring-red-500' : ''}
             />
             {fieldErrors.description && <p className="text-xs text-red-600 mt-1">{fieldErrors.description}</p>}
-            <p className="text-xs text-gray-500">Jelaskan secara rinci kendala yang dialami dan dampaknya bagi pengguna (maks 10.000 karakter).</p>
+            <p className="text-xs text-gray-500">
+              Jelaskan secara rinci kendala yang dialami dan dampaknya bagi pengguna (maks 10.000 karakter).
+            </p>
           </div>
 
           {/* Field 3: Link Submission Error */}
@@ -241,7 +268,9 @@ export default function CreateTicket() {
               className={fieldErrors.affected_url ? 'border-red-500 focus:ring-red-500' : ''}
             />
             {fieldErrors.affected_url && <p className="text-xs text-red-600 mt-1">{fieldErrors.affected_url}</p>}
-            <p className="text-xs text-gray-500">Masukkan tautan/URL halaman web di mana error atau kendala terjadi (diawali http:// atau https://).</p>
+            <p className="text-xs text-gray-500">
+              Masukkan tautan/URL halaman web di mana error atau kendala terjadi (diawali http:// atau https://).
+            </p>
           </div>
 
           {/* Field 4: Referensi */}
@@ -256,7 +285,10 @@ export default function CreateTicket() {
               disabled={submitting}
               maxLength={255}
             />
-            <p className="text-xs text-gray-500">Dapat diisi nomor dokumen terkait seperti nomor polis, nomor klaim, atau nomor transaksi untuk mempermudah pencarian.</p>
+            <p className="text-xs text-gray-500">
+              Dapat diisi nomor dokumen terkait seperti nomor polis, nomor klaim, atau nomor transaksi untuk mempermudah
+              pencarian.
+            </p>
           </div>
 
           {/* Field 5: Lampiran Dokumen atau Screenshot */}

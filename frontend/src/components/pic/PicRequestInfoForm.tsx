@@ -62,7 +62,9 @@ export const PicRequestInfoForm: React.FC<PicRequestInfoFormProps> = ({ onSubmit
       <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
         <p className="font-semibold">Efek Tindakan ini:</p>
         <ul className="list-disc list-inside mt-1 space-y-0.5 text-[11px] text-amber-700 dark:text-amber-400">
-          <li>Status tiket berubah menjadi <strong>Memerlukan Informasi</strong>.</li>
+          <li>
+            Status tiket berubah menjadi <strong>Memerlukan Informasi</strong>.
+          </li>
           <li>Requester akan menerima notifikasi email & portal.</li>
           <li>Setelah Requester menjawab, tiket akan otomatis kembali ke antrean penanganan PIC.</li>
         </ul>

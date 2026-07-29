@@ -80,10 +80,7 @@ export const PicUnifiedDashboard: React.FC = () => {
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
             <Inbox className="w-5 h-5 text-amber-500" /> Perlu Tindakan PIC Saat Ini
           </h2>
-          <a
-            href="/pic/tickets"
-            className="text-xs font-semibold text-primary hover:underline flex items-center gap-1"
-          >
+          <a href="/pic/tickets" className="text-xs font-semibold text-primary hover:underline flex items-center gap-1">
             Lihat Semua Tiket <ArrowRight className="w-3 h-3" />
           </a>
         </div>

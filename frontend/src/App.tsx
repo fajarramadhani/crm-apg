@@ -55,7 +55,9 @@ const SupervisorItDashboard = lazy(() => import('./pages/supervisorIt/Supervisor
 const SupervisorTicketList = lazy(() => import('./pages/supervisorIt/SupervisorTicketList'))
 const SupervisorTicketDetail = lazy(() => import('./pages/supervisorIt/SupervisorTicketDetail'))
 
-const PicUnifiedDashboard = lazy(() => import('./pages/pic/PicUnifiedDashboard').then((m) => ({ default: m.PicUnifiedDashboard })))
+const PicUnifiedDashboard = lazy(() =>
+  import('./pages/pic/PicUnifiedDashboard').then((m) => ({ default: m.PicUnifiedDashboard })),
+)
 const PicTicketList = lazy(() => import('./pages/pic/PicTicketList').then((m) => ({ default: m.PicTicketList })))
 const PicTicketDetail = lazy(() => import('./pages/pic/PicTicketDetail').then((m) => ({ default: m.PicTicketDetail })))
 
@@ -309,11 +311,17 @@ function AppRoutes() {
         />
         <Route
           path="/pic/rca"
-          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <Navigate to="/pic/workspace" replace />)}
+          element={guard(
+            ['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'],
+            <Navigate to="/pic/workspace" replace />,
+          )}
         />
         <Route
           path="/pic/assignments"
-          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <Navigate to="/pic/tickets" replace />)}
+          element={guard(
+            ['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'],
+            <Navigate to="/pic/tickets" replace />,
+          )}
         />
         <Route
           path="/pic/testing"
@@ -325,7 +333,10 @@ function AppRoutes() {
         />
         <Route
           path="/pic/reports"
-          element={guard(['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'], <AnalyticsDashboard role="pic" />)}
+          element={guard(
+            ['pic', 'pic_it_support', 'pic_it_develop', 'supervisor_it'],
+            <AnalyticsDashboard role="pic" />,
+          )}
         />
 
         <Route path="/qa/dashboard" element={guard(['qa'], <QADashboard />)} />

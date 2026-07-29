@@ -17,19 +17,24 @@
     "workflow_editor": "/admin/workflows/1/edit"
   },
   "users": {
-    "requester": {"id": 1, "email": "requester@stage9.invalid", "role": "requester"},
-    "supervisor": {"id": 2, "email": "supervisor-it@stage9.invalid", "role": "supervisor_it"},
-    "support": {"id": 3, "email": "support-pic@stage9.invalid", "role": "pic_it_support"},
-    "develop": {"id": 4, "email": "develop-pic@stage9.invalid", "role": "pic_it_develop"},
-    "admin": {"id": 5, "email": "admin@stage9.invalid", "role": "admin"},
-    "legacy_it_lead": {"id": 6, "email": "legacy-it-lead@stage9.invalid", "role": "it_lead"},
-    "legacy_pic": {"id": 7, "email": "legacy-pic@stage9.invalid", "role": "pic"},
-    "legacy_qa": {"id": 8, "email": "legacy-qa@stage9.invalid", "role": "qa"}
+    "requester": { "id": 1, "email": "requester@stage9.invalid", "role": "requester" },
+    "supervisor": { "id": 2, "email": "supervisor-it@stage9.invalid", "role": "supervisor_it" },
+    "support": { "id": 3, "email": "support-pic@stage9.invalid", "role": "pic_it_support" },
+    "develop": { "id": 4, "email": "develop-pic@stage9.invalid", "role": "pic_it_develop" },
+    "admin": { "id": 5, "email": "admin@stage9.invalid", "role": "admin" },
+    "legacy_it_lead": { "id": 6, "email": "legacy-it-lead@stage9.invalid", "role": "it_lead" },
+    "legacy_pic": { "id": 7, "email": "legacy-pic@stage9.invalid", "role": "pic" },
+    "legacy_qa": { "id": 8, "email": "legacy-qa@stage9.invalid", "role": "qa" }
   },
   "tickets": {
-    "requester": {"id": 1, "number": "STAGE9-DYNAMIC-001", "status": "submitted", "workflow_mode": "dynamic"},
-    "pic": {"id": 2, "number": "STAGE9-DYNAMIC-002", "status": "in_progress", "workflow_mode": "dynamic"},
-    "self_approval": {"id": 3, "number": "STAGE9-DYNAMIC-003", "status": "pending_approval", "workflow_mode": "dynamic"},
-    "legacy": {"id": 4, "number": "STAGE9-LEGACY-001", "status": "triage", "workflow_mode": "legacy"}
+    "requester": { "id": 1, "number": "STAGE9-DYNAMIC-001", "status": "submitted", "workflow_mode": "dynamic" },
+    "pic": { "id": 2, "number": "STAGE9-DYNAMIC-002", "status": "in_progress", "workflow_mode": "dynamic" },
+    "self_approval": {
+      "id": 3,
+      "number": "STAGE9-DYNAMIC-003",
+      "status": "pending_approval",
+      "workflow_mode": "dynamic"
+    },
+    "legacy": { "id": 4, "number": "STAGE9-LEGACY-001", "status": "triage", "workflow_mode": "legacy" }
   }
 }

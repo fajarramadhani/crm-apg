@@ -39,11 +39,7 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
         </h3>
       </div>
 
-      {error && (
-        <div className="p-3 text-xs bg-red-50 text-red-600 rounded-lg border border-red-200">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-3 text-xs bg-red-50 text-red-600 rounded-lg border border-red-200">{error}</div>}
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">

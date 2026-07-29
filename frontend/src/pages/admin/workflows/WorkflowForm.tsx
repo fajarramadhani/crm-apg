@@ -16,7 +16,8 @@ export default function WorkflowForm() {
   useEffect(() => {
     if (id) {
       setLoading(true)
-      workflowService.getWorkflow(id)
+      workflowService
+        .getWorkflow(id)
         .then((wf) => {
           if (wf.config_status !== 'draft') {
             navigate(`/admin/workflows/${wf.id}`, { replace: true })

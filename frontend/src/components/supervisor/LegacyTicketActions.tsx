@@ -7,8 +7,18 @@ interface LegacyTicketActionsProps {
 }
 
 export const LegacyTicketActions: React.FC<LegacyTicketActionsProps> = ({ ticket }) => {
-  const isLegacy = ticket.workflow_mode !== 'simplified' &&
-    ['triage', 'plan_review', 'ready_for_qa', 'qa_in_progress', 'ready_for_uat', 'uat_in_progress', 'approval_pending', 'release_preparation'].includes(ticket.status)
+  const isLegacy =
+    ticket.workflow_mode !== 'simplified' &&
+    [
+      'triage',
+      'plan_review',
+      'ready_for_qa',
+      'qa_in_progress',
+      'ready_for_uat',
+      'uat_in_progress',
+      'approval_pending',
+      'release_preparation',
+    ].includes(ticket.status)
 
   if (!isLegacy) return null
 
@@ -19,11 +29,14 @@ export const LegacyTicketActions: React.FC<LegacyTicketActionsProps> = ({ ticket
           <LegacyWorkflowBadge isLegacy />
           <span className="text-xs font-bold text-amber-900">Legacy Transition Controls</span>
         </div>
-        <span className="text-[11px] text-amber-700">Tahap Legacy: <strong className="uppercase">{ticket.status}</strong></span>
+        <span className="text-[11px] text-amber-700">
+          Tahap Legacy: <strong className="uppercase">{ticket.status}</strong>
+        </span>
       </div>
 
       <p className="text-xs text-amber-800 leading-relaxed">
-        Tiket ini dibuat menggunakan alur kerja terdahulu. Anda dapat melihat seluruh riwayat dan data QA, UAT, serta Approval legacy dari audit trail di bawah.
+        Tiket ini dibuat menggunakan alur kerja terdahulu. Anda dapat melihat seluruh riwayat dan data QA, UAT, serta
+        Approval legacy dari audit trail di bawah.
       </p>
     </div>
   )

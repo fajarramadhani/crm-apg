@@ -6,10 +6,7 @@ interface PicAttachmentUploaderProps {
   onClose: () => void
 }
 
-export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({
-  onUpload,
-  onClose,
-}) => {
+export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ onUpload, onClose }) => {
   const [file, setFile] = useState<File | null>(null)
   const [visibility, setVisibility] = useState<'internal' | 'requester_visible'>('internal')
   const [category, setCategory] = useState('result')
@@ -93,9 +90,7 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({
           />
           <label htmlFor="pic-file-input" className="cursor-pointer flex flex-col items-center gap-1">
             <Upload className="w-8 h-8 text-slate-400" />
-            <span className="text-xs font-semibold text-primary">
-              {file ? file.name : 'Klik untuk memilih file'}
-            </span>
+            <span className="text-xs font-semibold text-primary">{file ? file.name : 'Klik untuk memilih file'}</span>
             <span className="text-[10px] text-slate-400">
               Format didukung: PDF, PNG, JPG, DOCX, XLSX, ZIP (Maks 10MB)
             </span>

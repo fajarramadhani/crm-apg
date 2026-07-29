@@ -60,15 +60,28 @@ export const PicAssignmentSummary: React.FC<PicAssignmentSummaryProps> = ({ tick
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs text-slate-600 dark:text-slate-400 pt-2">
         <div className="flex items-center gap-1.5">
           <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span>Ditugaskan: <strong>{ticket.assigned_at ? new Date(ticket.assigned_at).toLocaleDateString('id-ID') : '-'}</strong></span>
+          <span>
+            Ditugaskan:{' '}
+            <strong>{ticket.assigned_at ? new Date(ticket.assigned_at).toLocaleDateString('id-ID') : '-'}</strong>
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span>Target SLA: <strong>{ticket.resolution_due_at ? new Date(ticket.resolution_due_at).toLocaleDateString('id-ID') : '-'}</strong></span>
+          <span>
+            Target SLA:{' '}
+            <strong>
+              {ticket.resolution_due_at ? new Date(ticket.resolution_due_at).toLocaleDateString('id-ID') : '-'}
+            </strong>
+          </span>
         </div>
         <div className="flex items-center gap-1.5">
           <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
-          <span>Prioritas: <strong className="uppercase">{ticket.final_priority?.name ?? ticket.requested_priority?.name ?? 'Normal'}</strong></span>
+          <span>
+            Prioritas:{' '}
+            <strong className="uppercase">
+              {ticket.final_priority?.name ?? ticket.requested_priority?.name ?? 'Normal'}
+            </strong>
+          </span>
         </div>
       </div>
     </div>

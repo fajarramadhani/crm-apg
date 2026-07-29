@@ -6,10 +6,7 @@ interface PicInternalCheckFormProps {
   onClose: () => void
 }
 
-export const PicInternalCheckForm: React.FC<PicInternalCheckFormProps> = ({
-  onSubmit,
-  onClose,
-}) => {
+export const PicInternalCheckForm: React.FC<PicInternalCheckFormProps> = ({ onSubmit, onClose }) => {
   const [result, setResult] = useState<'passed' | 'needs_rework'>('passed')
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -42,11 +39,7 @@ export const PicInternalCheckForm: React.FC<PicInternalCheckFormProps> = ({
         </h3>
       </div>
 
-      {error && (
-        <div className="p-3 text-xs bg-red-50 text-red-600 rounded-lg border border-red-200">
-          {error}
-        </div>
-      )}
+      {error && <div className="p-3 text-xs bg-red-50 text-red-600 rounded-lg border border-red-200">{error}</div>}
 
       <div>
         <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">

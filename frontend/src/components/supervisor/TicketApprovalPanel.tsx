@@ -32,8 +32,8 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
   const [inputText, setInputText] = useState<string>('')
   const [summaryText, setSummaryText] = useState<string>('')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
-  const activePrimaryAssignment = ticket.assignments?.find((assignment) =>
-    assignment.assignment_type === 'primary' && assignment.is_current
+  const activePrimaryAssignment = ticket.assignments?.find(
+    (assignment) => assignment.assignment_type === 'primary' && assignment.is_current,
   )
   const activePrimaryPicId = activePrimaryAssignment?.assigned_to ?? ticket.assignee?.id
   const isSelfApproval = currentUserId !== null && activePrimaryPicId === currentUserId
@@ -189,21 +189,33 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
             </h3>
 
             {errorMsg && (
-              <div role="alert" className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-200">
+              <div
+                role="alert"
+                className="rounded-lg bg-red-50 p-3 text-xs font-semibold text-red-700 border border-red-200"
+              >
                 {errorMsg}
               </div>
             )}
 
             {activeModal === 'approve' && isSelfApproval && (
-              <div id="self-approval-warning" role="alert" className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+              <div
+                id="self-approval-warning"
+                role="alert"
+                className="rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950"
+              >
                 <p className="font-bold">Peringatan self-approval</p>
-                <p>Anda juga tercatat sebagai PIC utama tiket ini. Approval akan dicatat sebagai self-approval pada audit trail.</p>
+                <p>
+                  Anda juga tercatat sebagai PIC utama tiket ini. Approval akan dicatat sebagai self-approval pada audit
+                  trail.
+                </p>
               </div>
             )}
 
             <div>
               <label className="block text-xs font-semibold text-gray-700 mb-1">
-                {['reject', 'cancel', 'reopen'].includes(activeModal) || (activeModal === 'approve' && isSelfApproval) ? 'Catatan / Alasan (Wajib)' : 'Catatan / Deskripsi'}
+                {['reject', 'cancel', 'reopen'].includes(activeModal) || (activeModal === 'approve' && isSelfApproval)
+                  ? 'Catatan / Alasan (Wajib)'
+                  : 'Catatan / Deskripsi'}
               </label>
               <textarea
                 rows={4}
@@ -219,7 +231,8 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
             {['approve', 'reject'].includes(activeModal) && (
               <div>
                 <label className="block text-xs font-semibold text-gray-700 mb-1">
-                  Ringkasan Hasil untuk Requester <span className="text-gray-400 font-normal">(Dapat dilihat Requester)</span>
+                  Ringkasan Hasil untuk Requester{' '}
+                  <span className="text-gray-400 font-normal">(Dapat dilihat Requester)</span>
                 </label>
                 <textarea
                   rows={2}
