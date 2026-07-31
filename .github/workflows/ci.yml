@@ -33,7 +33,7 @@ jobs:
           restore-keys: composer-${{ runner.os }}-
       - run: composer validate --no-interaction
       - run: composer install --prefer-dist --no-interaction --no-progress
-      - run: php artisan test
+      - run: vendor/bin/phpunit
       - run: vendor/bin/pint --test
       - run: composer audit --locked --no-interaction
       - name: Reject runtime fixture markers
@@ -97,7 +97,7 @@ jobs:
           php artisan migrate:status
           php artisan migrate:fresh --force
       - name: Run backend tests on MySQL
-        run: php artisan test
+        run: vendor/bin/phpunit
 
   frontend:
     runs-on: ubuntu-latest
