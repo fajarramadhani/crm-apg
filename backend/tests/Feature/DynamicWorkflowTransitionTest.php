@@ -108,27 +108,23 @@ class DynamicWorkflowTransitionTest extends TestCase
     // canTransition
     // =========================================================================
 
-    /** @test */
-    public function supervisor_can_transition_start_analysis(): void
+    public function test_supervisor_can_transition_start_analysis(): void
     {
         $this->assertTrue($this->engine->canTransition($this->dynamicTicket, $this->supervisorIt, 'start_analysis'));
     }
 
-    /** @test */
-    public function requester_cannot_transition_start_analysis(): void
+    public function test_requester_cannot_transition_start_analysis(): void
     {
         $this->assertFalse($this->engine->canTransition($this->dynamicTicket, $this->requester, 'start_analysis'));
     }
 
-    /** @test */
-    public function legacy_ticket_cannot_use_dynamic_transition(): void
+    public function test_legacy_ticket_cannot_use_dynamic_transition(): void
     {
         $legacyTicket = Ticket::factory()->create(['workflow_mode' => null, 'status' => TicketStatus::PendingValidation]);
         $this->assertFalse($this->engine->canTransition($legacyTicket, $this->supervisorIt, 'start_analysis'));
     }
 
-    /** @test */
-    public function unavailable_action_returns_false(): void
+    public function test_unavailable_action_returns_false(): void
     {
         $this->assertFalse($this->engine->canTransition($this->dynamicTicket, $this->supervisorIt, 'nonexistent_action'));
     }
@@ -137,8 +133,7 @@ class DynamicWorkflowTransitionTest extends TestCase
     // availableActions
     // =========================================================================
 
-    /** @test */
-    public function supervisor_sees_start_analysis_and_cancel_from_submitted(): void
+    public function test_supervisor_sees_start_analysis_and_cancel_from_submitted(): void
     {
         $actions = $this->engine->availableActions($this->dynamicTicket, $this->supervisorIt);
         $codes = array_column($actions, 'code');
@@ -147,8 +142,7 @@ class DynamicWorkflowTransitionTest extends TestCase
         $this->assertContains('cancel', $codes);
     }
 
-    /** @test */
-    public function pic_sees_no_actions_from_submitted_stage(): void
+    public function test_pic_sees_no_actions_from_submitted_stage(): void
     {
         $actions = $this->engine->availableActions($this->dynamicTicket, $this->pic);
         $this->assertEmpty($actions, 'PIC should see no actions from submitted stage');
@@ -158,8 +152,7 @@ class DynamicWorkflowTransitionTest extends TestCase
     // executeTransition
     // =========================================================================
 
-    /** @test */
-    public function supervisor_can_execute_start_analysis(): void
+    public function test_supervisor_can_execute_start_analysis(): void
     {
         $updated = $this->engine->executeTransition($this->dynamicTicket, $this->supervisorIt, 'start_analysis');
 
@@ -167,12 +160,11 @@ class DynamicWorkflowTransitionTest extends TestCase
         $this->assertNotNull($updated->workflow_stage_entered_at);
     }
 
-    /** @test */
-    public function executing_transition_records_history(): void
+    public function test_executing_transition_records_history(): void
     {
         $this->engine->executeTransition($this->dynamicTicket, $this->supervisorIt, 'start_analysis');
 
-        $this->assertDatabaseHas('ticket_histories', [
+        $this->assertDatabaseHas('ticket_status_histories', [
             'ticket_id' => $this->dynamicTicket->id,
             'from_status' => 'submitted',
             'to_status' => 'in_progress',
@@ -181,23 +173,20 @@ class DynamicWorkflowTransitionTest extends TestCase
         ]);
     }
 
-    /** @test */
-    public function cancel_transition_requires_notes(): void
+    public function test_cancel_transition_requires_notes(): void
     {
         // Without notes → validation fails
         $this->expectException(HttpException::class);
         $this->engine->executeTransition($this->dynamicTicket, $this->supervisorIt, 'cancel', []);
     }
 
-    /** @test */
-    public function cancel_with_notes_succeeds(): void
+    public function test_cancel_with_notes_succeeds(): void
     {
         $updated = $this->engine->executeTransition($this->dynamicTicket, $this->supervisorIt, 'cancel', ['notes' => 'Testing cancellation.']);
         $this->assertEquals('cancelled', $updated->current_workflow_stage);
     }
 
-    /** @test */
-    public function active_approval_config_can_require_notes_for_approve(): void
+    public function test_active_approval_config_can_require_notes_for_approve(): void
     {
         $approvalStage = $this->workflow->stages()->where('stage_key', 'pending_approval')->firstOrFail();
         $config = $this->workflow->approvalConfigs()->create([
@@ -230,8 +219,7 @@ class DynamicWorkflowTransitionTest extends TestCase
         $this->assertSame('done', $updated->current_workflow_stage);
     }
 
-    /** @test */
-    public function concurrency_guard_raises_409_when_stage_has_changed(): void
+    public function test_concurrency_guard_raises_409_when_stage_has_changed(): void
     {
         // Simulate another process advancing the ticket
         $this->dynamicTicket->update(['current_workflow_stage' => 'in_progress']);
@@ -247,8 +235,7 @@ class DynamicWorkflowTransitionTest extends TestCase
         );
     }
 
-    /** @test */
-    public function http_endpoint_returns_403_when_transition_unauthorized(): void
+    public function test_http_endpoint_returns_403_when_transition_unauthorized(): void
     {
         $this->actingAs($this->requester)
             ->postJson("/api/v1/tickets/{$this->dynamicTicket->id}/workflow-transition", [
@@ -257,8 +244,7 @@ class DynamicWorkflowTransitionTest extends TestCase
             ->assertStatus(403);
     }
 
-    /** @test */
-    public function http_endpoint_returns_409_on_stage_conflict(): void
+    public function test_http_endpoint_returns_409_on_stage_conflict(): void
     {
         $this->actingAs($this->supervisorIt)
             ->postJson("/api/v1/tickets/{$this->dynamicTicket->id}/workflow-transition", [
