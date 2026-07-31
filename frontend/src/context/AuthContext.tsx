@@ -56,23 +56,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const { begin, end } = useLoading()
 
-  const login = useCallback(async (email: string, password: string) => {
-    setStatus('authenticating')
-    begin('Sedang masuk ke dashboard Anda...')
+  const login = useCallback(
+    async (email: string, password: string) => {
+      setStatus('authenticating')
+      begin('Sedang masuk ke dashboard Anda...')
 
-    try {
-      const authenticatedUser = await authService.login(email, password)
-      setUser(authenticatedUser)
-      setStatus('authenticated')
-      return authenticatedUser
-    } catch (error) {
-      setUser(null)
-      setStatus('unauthenticated')
-      throw error
-    } finally {
-      end()
-    }
-  }, [begin, end])
+      try {
+        const authenticatedUser = await authService.login(email, password)
+        setUser(authenticatedUser)
+        setStatus('authenticated')
+        return authenticatedUser
+      } catch (error) {
+        setUser(null)
+        setStatus('unauthenticated')
+        throw error
+      } finally {
+        end()
+      }
+    },
+    [begin, end],
+  )
 
   const logout = useCallback(async () => {
     begin('Keluar dari sesi dan menyimpan keadaan...')

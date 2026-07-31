@@ -127,7 +127,12 @@ export default function Login() {
               </div>
             </div>
 
-            <Button type="submit" variant="primary" className="w-full justify-center py-3 mt-8 rounded-xl" disabled={loading}>
+            <Button
+              type="submit"
+              variant="primary"
+              className="w-full justify-center py-3 mt-8 rounded-xl"
+              disabled={loading}
+            >
               {loading ? <Loader2 className="animate-spin" size={20} /> : 'Masuk ke Sistem'}
             </Button>
           </form>

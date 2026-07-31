@@ -78,9 +78,7 @@ export const PicWaitingExternalForm: React.FC<PicWaitingExternalFormProps> = ({ 
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Nomor Referensi Eksternal
-          </label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Nomor Referensi Eksternal</label>
           <input
             type="text"
             value={referenceNumber}
@@ -91,9 +89,7 @@ export const PicWaitingExternalForm: React.FC<PicWaitingExternalFormProps> = ({ 
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Rencana Tanggal Follow-Up
-          </label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Rencana Tanggal Follow-Up</label>
           <input
             type="date"
             value={followUpDate}

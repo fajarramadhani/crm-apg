@@ -56,15 +56,11 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">
-          Visibilitas Catatan
-        </label>
+        <label className="block text-xs font-semibold text-slate-700 mb-1">Visibilitas Catatan</label>
         <div className="grid grid-cols-2 gap-3">
           <label
             className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer text-xs font-medium transition ${
-              visibility === 'internal'
-                ? 'border-primary bg-primary/5 text-primary'
-                : 'border-slate-200 text-slate-600'
+              visibility === 'internal' ? 'border-primary bg-primary/5 text-primary' : 'border-slate-200 text-slate-600'
             }`}
           >
             <input

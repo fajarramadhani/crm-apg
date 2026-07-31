@@ -79,9 +79,7 @@ export const PicSubmitApprovalForm: React.FC<PicSubmitApprovalFormProps> = ({ on
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">
-          Catatan Internal Tambahan (Opsional)
-        </label>
+        <label className="block text-xs font-semibold text-slate-700 mb-1">Catatan Internal Tambahan (Opsional)</label>
         <textarea
           rows={2}
           value={internalNotes}

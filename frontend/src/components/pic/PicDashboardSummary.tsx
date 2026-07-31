@@ -78,7 +78,10 @@ export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({
     return (
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-live="polite" aria-busy="true">
         {cards.map((card) => (
-          <div key={card.key} className="h-[118px] animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <div
+            key={card.key}
+            className="h-[118px] animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
+          >
             <div className="mb-4 flex items-center justify-between">
               <div className="h-4 w-28 rounded bg-slate-200" />
               <div className="h-10 w-10 rounded-xl bg-slate-200" />

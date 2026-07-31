@@ -1,6 +1,18 @@
 import { useEffect, useState } from 'react'
 import { ApiRequestError } from '../../api/client'
-import { Button, EmptyState, Input, Modal, PageHeader, SectionCard, Select, Table, TD, Toast, TR } from '../../components/ui'
+import {
+  Button,
+  EmptyState,
+  Input,
+  Modal,
+  PageHeader,
+  SectionCard,
+  Select,
+  Table,
+  TD,
+  Toast,
+  TR,
+} from '../../components/ui'
 import { officeService, type Office } from '../../services/officeService'
 
 const emptyForm: { name: string; office_type: Office['office_type'] } = { name: '', office_type: 'cabang' }
@@ -100,22 +112,36 @@ export default function OfficeManagement() {
         />
       </div>
       <SectionCard title={`Daftar kantor (${offices.length})`}>
-        {error && !modalOpen && <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+        {error && !modalOpen && (
+          <div role="alert" className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
         {loading ? (
-          <div role="status" className="py-14 text-center text-sm text-gray-500">Memuat kantor...</div>
+          <div role="status" className="py-14 text-center text-sm text-gray-500">
+            Memuat kantor...
+          </div>
         ) : offices.length === 0 ? (
           <EmptyState title="Kantor tidak ditemukan" message="Tambahkan kantor atau ubah filter." icon="K" />
         ) : (
           <Table headers={['Nama kantor', 'Tipe kantor', 'Tanggal dibuat', 'Aksi']}>
             {offices.map((office) => (
               <TR key={office.id}>
-                <TD><span className="font-semibold text-gray-900">{office.name}</span></TD>
+                <TD>
+                  <span className="font-semibold text-gray-900">{office.name}</span>
+                </TD>
                 <TD>{office.office_type === 'pusat' ? 'Kantor Pusat' : 'Kantor Cabang'}</TD>
-                <TD className="whitespace-nowrap">{office.created_at ? new Date(office.created_at).toLocaleDateString('id-ID') : '-'}</TD>
+                <TD className="whitespace-nowrap">
+                  {office.created_at ? new Date(office.created_at).toLocaleDateString('id-ID') : '-'}
+                </TD>
                 <TD>
                   <div className="flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={() => openEdit(office)}>Edit</Button>
-                    <Button size="sm" variant="danger" onClick={() => void remove(office)}>Hapus</Button>
+                    <Button size="sm" variant="secondary" onClick={() => openEdit(office)}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => void remove(office)}>
+                      Hapus
+                    </Button>
                   </div>
                 </TD>
               </TR>
@@ -123,20 +149,46 @@ export default function OfficeManagement() {
           </Table>
         )}
       </SectionCard>
-      <Modal open={modalOpen} onClose={() => !saving && setModalOpen(false)} title={editing ? 'Edit Kantor' : 'Tambah Kantor'}>
-        <form className="space-y-4" onSubmit={(event) => { event.preventDefault(); void save() }}>
-          {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          <Input label="Nama Kantor *" value={form.name} error={validation.name?.[0]} onChange={(event) => setForm({ ...form, name: event.target.value })} />
+      <Modal
+        open={modalOpen}
+        onClose={() => !saving && setModalOpen(false)}
+        title={editing ? 'Edit Kantor' : 'Tambah Kantor'}
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            void save()
+          }}
+        >
+          {error && (
+            <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+          <Input
+            label="Nama Kantor *"
+            value={form.name}
+            error={validation.name?.[0]}
+            onChange={(event) => setForm({ ...form, name: event.target.value })}
+          />
           <Select
             label="Tipe Kantor *"
             value={form.office_type}
             error={validation.office_type?.[0]}
             onChange={(event) => setForm({ ...form, office_type: event.target.value as Office['office_type'] })}
-            options={[{ value: 'pusat', label: 'Kantor Pusat' }, { value: 'cabang', label: 'Kantor Cabang' }]}
+            options={[
+              { value: 'pusat', label: 'Kantor Pusat' },
+              { value: 'cabang', label: 'Kantor Cabang' },
+            ]}
           />
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="secondary" disabled={saving} onClick={() => setModalOpen(false)}>Batal</Button>
-            <Button type="submit" loading={saving} disabled={!form.name.trim()}>Simpan Kantor</Button>
+            <Button type="button" variant="secondary" disabled={saving} onClick={() => setModalOpen(false)}>
+              Batal
+            </Button>
+            <Button type="submit" loading={saving} disabled={!form.name.trim()}>
+              Simpan Kantor
+            </Button>
           </div>
         </form>
       </Modal>

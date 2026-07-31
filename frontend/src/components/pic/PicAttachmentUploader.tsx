@@ -100,9 +100,7 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Kategori Lampiran
-          </label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Kategori Lampiran</label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
@@ -117,9 +115,7 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
-            Visibilitas File
-          </label>
+          <label className="block text-xs font-semibold text-slate-700 mb-1">Visibilitas File</label>
           <select
             value={visibility}
             onChange={(e) => setVisibility(e.target.value as 'internal' | 'requester_visible')}

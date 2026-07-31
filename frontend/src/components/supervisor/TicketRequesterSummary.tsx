@@ -57,8 +57,12 @@ export const TicketRequesterSummary: React.FC<TicketRequesterSummaryProps> = ({ 
           <span className="mt-1 block text-sm font-semibold text-gray-900">{ticket.application?.name || '-'}</span>
         </div>
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
-          <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Kategori Requester</span>
-          <span className="mt-1 block text-sm font-semibold text-gray-900">{ticket.request_category?.label || '-'}</span>
+          <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">
+            Kategori Requester
+          </span>
+          <span className="mt-1 block text-sm font-semibold text-gray-900">
+            {ticket.request_category?.label || '-'}
+          </span>
         </div>
         <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
           <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Urgency</span>

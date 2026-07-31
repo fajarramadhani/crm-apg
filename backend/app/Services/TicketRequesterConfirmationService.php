@@ -36,12 +36,17 @@ class TicketRequesterConfirmationService
             throw new InvalidArgumentException('A rejection reason is required when rejecting a confirmation.');
         }
 
-        return DB::transaction(function () use ($ticket, $actor, $data, $isConfirmed) {
+        $requestedBy = $ticket->release_owner_id ?? $ticket->currentDeployment?->release_owner_id;
+        if (! $requestedBy) {
+            throw new InvalidArgumentException('The confirmation requester is not available.');
+        }
+
+        return DB::transaction(function () use ($ticket, $actor, $data, $isConfirmed, $requestedBy) {
             $confirmation = TicketRequesterConfirmation::create([
                 'ticket_id' => $ticket->id,
                 'deployment_id' => $ticket->current_deployment_id,
                 'requester_id' => $ticket->requester_id,
-                'requested_by' => $ticket->release_owner_id ?? 1, // Fallback
+                'requested_by' => $requestedBy,
                 'requested_at' => $ticket->requester_confirmation_requested_at ?? now(),
                 'responded_at' => now(),
                 'status' => $data['status'],

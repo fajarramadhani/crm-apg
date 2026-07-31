@@ -244,11 +244,7 @@ export default function SupervisorTicketDetail() {
 
       <TicketRequesterSummary ticket={ticket} />
 
-      <TicketAnalysisPanel
-        ticket={ticket}
-        onSaveAnalysis={handleSaveAnalysis}
-        loading={actionLoading}
-      />
+      <TicketAnalysisPanel ticket={ticket} onSaveAnalysis={handleSaveAnalysis} loading={actionLoading} />
 
       <TicketAssignmentPanel
         ticket={ticket}

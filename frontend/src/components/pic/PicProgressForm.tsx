@@ -48,7 +48,9 @@ export const PicProgressForm: React.FC<PicProgressFormProps> = ({ currentProgres
       <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
         <div className="mb-3 flex items-center justify-between">
           <label className="text-xs font-semibold text-slate-700">Persentase Progres (0 - 100%)</label>
-          <span className="rounded-full bg-white px-2.5 py-1 text-sm font-bold text-primary shadow-sm">{progress}%</span>
+          <span className="rounded-full bg-white px-2.5 py-1 text-sm font-bold text-primary shadow-sm">
+            {progress}%
+          </span>
         </div>
 
         <input
@@ -68,7 +70,9 @@ export const PicProgressForm: React.FC<PicProgressFormProps> = ({ currentProgres
       </div>
 
       <div>
-        <label className="mb-1.5 block text-xs font-semibold text-slate-700">Catatan Perubahan Progres (Opsional)</label>
+        <label className="mb-1.5 block text-xs font-semibold text-slate-700">
+          Catatan Perubahan Progres (Opsional)
+        </label>
         <textarea
           rows={4}
           value={notes}

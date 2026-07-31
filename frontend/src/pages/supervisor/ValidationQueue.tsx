@@ -173,7 +173,9 @@ export default function ValidationQueue() {
                   {selected.requested_priority && (
                     <PriorityBadge priority={selected.requested_priority.key as Priority} />
                   )}
-                  <span className="text-xs px-3 py-1 bg-gray-100 rounded-full">{selected.category?.name || 'Belum dikategorikan'}</span>
+                  <span className="text-xs px-3 py-1 bg-gray-100 rounded-full">
+                    {selected.category?.name || 'Belum dikategorikan'}
+                  </span>
                 </div>
                 <h2 className="font-bold mb-2">{selected.title}</h2>
                 <TicketDescriptionContent html={selected.description} className="mb-4 text-gray-600" />

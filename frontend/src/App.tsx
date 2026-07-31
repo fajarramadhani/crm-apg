@@ -79,13 +79,7 @@ export const DEFAULT_ROUTES: Record<Role, string> = {
   superadmin: '/admin/users',
 }
 
-function GlobalLoader({
-  label,
-  fullscreen = false,
-}: {
-  label: string
-  fullscreen?: boolean
-}) {
+function GlobalLoader({ label, fullscreen = false }: { label: string; fullscreen?: boolean }) {
   if (fullscreen) {
     return (
       <div
@@ -127,7 +121,11 @@ function GlobalLoader({
   }
 
   return (
-    <div className="flex min-h-[24rem] items-center justify-center rounded-3xl bg-gradient-to-br from-[#0F2554] via-[#16397f] to-[#0b1227] p-6 text-white" role="status" aria-live="polite">
+    <div
+      className="flex min-h-[24rem] items-center justify-center rounded-3xl bg-gradient-to-br from-[#0F2554] via-[#16397f] to-[#0b1227] p-6 text-white"
+      role="status"
+      aria-live="polite"
+    >
       <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 px-8 py-8 shadow-2xl backdrop-blur-xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.32),_transparent_55%)]" />
         <div className="relative flex min-w-[260px] flex-col items-center gap-5 text-center">

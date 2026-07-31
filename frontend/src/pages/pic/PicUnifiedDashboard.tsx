@@ -24,7 +24,9 @@ function DashboardSection({
       <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">{icon}</span>
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-slate-100 text-slate-700">
+              {icon}
+            </span>
             <div>
               <h2 className="text-base font-semibold text-slate-900">{title}</h2>
               <p className="mt-0.5 text-sm text-slate-500">{description}</p>
@@ -38,7 +40,15 @@ function DashboardSection({
   )
 }
 
-function DashboardPanelEmptyState({ title, message, linkLabel }: { title: string; message: string; linkLabel: string }) {
+function DashboardPanelEmptyState({
+  title,
+  message,
+  linkLabel,
+}: {
+  title: string
+  message: string
+  linkLabel: string
+}) {
   return (
     <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-6 py-10 text-center">
       <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-slate-500 shadow-sm">

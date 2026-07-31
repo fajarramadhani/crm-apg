@@ -181,14 +181,20 @@ export const PicTicketDetail: React.FC = () => {
   if (error || !ticket) {
     return (
       <div className="p-8 max-w-4xl mx-auto space-y-4">
-        <Link to="/pic/tickets" className="inline-flex items-center gap-1 text-xs font-semibold text-[#1E3A8A] hover:underline">
+        <Link
+          to="/pic/tickets"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[#1E3A8A] hover:underline"
+        >
           <ArrowLeft className="w-4 h-4" /> Kembali ke Daftar Tiket
         </Link>
         <div className="p-6 bg-red-50 text-red-600 border border-red-200 rounded-xl flex items-center gap-3">
           <AlertTriangle className="w-6 h-6 shrink-0" />
           <div>
             <h4 className="font-bold text-base">Akses Ditolak / Tiket Tidak Ditemukan</h4>
-            <p className="text-xs mt-1">{error || 'Anda tidak memiliki hak akses pada tiket ini. Silakan hubungi Administrator jika ini merupakan kesalahan.'}</p>
+            <p className="text-xs mt-1">
+              {error ||
+                'Anda tidak memiliki hak akses pada tiket ini. Silakan hubungi Administrator jika ini merupakan kesalahan.'}
+            </p>
           </div>
         </div>
       </div>
@@ -328,7 +334,8 @@ export const PicTicketDetail: React.FC = () => {
                   onClick={() => setActiveModal('progress')}
                   className="px-3 py-2 text-xs font-semibold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition flex items-center justify-center gap-1.5 flex-1 md:flex-none"
                 >
-                  <Sliders className="w-3.5 h-3.5 text-indigo-500" /> Perbarui Progress ({ticket.progress_percentage ?? 0}%)
+                  <Sliders className="w-3.5 h-3.5 text-indigo-500" /> Perbarui Progress (
+                  {ticket.progress_percentage ?? 0}%)
                 </button>
               )}
 
@@ -343,7 +350,11 @@ export const PicTicketDetail: React.FC = () => {
             </div>
 
             {/* Conditional / Other Actions Dropdown */}
-            {(can('request_info') || can('mark_waiting_external') || can('internal_check') || can('request_assistance') || can('request_transfer')) && (
+            {(can('request_info') ||
+              can('mark_waiting_external') ||
+              can('internal_check') ||
+              can('request_assistance') ||
+              can('request_transfer')) && (
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -359,7 +370,10 @@ export const PicTicketDetail: React.FC = () => {
                     <div className="absolute right-0 mt-1.5 w-full md:w-56 rounded-xl border border-slate-200 bg-white p-1.5 shadow-lg z-20 space-y-0.5">
                       {can('request_info') && (
                         <button
-                          onClick={() => { setDropdownOpen(false); setActiveModal('request_info'); }}
+                          onClick={() => {
+                            setDropdownOpen(false)
+                            setActiveModal('request_info')
+                          }}
                           className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
                         >
                           <HelpCircle className="w-3.5 h-3.5 text-amber-500" /> Minta Info Requester
@@ -368,7 +382,10 @@ export const PicTicketDetail: React.FC = () => {
 
                       {can('mark_waiting_external') && (
                         <button
-                          onClick={() => { setDropdownOpen(false); setActiveModal('waiting_external'); }}
+                          onClick={() => {
+                            setDropdownOpen(false)
+                            setActiveModal('waiting_external')
+                          }}
                           className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
                         >
                           <ExternalLink className="w-3.5 h-3.5 text-purple-500" /> Menunggu Eksternal
@@ -377,7 +394,10 @@ export const PicTicketDetail: React.FC = () => {
 
                       {can('internal_check') && (
                         <button
-                          onClick={() => { setDropdownOpen(false); setActiveModal('internal_check'); }}
+                          onClick={() => {
+                            setDropdownOpen(false)
+                            setActiveModal('internal_check')
+                          }}
                           className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
                         >
                           <ShieldCheck className="w-3.5 h-3.5 text-emerald-500" /> Pengecekan Mandiri
@@ -386,7 +406,10 @@ export const PicTicketDetail: React.FC = () => {
 
                       {can('request_assistance') && (
                         <button
-                          onClick={() => { setDropdownOpen(false); setActiveModal('request_assistance'); }}
+                          onClick={() => {
+                            setDropdownOpen(false)
+                            setActiveModal('request_assistance')
+                          }}
                           className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
                         >
                           <Users className="w-3.5 h-3.5 text-blue-500" /> Minta Bantuan
@@ -395,7 +418,10 @@ export const PicTicketDetail: React.FC = () => {
 
                       {can('request_transfer') && (
                         <button
-                          onClick={() => { setDropdownOpen(false); setActiveModal('request_transfer'); }}
+                          onClick={() => {
+                            setDropdownOpen(false)
+                            setActiveModal('request_transfer')
+                          }}
                           className="w-full text-left px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 rounded-lg flex items-center gap-2"
                         >
                           <ArrowRightLeft className="w-3.5 h-3.5 text-orange-500" /> Ajukan Pengalihan
@@ -458,7 +484,9 @@ export const PicTicketDetail: React.FC = () => {
                   <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">
                     Referensi / Catatan Tambahan
                   </span>
-                  <div className="text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">{ticket.reference}</div>
+                  <div className="text-slate-800 bg-slate-50 p-3 rounded-lg border border-slate-100">
+                    {ticket.reference}
+                  </div>
                 </div>
               )}
             </div>
@@ -466,15 +494,11 @@ export const PicTicketDetail: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-4 border-t border-slate-100 text-xs">
               <div>
                 <span className="block text-slate-500 mb-0.5">Kategori Pengajuan:</span>
-                <span className="font-semibold text-slate-800">
-                  {ticket.category?.name ?? 'Belum tersedia'}
-                </span>
+                <span className="font-semibold text-slate-800">{ticket.category?.name ?? 'Belum tersedia'}</span>
               </div>
               <div>
                 <span className="block text-slate-500 mb-0.5">Sistem / Aplikasi:</span>
-                <span className="font-semibold text-slate-800">
-                  {ticket.application?.name ?? 'Belum tersedia'}
-                </span>
+                <span className="font-semibold text-slate-800">{ticket.application?.name ?? 'Belum tersedia'}</span>
               </div>
               <div>
                 <span className="block text-slate-500 mb-0.5">Urgency:</span>
@@ -512,9 +536,7 @@ export const PicTicketDetail: React.FC = () => {
                 )}
               </div>
             ) : (
-              <div className="text-xs text-slate-400 italic py-2">
-                Analisis Supervisor belum tersedia.
-              </div>
+              <div className="text-xs text-slate-400 italic py-2">Analisis Supervisor belum tersedia.</div>
             )}
           </div>
 
@@ -526,7 +548,10 @@ export const PicTicketDetail: React.FC = () => {
             {ticket.attachments && ticket.attachments.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {ticket.attachments.map((file) => (
-                  <div key={file.id} className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/50 transition">
+                  <div
+                    key={file.id}
+                    className="flex items-center justify-between p-3 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100/50 transition"
+                  >
                     <div className="min-w-0 flex-1 pr-2">
                       <p className="text-xs font-semibold text-slate-900 truncate" title={file.original_name}>
                         {file.original_name}
@@ -547,9 +572,7 @@ export const PicTicketDetail: React.FC = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-xs text-slate-400 italic py-2">
-                Belum ada lampiran hasil pengerjaan.
-              </div>
+              <div className="text-xs text-slate-400 italic py-2">Belum ada lampiran hasil pengerjaan.</div>
             )}
           </div>
 

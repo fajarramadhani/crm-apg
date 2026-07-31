@@ -1,15 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import {
-  Button,
-  FilterBar,
-  Input,
-  PageHeader,
-  Select,
-  Table,
-  TD,
-  TR,
-} from '../../components/ui'
+import { Button, FilterBar, Input, PageHeader, Select, Table, TD, TR } from '../../components/ui'
 import { ticketService, type TicketRecord } from '../../services/ticketService'
 import { getPublicStatusLabel } from '../../presentation'
 
@@ -118,7 +109,18 @@ export default function TicketHistory() {
             <p className="text-sm text-gray-500 mt-1">Buat tiket baru atau ubah filter pencarian.</p>
           </div>
         ) : (
-          <Table headers={['Nomor', 'Judul', 'Kategori', 'Sistem', 'Urgency', 'Status', 'Informasi Penanganan', 'Tanggal Pengajuan']}>
+          <Table
+            headers={[
+              'Nomor',
+              'Judul',
+              'Kategori',
+              'Sistem',
+              'Urgency',
+              'Status',
+              'Informasi Penanganan',
+              'Tanggal Pengajuan',
+            ]}
+          >
             {tickets.map((ticket) => (
               <TR key={ticket.id} onClick={() => navigate(`/user/tickets/${ticket.id}`)}>
                 <TD>
@@ -136,10 +138,14 @@ export default function TicketHistory() {
                   <span className="text-xs">{ticket.application?.name || 'Sistem belum tersedia'}</span>
                 </TD>
                 <TD>
-                  <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold">{ticket.urgency?.toUpperCase() || 'Urgency belum tersedia'}</span>
+                  <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold">
+                    {ticket.urgency?.toUpperCase() || 'Urgency belum tersedia'}
+                  </span>
                 </TD>
                 <TD>
-                  <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-800">{getPublicStatusLabel(ticket.status)}</span>
+                  <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-800">
+                    {getPublicStatusLabel(ticket.status)}
+                  </span>
                 </TD>
                 <TD>
                   <p className="min-w-52 text-xs leading-relaxed text-gray-600">{ticket.handling.message}</p>

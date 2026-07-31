@@ -26,7 +26,12 @@ export function LoadingProvider({ children }: { children: React.ReactNode }) {
 
   const value = useMemo(() => ({ active, message, begin, end }), [active, begin, end, message])
 
-  return <LoadingContext.Provider value={value}>{children}{active && <GlobalLoadingOverlay message={message} />}</LoadingContext.Provider>
+  return (
+    <LoadingContext.Provider value={value}>
+      {children}
+      {active && <GlobalLoadingOverlay message={message} />}
+    </LoadingContext.Provider>
+  )
 }
 
 export function useLoading() {
@@ -37,7 +42,11 @@ export function useLoading() {
 
 function GlobalLoadingOverlay({ message }: { message: string }) {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm text-white" role="status" aria-live="polite">
+    <div
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 backdrop-blur-sm text-white"
+      role="status"
+      aria-live="polite"
+    >
       <div className="relative w-full max-w-md overflow-hidden rounded-[2rem] border border-white/10 bg-white/10 px-8 py-8 text-center shadow-2xl backdrop-blur-xl">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(96,165,250,0.28),_transparent_60%)]" />
         <div className="relative flex flex-col items-center gap-5">

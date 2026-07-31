@@ -50,9 +50,7 @@ export const PicAssistanceRequestForm: React.FC<PicAssistanceRequestFormProps> =
       )}
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 mb-1">
-          Keahlian yang Dibutuhkan (Opsional)
-        </label>
+        <label className="block text-xs font-semibold text-slate-700 mb-1">Keahlian yang Dibutuhkan (Opsional)</label>
         <input
           type="text"
           value={expertise}

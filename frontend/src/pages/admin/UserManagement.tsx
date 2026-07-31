@@ -301,10 +301,15 @@ export default function UserManagement() {
       {options && (
         <div className="mt-6">
           <SectionCard title="Management Role">
-            <p className="mb-4 text-sm text-gray-500">Role Super Admin dilindungi. Role lain hanya dapat dihapus jika tidak digunakan akun atau workflow.</p>
+            <p className="mb-4 text-sm text-gray-500">
+              Role Super Admin dilindungi. Role lain hanya dapat dihapus jika tidak digunakan akun atau workflow.
+            </p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {options.roles.map((roleOption) => (
-                <div key={roleOption.id} className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3">
+                <div
+                  key={roleOption.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white p-3"
+                >
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-gray-900">{roleOption.name}</p>
                     <p className="text-xs text-gray-500">{roleOption.users_count} akun</p>
@@ -313,7 +318,13 @@ export default function UserManagement() {
                     size="sm"
                     variant="danger"
                     disabled={roleOption.key === 'superadmin' || roleOption.users_count > 0}
-                    title={roleOption.key === 'superadmin' ? 'Role Super Admin dilindungi' : roleOption.users_count > 0 ? 'Role masih digunakan akun' : 'Hapus role'}
+                    title={
+                      roleOption.key === 'superadmin'
+                        ? 'Role Super Admin dilindungi'
+                        : roleOption.users_count > 0
+                          ? 'Role masih digunakan akun'
+                          : 'Hapus role'
+                    }
                     onClick={() => void removeRole(roleOption.id, roleOption.name)}
                   >
                     Hapus
@@ -461,115 +472,127 @@ export default function UserManagement() {
         </SectionCard>
       </div>
 
-      <Modal open={modalOpen} onClose={() => !saving && setModalOpen(false)} title={editing ? 'Edit Akun' : 'Buat Akun'}>
-        {editing ? <div className="space-y-4">
-          {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
-          <Input
-            label="Nama *"
-            value={form.name}
-            error={fieldError('name')}
-            onChange={(event) => setForm({ ...form, name: event.target.value })}
-          />
-          <Input
-            label="Email *"
-            type="email"
-            value={form.email}
-            error={fieldError('email')}
-            onChange={(event) => setForm({ ...form, email: event.target.value })}
-          />
-          <Select
-            label="Role *"
-            value={form.role_id}
-            error={fieldError('role_id')}
-            onChange={(event) => setForm({ ...form, role_id: event.target.value })}
-            options={[
-              { value: '', label: 'Pilih role' },
-              ...(options?.roles.map((item) => ({
-                value: String(item.id),
-                label: `${item.name}${options.workflow_role_keys.includes(item.key) ? ' - workflow utama' : ''}`,
-              })) ?? []),
-            ]}
-          />
-          <div className="grid gap-4 sm:grid-cols-2">
+      <Modal
+        open={modalOpen}
+        onClose={() => !saving && setModalOpen(false)}
+        title={editing ? 'Edit Akun' : 'Buat Akun'}
+      >
+        {editing ? (
+          <div className="space-y-4">
+            {error && (
+              <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {error}
+              </div>
+            )}
+            <Input
+              label="Nama *"
+              value={form.name}
+              error={fieldError('name')}
+              onChange={(event) => setForm({ ...form, name: event.target.value })}
+            />
+            <Input
+              label="Email *"
+              type="email"
+              value={form.email}
+              error={fieldError('email')}
+              onChange={(event) => setForm({ ...form, email: event.target.value })}
+            />
             <Select
-              label="Divisi"
-              value={form.division_id}
-              error={fieldError('division_id')}
-              onChange={(event) => setForm({ ...form, division_id: event.target.value })}
+              label="Role *"
+              value={form.role_id}
+              error={fieldError('role_id')}
+              onChange={(event) => setForm({ ...form, role_id: event.target.value })}
               options={[
-                { value: '', label: 'Tanpa divisi' },
-                ...(options?.divisions.map((item) => ({
+                { value: '', label: 'Pilih role' },
+                ...(options?.roles.map((item) => ({
                   value: String(item.id),
-                  label: `${item.code} - ${item.name}`,
+                  label: `${item.name}${options.workflow_role_keys.includes(item.key) ? ' - workflow utama' : ''}`,
                 })) ?? []),
               ]}
             />
-            <Select
-              label="Cabang"
-              value={form.branch_id}
-              error={fieldError('branch_id')}
-              onChange={(event) => setForm({ ...form, branch_id: event.target.value })}
-              options={[
-                { value: '', label: 'Tanpa cabang' },
-                ...(options?.branches.map((item) => ({
-                  value: String(item.id),
-                  label: `${item.code} - ${item.name}`,
-                })) ?? []),
-              ]}
-            />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Select
+                label="Divisi"
+                value={form.division_id}
+                error={fieldError('division_id')}
+                onChange={(event) => setForm({ ...form, division_id: event.target.value })}
+                options={[
+                  { value: '', label: 'Tanpa divisi' },
+                  ...(options?.divisions.map((item) => ({
+                    value: String(item.id),
+                    label: `${item.code} - ${item.name}`,
+                  })) ?? []),
+                ]}
+              />
+              <Select
+                label="Cabang"
+                value={form.branch_id}
+                error={fieldError('branch_id')}
+                onChange={(event) => setForm({ ...form, branch_id: event.target.value })}
+                options={[
+                  { value: '', label: 'Tanpa cabang' },
+                  ...(options?.branches.map((item) => ({
+                    value: String(item.id),
+                    label: `${item.code} - ${item.name}`,
+                  })) ?? []),
+                ]}
+              />
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Input
+                label={editing ? 'Password baru' : 'Password *'}
+                type="password"
+                minLength={12}
+                hint={editing ? 'Kosongkan jika tidak diubah. Minimal 12 karakter.' : 'Minimal 12 karakter.'}
+                error={fieldError('password')}
+                value={form.password}
+                onChange={(event) => setForm({ ...form, password: event.target.value })}
+              />
+              <Input
+                label={editing ? 'Konfirmasi password baru' : 'Konfirmasi password *'}
+                type="password"
+                value={form.password_confirmation}
+                onChange={(event) => setForm({ ...form, password_confirmation: event.target.value })}
+              />
+            </div>
+            {editing && (
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input
+                  type="checkbox"
+                  checked={form.is_active}
+                  disabled={editing.id === currentUser?.id}
+                  onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
+                />{' '}
+                Akun aktif
+              </label>
+            )}
+            <div className="flex justify-end gap-2">
+              <Button variant="secondary" onClick={() => setModalOpen(false)}>
+                Batal
+              </Button>
+              <Button
+                loading={saving}
+                disabled={
+                  !form.name ||
+                  !form.email ||
+                  !form.role_id ||
+                  (!editing && (!form.password || form.password !== form.password_confirmation))
+                }
+                onClick={() => void save()}
+              >
+                Simpan Akun
+              </Button>
+            </div>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input
-              label={editing ? 'Password baru' : 'Password *'}
-              type="password"
-              minLength={12}
-              hint={editing ? 'Kosongkan jika tidak diubah. Minimal 12 karakter.' : 'Minimal 12 karakter.'}
-              error={fieldError('password')}
-              value={form.password}
-              onChange={(event) => setForm({ ...form, password: event.target.value })}
-            />
-            <Input
-              label={editing ? 'Konfirmasi password baru' : 'Konfirmasi password *'}
-              type="password"
-              value={form.password_confirmation}
-              onChange={(event) => setForm({ ...form, password_confirmation: event.target.value })}
-            />
-          </div>
-          {editing && (
-            <label className="flex items-center gap-2 text-sm text-gray-700">
-              <input
-                type="checkbox"
-                checked={form.is_active}
-                disabled={editing.id === currentUser?.id}
-                onChange={(event) => setForm({ ...form, is_active: event.target.checked })}
-              />{' '}
-              Akun aktif
-            </label>
-          )}
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={() => setModalOpen(false)}>
-              Batal
-            </Button>
-            <Button
-              loading={saving}
-              disabled={
-                !form.name ||
-                !form.email ||
-                !form.role_id ||
-                (!editing && (!form.password || form.password !== form.password_confirmation))
-              }
-              onClick={() => void save()}
-            >
-              Simpan Akun
-            </Button>
-          </div>
-        </div> : (
+        ) : (
           <div>
             <div role="tablist" aria-label="Jenis akun" className="mb-6 grid grid-cols-2 rounded-xl bg-gray-100 p-1">
-              {([
-                ['requester', 'Buat Akun Requester'],
-                ['it', 'Buat Akun IT'],
-              ] as const).map(([value, label]) => (
+              {(
+                [
+                  ['requester', 'Buat Akun Requester'],
+                  ['it', 'Buat Akun IT'],
+                ] as const
+              ).map(([value, label]) => (
                 <button
                   key={value}
                   id={`account-tab-${value}`}
@@ -581,7 +604,8 @@ export default function UserManagement() {
                   className={`rounded-lg px-2 py-2.5 text-xs font-semibold transition sm:text-sm ${createTab === value ? 'bg-white text-blue-900 shadow-sm ring-1 ring-gray-200' : 'text-gray-600 hover:text-gray-900'}`}
                   onClick={() => changeCreateTab(value)}
                   onKeyDown={(event) => {
-                    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') changeCreateTab(value === 'requester' ? 'it' : 'requester')
+                    if (event.key === 'ArrowLeft' || event.key === 'ArrowRight')
+                      changeCreateTab(value === 'requester' ? 'it' : 'requester')
                   }}
                 >
                   {label}
@@ -593,15 +617,27 @@ export default function UserManagement() {
               role="tabpanel"
               aria-labelledby={`account-tab-${createTab}`}
               className="space-y-4"
-              onSubmit={(event) => { event.preventDefault(); void saveCreate() }}
+              onSubmit={(event) => {
+                event.preventDefault()
+                void saveCreate()
+              }}
             >
-              {error && <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>}
+              {error && (
+                <div role="alert" className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                  {error}
+                </div>
+              )}
               {createTab === 'requester' ? (
                 <fieldset>
-                  <legend className="mb-2 text-sm font-medium text-gray-700">Pilih Kantor Pusat atau Kantor Cabang?</legend>
+                  <legend className="mb-2 text-sm font-medium text-gray-700">
+                    Pilih Kantor Pusat atau Kantor Cabang?
+                  </legend>
                   <div className="grid grid-cols-2 gap-2">
                     {(['pusat', 'cabang'] as const).map((mode) => (
-                      <label key={mode} className={`cursor-pointer rounded-lg border p-3 text-center text-sm font-semibold ${createForm.office_mode === mode ? 'border-blue-800 bg-blue-50 text-blue-900' : 'border-gray-300 text-gray-600'}`}>
+                      <label
+                        key={mode}
+                        className={`cursor-pointer rounded-lg border p-3 text-center text-sm font-semibold ${createForm.office_mode === mode ? 'border-blue-800 bg-blue-50 text-blue-900' : 'border-gray-300 text-gray-600'}`}
+                      >
                         <input
                           className="sr-only"
                           type="radio"
@@ -614,14 +650,18 @@ export default function UserManagement() {
                       </label>
                     ))}
                   </div>
-                  {validation.office_mode?.[0] && <p className="mt-1 text-xs text-red-600">{validation.office_mode[0]}</p>}
+                  {validation.office_mode?.[0] && (
+                    <p className="mt-1 text-xs text-red-600">{validation.office_mode[0]}</p>
+                  )}
                 </fieldset>
               ) : (
                 <Select
                   label="Role *"
                   value={createForm.role}
                   error={fieldError('role')}
-                  onChange={(event) => setCreateForm({ ...createForm, role: event.target.value as typeof createForm.role })}
+                  onChange={(event) =>
+                    setCreateForm({ ...createForm, role: event.target.value as typeof createForm.role })
+                  }
                   options={[
                     { value: 'supervisor_it', label: 'Supervisor' },
                     { value: 'pic_it_develop', label: 'IT Developer' },
@@ -637,34 +677,104 @@ export default function UserManagement() {
                   error={fieldError('office_id')}
                   onChange={(event) => setCreateForm({ ...createForm, office_id: event.target.value })}
                   options={[
-                    { value: '', label: options ? (options.offices.filter((office) => office.office_type === 'cabang').length ? 'Pilih cabang' : 'Belum ada Kantor Cabang') : 'Memuat cabang...' },
-                    ...(options?.offices.filter((office) => office.office_type === 'cabang').map((office) => ({ value: String(office.id), label: office.name })) ?? []),
+                    {
+                      value: '',
+                      label: options
+                        ? options.offices.filter((office) => office.office_type === 'cabang').length
+                          ? 'Pilih cabang'
+                          : 'Belum ada Kantor Cabang'
+                        : 'Memuat cabang...',
+                    },
+                    ...(options?.offices
+                      .filter((office) => office.office_type === 'cabang')
+                      .map((office) => ({ value: String(office.id), label: office.name })) ?? []),
                   ]}
                 />
               )}
-              <Input label="Nama *" value={createForm.name} error={fieldError('name')} onChange={(event) => setCreateForm({ ...createForm, name: event.target.value })} />
-              <Input label="Email *" type="email" value={createForm.email} error={fieldError('email')} onChange={(event) => setCreateForm({ ...createForm, email: event.target.value })} />
-              <Input label="No. Telp *" type="tel" value={createForm.phone} error={fieldError('phone')} onChange={(event) => setCreateForm({ ...createForm, phone: event.target.value })} />
+              <Input
+                label="Nama *"
+                value={createForm.name}
+                error={fieldError('name')}
+                onChange={(event) => setCreateForm({ ...createForm, name: event.target.value })}
+              />
+              <Input
+                label="Email *"
+                type="email"
+                value={createForm.email}
+                error={fieldError('email')}
+                onChange={(event) => setCreateForm({ ...createForm, email: event.target.value })}
+              />
+              <Input
+                label="No. Telp *"
+                type="tel"
+                value={createForm.phone}
+                error={fieldError('phone')}
+                onChange={(event) => setCreateForm({ ...createForm, phone: event.target.value })}
+              />
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="relative">
-                  <Input className="pr-11" label="Password *" type={showPassword ? 'text' : 'password'} minLength={12} value={createForm.password} error={fieldError('password')} onChange={(event) => setCreateForm({ ...createForm, password: event.target.value })} />
-                  <button type="button" aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'} aria-pressed={showPassword} className="absolute right-2 top-7 flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-800 focus-visible:ring-offset-1" onClick={() => setShowPassword((value) => !value)}>
-                    {showPassword ? <EyeOff aria-hidden="true" className="h-5 w-5" /> : <Eye aria-hidden="true" className="h-5 w-5" />}
+                  <Input
+                    className="pr-11"
+                    label="Password *"
+                    type={showPassword ? 'text' : 'password'}
+                    minLength={12}
+                    value={createForm.password}
+                    error={fieldError('password')}
+                    onChange={(event) => setCreateForm({ ...createForm, password: event.target.value })}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showPassword ? 'Sembunyikan password' : 'Tampilkan password'}
+                    aria-pressed={showPassword}
+                    className="absolute right-2 top-7 flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-800 focus-visible:ring-offset-1"
+                    onClick={() => setShowPassword((value) => !value)}
+                  >
+                    {showPassword ? (
+                      <EyeOff aria-hidden="true" className="h-5 w-5" />
+                    ) : (
+                      <Eye aria-hidden="true" className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
                 <div className="relative">
-                  <Input className="pr-11" label="Konfirmasi Password *" type={showConfirmation ? 'text' : 'password'} value={createForm.password_confirmation} error={fieldError('password_confirmation')} onChange={(event) => setCreateForm({ ...createForm, password_confirmation: event.target.value })} />
-                  <button type="button" aria-label={showConfirmation ? 'Sembunyikan konfirmasi password' : 'Tampilkan konfirmasi password'} aria-pressed={showConfirmation} className="absolute right-2 top-7 flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-800 focus-visible:ring-offset-1" onClick={() => setShowConfirmation((value) => !value)}>
-                    {showConfirmation ? <EyeOff aria-hidden="true" className="h-5 w-5" /> : <Eye aria-hidden="true" className="h-5 w-5" />}
+                  <Input
+                    className="pr-11"
+                    label="Konfirmasi Password *"
+                    type={showConfirmation ? 'text' : 'password'}
+                    value={createForm.password_confirmation}
+                    error={fieldError('password_confirmation')}
+                    onChange={(event) => setCreateForm({ ...createForm, password_confirmation: event.target.value })}
+                  />
+                  <button
+                    type="button"
+                    aria-label={showConfirmation ? 'Sembunyikan konfirmasi password' : 'Tampilkan konfirmasi password'}
+                    aria-pressed={showConfirmation}
+                    className="absolute right-2 top-7 flex h-8 w-8 items-center justify-center rounded-md text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-800 focus-visible:ring-offset-1"
+                    onClick={() => setShowConfirmation((value) => !value)}
+                  >
+                    {showConfirmation ? (
+                      <EyeOff aria-hidden="true" className="h-5 w-5" />
+                    ) : (
+                      <Eye aria-hidden="true" className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
-                <Button type="button" variant="secondary" disabled={saving} onClick={() => setModalOpen(false)}>Batal</Button>
+                <Button type="button" variant="secondary" disabled={saving} onClick={() => setModalOpen(false)}>
+                  Batal
+                </Button>
                 <Button
                   type="submit"
                   loading={saving}
-                  disabled={!createForm.name.trim() || !createForm.email.trim() || !createForm.phone.trim() || !createForm.password || createForm.password !== createForm.password_confirmation || (createTab === 'requester' && createForm.office_mode === 'cabang' && !createForm.office_id)}
+                  disabled={
+                    !createForm.name.trim() ||
+                    !createForm.email.trim() ||
+                    !createForm.phone.trim() ||
+                    !createForm.password ||
+                    createForm.password !== createForm.password_confirmation ||
+                    (createTab === 'requester' && createForm.office_mode === 'cabang' && !createForm.office_id)
+                  }
                 >
                   {createTab === 'requester' ? 'Buat Akun Requester' : 'Buat Akun IT'}
                 </Button>

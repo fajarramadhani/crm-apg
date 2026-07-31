@@ -11,6 +11,7 @@ use App\Notifications\TicketAlertNotification;
 use App\Services\WorkflowEngineService;
 use App\Services\WorkflowSnapshotBuilder;
 use Illuminate\Contracts\Notifications\Dispatcher;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use Mockery;
@@ -20,6 +21,8 @@ use Tests\TestCase;
 
 class DynamicWorkflowTransitionNotificationTest extends TestCase
 {
+    use RefreshDatabase;
+
     private WorkflowEngineService $engine;
 
     private User $supervisor;
@@ -31,8 +34,6 @@ class DynamicWorkflowTransitionNotificationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-
-        $this->artisan('migrate:fresh');
 
         $roles = collect(['supervisor_it', 'requester', 'pic_it_support', 'developer', 'qa', 'uat', 'manager'])
             ->mapWithKeys(fn (string $key): array => [$key => Role::factory()->create(['key' => $key, 'name' => $key])]);

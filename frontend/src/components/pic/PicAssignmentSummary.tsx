@@ -39,7 +39,8 @@ export const PicAssignmentSummary: React.FC<PicAssignmentSummaryProps> = ({ tick
         </h3>
         {userRole && (
           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 uppercase tracking-wide">
-            Peran Anda: {userRole === 'primary' ? 'PIC Utama' : userRole === 'secondary' ? 'PIC Pendamping' : 'Supervisor'}
+            Peran Anda:{' '}
+            {userRole === 'primary' ? 'PIC Utama' : userRole === 'secondary' ? 'PIC Pendamping' : 'Supervisor'}
           </span>
         )}
       </div>
@@ -51,9 +52,7 @@ export const PicAssignmentSummary: React.FC<PicAssignmentSummaryProps> = ({ tick
             <UserCheck className="h-4 w-4" />
           </span>
           <div className="min-w-0">
-            <span className="block text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
-              PIC Utama
-            </span>
+            <span className="block text-[10px] font-semibold text-blue-600 uppercase tracking-wider">PIC Utama</span>
             <span className="block text-sm font-semibold text-slate-900 truncate">
               {primaryPic?.name ?? 'Belum Ditunjuk'}
             </span>
@@ -104,7 +103,9 @@ export const PicAssignmentSummary: React.FC<PicAssignmentSummaryProps> = ({ tick
               {formatDate(ticket.resolution_due_at)}
             </span>
             {ticket.resolution_due_at && (
-              <span className={`text-[10px] font-semibold block mt-0.5 ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
+              <span
+                className={`text-[10px] font-semibold block mt-0.5 ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}
+              >
                 {getSlaLabel(slaRemainingHours, Boolean(isOverdue))}
               </span>
             )}
@@ -115,7 +116,9 @@ export const PicAssignmentSummary: React.FC<PicAssignmentSummaryProps> = ({ tick
           <span className="flex items-center gap-1.5 text-slate-400">
             <ShieldAlert className="w-4 h-4 shrink-0" /> Urgency
           </span>
-          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getPriorityColor(ticket.final_priority?.key ?? 'medium')}`}>
+          <span
+            className={`px-2 py-0.5 rounded text-[10px] font-bold ${getPriorityColor(ticket.final_priority?.key ?? 'medium')}`}
+          >
             {ticket.final_priority?.key ? PRIORITY_LABELS[ticket.final_priority.key]?.toUpperCase() : 'MEDIUM'}
           </span>
         </div>

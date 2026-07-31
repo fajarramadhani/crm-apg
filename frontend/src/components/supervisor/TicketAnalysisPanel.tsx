@@ -94,7 +94,9 @@ export const TicketAnalysisPanel: React.FC<TicketAnalysisPanelProps> = ({
             onChange={(e) => setTargetDate(e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
           />
-          <p className="mt-1 text-[11px] text-gray-400">Target ini tidak mengubah target kebutuhan yang diajukan Requester.</p>
+          <p className="mt-1 text-[11px] text-gray-400">
+            Target ini tidak mengubah target kebutuhan yang diajukan Requester.
+          </p>
         </div>
       </div>
 
