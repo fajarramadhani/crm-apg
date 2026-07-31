@@ -161,7 +161,7 @@ final class SupervisorItControlCenterTest extends TestCase
         $this->actingAs($this->supervisorIt)->getJson('/api/v1/supervisor-it/tickets')->assertOk();
         $queries = collect(DB::getQueryLog())->pluck('query');
 
-        $ticketQuery = $queries->first(fn (string $query): bool => str_contains($query, 'from "tickets"') && str_contains($query, 'defect_count'));
+        $ticketQuery = $queries->first(fn (string $query): bool => preg_match('/from [`"]tickets[`"]/', $query) === 1 && str_contains($query, 'defect_count'));
         $this->assertNotNull($ticketQuery);
         $this->assertStringNotContainsString('workflow_snapshot', $ticketQuery);
         $this->assertFalse($queries->contains(fn (string $query): bool => str_contains($query, 'count(*) as aggregate') && (str_contains($query, 'ticket_qa_defects') || str_contains($query, 'ticket_uat_findings'))));

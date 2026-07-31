@@ -62,7 +62,7 @@ class NotificationPreferenceTest extends TestCase
 
     public function test_user_cannot_update_preference_with_invalid_type()
     {
-        $user = User::factory()->create(['role_id' => 1]);
+        $user = User::factory()->create();
 
         $response = $this->actingAs($user)->putJson('/api/v1/notification-preferences/invalid_type_123', [
             'in_app_enabled' => false,
