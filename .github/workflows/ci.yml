@@ -20,7 +20,7 @@ jobs:
         working-directory: backend
     steps:
       - uses: actions/checkout@v4
-      - run: cp .env.example .env
+      - run: touch .env
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
@@ -77,7 +77,7 @@ jobs:
       SESSION_DRIVER: array
     steps:
       - uses: actions/checkout@v4
-      - run: cp .env.example .env
+      - run: touch .env
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.3'
