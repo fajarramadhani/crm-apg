@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ticketService, type TicketRecord } from '../../services/ticketService'
-import { masterDataService } from '../../services/masterDataService'
 import { TicketRequesterSummary } from '../../components/supervisor/TicketRequesterSummary'
 import { TicketAnalysisPanel } from '../../components/supervisor/TicketAnalysisPanel'
 import { TicketAssignmentPanel } from '../../components/supervisor/TicketAssignmentPanel'
@@ -20,17 +19,12 @@ export default function SupervisorTicketDetail() {
   const [error, setError] = useState<string | null>(null)
   const [ticket, setTicket] = useState<TicketRecord | null>(null)
 
-  // Master data
-  const [applications, setApplications] = useState<Array<{ id: number; name: string }>>([])
-  const [modules, setModules] = useState<Array<{ id: number; name: string }>>([])
-  const [categories, setCategories] = useState<Array<{ id: number; name: string }>>([])
-  const [priorities, setPriorities] = useState<Array<{ id: number; name: string }>>([])
   const [assignees, setAssignees] = useState<EligibleAssignee[]>([])
 
   useEffect(() => {
     if (id) {
       fetchTicketDetail(id)
-      fetchMasterData()
+      fetchAssignees()
     }
   }, [id])
 
@@ -47,24 +41,9 @@ export default function SupervisorTicketDetail() {
     }
   }
 
-  const fetchMasterData = async () => {
+  const fetchAssignees = async () => {
     try {
-      const [appsRes, catsRes, prioRes, assigneesRes] = await Promise.all([
-        masterDataService.getApplications(),
-        masterDataService.getTicketCategories(),
-        masterDataService.getTicketPriorities(),
-        ticketService.supervisorItAssignees(),
-      ])
-
-      setApplications(appsRes.map((a: { id: number; name: string }) => ({ id: a.id, name: a.name })))
-      setCategories(catsRes.map((c: { id: number; name: string }) => ({ id: c.id, name: c.name })))
-      setPriorities(prioRes.map((p: { id: number; name: string }) => ({ id: p.id, name: p.name })))
-      setAssignees(assigneesRes)
-
-      if (ticket?.application?.id) {
-        const mods = await masterDataService.getApplicationModules(ticket.application.id)
-        setModules(mods.map((m: { id: number; name: string }) => ({ id: m.id, name: m.name })))
-      }
+      setAssignees(await ticketService.supervisorItAssignees())
     } catch {
       // Non-blocking
     }
@@ -267,11 +246,6 @@ export default function SupervisorTicketDetail() {
 
       <TicketAnalysisPanel
         ticket={ticket}
-        applications={applications}
-        modules={modules}
-        categories={categories}
-        priorities={priorities}
-        assignees={assignees}
         onSaveAnalysis={handleSaveAnalysis}
         loading={actionLoading}
       />

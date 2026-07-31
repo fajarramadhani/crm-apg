@@ -286,9 +286,10 @@ return [
             'alert.executive.view_summary',
             'knowledge_base.view',
         ],
-        'admin' => [
+        'superadmin' => [
             'dashboard.admin.view',
             'admin.access',
+            'users.manage',
             'master_data.view',
             'master_data.manage',
             'ticket.release_checklist_template.manage',

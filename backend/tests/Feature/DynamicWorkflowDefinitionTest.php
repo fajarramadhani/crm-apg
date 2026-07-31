@@ -22,7 +22,7 @@ class DynamicWorkflowDefinitionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $adminRole = Role::factory()->create(['key' => 'admin', 'name' => 'Admin']);
+        $adminRole = Role::factory()->create(['key' => 'superadmin', 'name' => 'Super Admin']);
         $requesterRole = Role::factory()->create(['key' => 'requester', 'name' => 'Requester']);
         $supervisorRole = Role::factory()->create(['key' => 'supervisor_it', 'name' => 'Supervisor IT']);
 

@@ -15,6 +15,10 @@ final class PermissionRegistry
             return [];
         }
 
+        if ($roleKey === 'superadmin') {
+            return array_values(array_unique(array_merge(...array_values(config('permissions.roles', [])))));
+        }
+
         return array_values(array_unique(config("permissions.roles.{$roleKey}", [])));
     }
 

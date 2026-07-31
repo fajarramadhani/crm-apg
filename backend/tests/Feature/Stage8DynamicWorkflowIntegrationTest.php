@@ -293,10 +293,13 @@ class Stage8DynamicWorkflowIntegrationTest extends TestCase
     private function createTicket(): Ticket
     {
         return $this->requesterTickets->createTicket($this->requester, [
+            'request_category' => 'error_bug',
+            'application_id' => Application::query()->firstOrFail()->id,
             'title' => 'Stage 8 integration ticket',
             'description' => 'Exercise the seeded default dynamic workflow.',
             'affected_url' => 'https://example.test/tickets/stage-8',
             'reference' => 'STAGE-8',
+            'urgency' => 'medium',
         ], []);
     }
 

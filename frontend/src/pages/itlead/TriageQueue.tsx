@@ -16,6 +16,7 @@ import {
 } from '../../components/ui'
 import { masterDataService, type SlaPolicy, type TicketPriority } from '../../services/masterDataService'
 import { ticketService, type PicOption, type TicketRecord } from '../../services/ticketService'
+import { TicketDescriptionContent } from '../../components/TicketDescriptionContent'
 
 export default function TriageQueue() {
   const navigate = useNavigate()
@@ -191,10 +192,10 @@ export default function TriageQueue() {
                   {selected.requested_priority && <PriorityBadge priority={selected.requested_priority.key} />}
                 </div>
                 <h2 className="font-bold">{selected.title}</h2>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap mt-2">{selected.description}</p>
+                <TicketDescriptionContent html={selected.description} className="mt-2 text-gray-600" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50 rounded-xl p-4 mt-4 text-sm">
                   <Info label="Requester" value={selected.requester.name} />
-                  <Info label="Kategori" value={selected.category.name} />
+                  <Info label="Kategori" value={selected.category?.name || 'Belum ditentukan'} />
                   <Info
                     label="Aplikasi / Modul"
                     value={`${selected.application?.name || '—'} / ${selected.application_module?.name || '—'}`}

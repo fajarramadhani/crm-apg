@@ -1,5 +1,6 @@
 import React from 'react'
 import type { TicketRecord } from '../../services/ticketService'
+import { TicketDescriptionContent } from '../TicketDescriptionContent'
 import { LegacyWorkflowBadge } from './LegacyWorkflowBadge'
 
 interface TicketRequesterSummaryProps {
@@ -44,9 +45,25 @@ export const TicketRequesterSummary: React.FC<TicketRequesterSummaryProps> = ({ 
 
       <div>
         <h3 className="text-xs font-semibold uppercase text-gray-400">Deskripsi Kendala</h3>
-        <p className="mt-2 whitespace-pre-wrap text-sm text-gray-800 bg-gray-50/70 p-4 rounded-lg border border-gray-100 leading-relaxed">
-          {ticket.description}
-        </p>
+        <TicketDescriptionContent
+          html={ticket.description}
+          className="mt-2 rounded-lg border border-gray-100 bg-gray-50/70 p-4 text-gray-800"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Sistem</span>
+          <span className="mt-1 block text-sm font-semibold text-gray-900">{ticket.application?.name || '-'}</span>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Kategori Requester</span>
+          <span className="mt-1 block text-sm font-semibold text-gray-900">{ticket.request_category?.label || '-'}</span>
+        </div>
+        <div className="rounded-lg border border-gray-200 bg-gray-50 p-3">
+          <span className="block text-[11px] font-semibold uppercase tracking-wide text-gray-400">Urgency</span>
+          <span className="mt-1 block text-sm font-semibold capitalize text-gray-900">{ticket.urgency || '-'}</span>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">

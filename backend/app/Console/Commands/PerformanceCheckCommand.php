@@ -161,7 +161,7 @@ final class PerformanceCheckCommand extends Command
         $priority = TicketPriority::query()->create(['key' => $this->token, 'name' => "Performance {$this->token}", 'level' => 1]);
 
         $roles = [];
-        foreach (['requester', 'supervisor_it', 'pic_it_support', 'admin'] as $key) {
+        foreach (['requester', 'supervisor_it', 'pic_it_support', 'superadmin'] as $key) {
             $roles[$key] = Role::query()->create(['key' => $key, 'name' => Str::headline($key)]);
         }
 
@@ -169,7 +169,7 @@ final class PerformanceCheckCommand extends Command
         for ($index = 0; $index < self::USER_COUNT; $index++) {
             $role = match (true) {
                 $index === 0 => 'supervisor_it',
-                $index === 1 => 'admin',
+                $index === 1 => 'superadmin',
                 $index < 32 => 'requester',
                 default => 'pic_it_support',
             };
@@ -314,7 +314,7 @@ final class PerformanceCheckCommand extends Command
 
         $this->fixtures = [
             'supervisor' => $supervisor,
-            'admin' => $admin,
+            'superadmin' => $admin,
             'pic' => $pics->first(),
             'ticket' => Ticket::query()->where('current_assignee_id', $pics->first()->id)->firstOrFail(),
             'workflow' => $workflowModels[4],
@@ -330,7 +330,7 @@ final class PerformanceCheckCommand extends Command
     ): void {
         $supervisorRequest = fn (string $uri, array $query = []) => $this->request(TicketListRequest::class, $uri, $this->fixtures['supervisor'], $query);
         $picRequest = fn (string $uri, array $query = []) => $this->request(TicketListRequest::class, $uri, $this->fixtures['pic'], $query);
-        $adminRequest = fn (string $uri, array $query = []) => $this->request(Request::class, $uri, $this->fixtures['admin'], $query);
+        $adminRequest = fn (string $uri, array $query = []) => $this->request(Request::class, $uri, $this->fixtures['superadmin'], $query);
         $ticket = $this->fixtures['ticket'];
         $workflow = $this->fixtures['workflow'];
 
@@ -430,7 +430,7 @@ final class PerformanceCheckCommand extends Command
         DB::table('tickets')->where('description', "Token-owned benchmark fixture {$this->token}")->delete();
         DB::table('workflow_definitions')->where('code', $this->token)->delete();
         DB::table('users')->whereIn('id', $userIds)->delete();
-        DB::table('roles')->whereIn('key', ['requester', 'supervisor_it', 'pic_it_support', 'admin'])->delete();
+        DB::table('roles')->whereIn('key', ['requester', 'supervisor_it', 'pic_it_support', 'superadmin'])->delete();
         DB::table('ticket_categories')->where('code', strtoupper($this->token))->delete();
         DB::table('ticket_priorities')->where('key', $this->token)->delete();
         DB::table('branches')->where('code', strtoupper($this->token))->delete();

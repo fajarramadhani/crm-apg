@@ -1,9 +1,10 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
 import { ApiRequestError, SESSION_EXPIRED_EVENT } from '../api/client'
 import { authService } from '../services/authService'
+import { useLoading } from './LoadingContext'
 import type { AuthenticatedUser, Role } from '../types'
 
-type AuthStatus = 'initializing' | 'authenticated' | 'unauthenticated'
+type AuthStatus = 'initializing' | 'authenticating' | 'authenticated' | 'unauthenticated'
 
 interface AuthContextValue {
   user: AuthenticatedUser | null
@@ -53,18 +54,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, expireSession)
   }, [])
 
+  const { begin, end } = useLoading()
+
   const login = useCallback(async (email: string, password: string) => {
-    const authenticatedUser = await authService.login(email, password)
-    setUser(authenticatedUser)
-    setStatus('authenticated')
-    return authenticatedUser
-  }, [])
+    setStatus('authenticating')
+    begin('Sedang masuk ke dashboard Anda...')
+
+    try {
+      const authenticatedUser = await authService.login(email, password)
+      setUser(authenticatedUser)
+      setStatus('authenticated')
+      return authenticatedUser
+    } catch (error) {
+      setUser(null)
+      setStatus('unauthenticated')
+      throw error
+    } finally {
+      end()
+    }
+  }, [begin, end])
 
   const logout = useCallback(async () => {
-    setUser(null)
-    setStatus('unauthenticated')
-    await authService.logout()
-  }, [])
+    begin('Keluar dari sesi dan menyimpan keadaan...')
+    try {
+      setUser(null)
+      setStatus('unauthenticated')
+      await authService.logout()
+    } finally {
+      end()
+    }
+  }, [begin, end])
 
   const value = useMemo<AuthContextValue>(
     () => ({

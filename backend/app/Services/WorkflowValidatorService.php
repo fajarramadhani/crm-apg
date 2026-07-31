@@ -34,7 +34,7 @@ final class WorkflowValidatorService
 
     /** Known role keys in the system */
     private const KNOWN_ROLE_KEYS = [
-        'admin',
+        'superadmin',
         'supervisor_it',
         'supervisor',
         'it_lead',

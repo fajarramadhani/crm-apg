@@ -13,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-#[Fillable(['ticket_number', 'requester_id', 'division_id', 'branch_id', 'application_id', 'application_module_id', 'ticket_category_id', 'requested_priority_id', 'final_priority_id', 'sla_policy_id', 'working_calendar_id', 'current_assignee_id', 'assigned_by', 'title', 'description', 'business_impact', 'urgency', 'incident_occurred_at', 'affected_url', 'reference', 'expected_result', 'actual_result', 'reproduction_steps', 'request_purpose', 'target_needed_at', 'change_reason', 'expected_impact', 'recurring_indication', 'status', 'current_division_id', 'submitted_at', 'validated_at', 'rejected_at', 'triage_started_at', 'assigned_at', 'response_due_at', 'resolution_due_at', 'sla_timezone', 'analysis_started_at', 'analysis_completed_at', 'plan_submitted_at', 'plan_approved_at', 'current_analysis_id', 'current_solution_plan_id', 'development_started_at', 'development_completed_at', 'internal_testing_started_at', 'internal_testing_completed_at', 'ready_for_qa_at', 'progress_percentage', 'latest_progress_at', 'qa_assignee_id', 'qa_assigned_by', 'qa_assigned_at', 'qa_started_at', 'qa_completed_at', 'qa_cycle_number', 'latest_qa_result', 'ready_for_uat_at', 'uat_assignee_id', 'uat_assigned_by', 'uat_assigned_at', 'uat_started_at', 'uat_completed_at', 'uat_cycle_number', 'latest_uat_result', 'uat_approved_at', 'approval_requested_at', 'approval_completed_at', 'approved_for_release_at', 'release_preparation_started_at', 'release_ready_at', 'deployment_cycle_number', 'deployment_scheduled_at', 'deployment_started_at', 'deployed_at', 'monitoring_started_at', 'monitoring_completed_at', 'requester_confirmation_requested_at', 'requester_confirmed_at', 'closed_at', 'closed_by', 'latest_deployment_result', 'current_deployment_id', 'current_monitoring_session_id', 'post_release_status', 'workflow_id', 'workflow_version', 'workflow_snapshot', 'workflow_mode', 'current_workflow_stage', 'workflow_previous_stage', 'workflow_stage_entered_at'])]
+#[Fillable(['ticket_number', 'requester_id', 'division_id', 'branch_id', 'office_id', 'request_category', 'application_id', 'application_module_id', 'ticket_category_id', 'requested_priority_id', 'final_priority_id', 'sla_policy_id', 'working_calendar_id', 'current_assignee_id', 'assigned_by', 'title', 'description', 'business_impact', 'urgency', 'incident_occurred_at', 'affected_url', 'reference', 'expected_result', 'actual_result', 'reproduction_steps', 'request_purpose', 'target_needed_at', 'change_reason', 'expected_impact', 'recurring_indication', 'status', 'current_division_id', 'submitted_at', 'validated_at', 'rejected_at', 'triage_started_at', 'assigned_at', 'response_due_at', 'resolution_due_at', 'sla_timezone', 'analysis_started_at', 'analysis_completed_at', 'plan_submitted_at', 'plan_approved_at', 'current_analysis_id', 'current_solution_plan_id', 'development_started_at', 'development_completed_at', 'internal_testing_started_at', 'internal_testing_completed_at', 'ready_for_qa_at', 'progress_percentage', 'latest_progress_at', 'qa_assignee_id', 'qa_assigned_by', 'qa_assigned_at', 'qa_started_at', 'qa_completed_at', 'qa_cycle_number', 'latest_qa_result', 'uat_assignee_id', 'uat_assigned_by', 'uat_assigned_at', 'uat_started_at', 'uat_completed_at', 'uat_cycle_number', 'latest_uat_result', 'uat_approved_at', 'approval_requested_at', 'approval_completed_at', 'approved_for_release_at', 'release_preparation_started_at', 'release_ready_at', 'deployment_cycle_number', 'deployment_scheduled_at', 'deployment_started_at', 'deployed_at', 'monitoring_started_at', 'monitoring_completed_at', 'requester_confirmation_requested_at', 'requester_confirmed_at', 'closed_at', 'closed_by', 'latest_deployment_result', 'current_deployment_id', 'current_monitoring_session_id', 'post_release_status', 'workflow_id', 'workflow_version', 'workflow_snapshot', 'workflow_mode', 'current_workflow_stage', 'workflow_previous_stage', 'workflow_stage_entered_at'])]
 class Ticket extends Model
 {
     use HasFactory, SoftDeletes;
@@ -74,6 +74,11 @@ class Ticket extends Model
         return $this->belongsTo(Branch::class);
     }
 
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
+    }
+
     public function application(): BelongsTo
     {
         return $this->belongsTo(Application::class);
@@ -122,6 +127,16 @@ class Ticket extends Model
     public function assignments(): HasMany
     {
         return $this->hasMany(TicketAssignment::class);
+    }
+
+    public function publicHandlingAssignments(): HasMany
+    {
+        return $this->hasMany(TicketAssignment::class)
+            ->whereIn('assignment_type', ['primary', 'secondary'])
+            ->where('is_current', true)
+            ->whereNull('ended_at')
+            ->orderByRaw("case when assignment_type = 'primary' then 0 else 1 end")
+            ->orderByDesc('id');
     }
 
     public function hasActivePrimaryPic(User $user): bool

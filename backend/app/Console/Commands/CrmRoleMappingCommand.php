@@ -24,7 +24,7 @@ class CrmRoleMappingCommand extends Command
         'supervisor_it',
         'pic_it_support',
         'pic_it_develop',
-        'admin',
+        'superadmin',
     ];
 
     protected $signature = 'crm:role-mapping

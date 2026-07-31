@@ -24,7 +24,7 @@ class SeedStage9BrowserFixturesCommandTest extends TestCase
         $fixtures = SeedStage9BrowserFixturesCommand::fixtureUsers();
 
         $this->assertSame(
-            ['requester', 'supervisor_it', 'pic_it_support', 'pic_it_develop', 'admin', 'it_lead', 'pic', 'qa'],
+            ['requester', 'supervisor_it', 'pic_it_support', 'pic_it_develop', 'superadmin', 'it_lead', 'pic', 'qa'],
             array_values(array_column($fixtures, 'role')),
         );
         foreach ($fixtures as $fixture) {

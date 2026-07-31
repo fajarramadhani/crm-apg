@@ -25,6 +25,7 @@ class RequesterTicketService
     public function __construct(
         private TicketNumberGenerator $numberGenerator,
         private WorkflowEngineService $workflowEngine,
+        private TicketDescriptionSanitizer $descriptionSanitizer,
     ) {}
 
     /**
@@ -39,9 +40,9 @@ class RequesterTicketService
             ]);
         }
 
-        if (! $user->division_id) {
+        if (! $user->division_id && ! $user->office_id) {
             throw ValidationException::withMessages([
-                'division' => ['Your account must have a division before creating a ticket.'],
+                'organization' => ['Akun harus memiliki lokasi kantor atau divisi sebelum membuat tiket.'],
             ]);
         }
 
@@ -123,11 +124,15 @@ class RequesterTicketService
                     'requester_id' => $user->id,
                     'division_id' => $user->division_id,
                     'branch_id' => $user->branch_id,
+                    'office_id' => $user->office_id,
+                    'request_category' => $validated['request_category'],
+                    'application_id' => $validated['application_id'],
                     'current_division_id' => $user->division_id,
                     'title' => trim($validated['title']),
-                    'description' => trim($validated['description']),
-                    'affected_url' => trim($validated['affected_url']),
+                    'description' => $this->descriptionSanitizer->sanitize($validated['description']),
+                    'affected_url' => isset($validated['affected_url']) ? trim($validated['affected_url']) : null,
                     'reference' => isset($validated['reference']) ? trim($validated['reference']) : null,
+                    'urgency' => $validated['urgency'],
                     'status' => $initialStatus,
                     'submitted_at' => now(),
                 ]);
@@ -242,10 +247,13 @@ class RequesterTicketService
         }, $files);
 
         $logicalPayload = [
+            'request_category' => $validated['request_category'],
+            'application_id' => (int) $validated['application_id'],
             'title' => trim($validated['title']),
-            'description' => trim($validated['description']),
-            'affected_url' => trim($validated['affected_url']),
+            'description' => $this->descriptionSanitizer->sanitize($validated['description']),
+            'affected_url' => isset($validated['affected_url']) ? trim($validated['affected_url']) : null,
             'reference' => isset($validated['reference']) ? trim($validated['reference']) : null,
+            'urgency' => $validated['urgency'],
             'attachments' => $attachments,
         ];
 

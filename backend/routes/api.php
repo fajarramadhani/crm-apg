@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AdminMasterDataController;
+use App\Http\Controllers\Api\V1\AdminOfficeController;
 use App\Http\Controllers\Api\V1\AdminReleaseChecklistTemplateController;
+use App\Http\Controllers\Api\V1\AdminRoleController;
 use App\Http\Controllers\Api\V1\AdminSlaEscalationPolicyController;
+use App\Http\Controllers\Api\V1\AdminUserController;
 use App\Http\Controllers\Api\V1\AdminWorkflowApprovalController;
 use App\Http\Controllers\Api\V1\AdminWorkflowController;
 use App\Http\Controllers\Api\V1\AdminWorkflowStageController;
@@ -367,6 +370,27 @@ Route::prefix('v1')->group(function (): void {
             Route::get('holidays', [MasterDataController::class, 'holidays'])->name('holidays');
         });
 
+        Route::prefix('admin/users')->middleware(['permission:users.manage', 'throttle:admin-mutation'])->name('api.v1.admin.users.')->group(function (): void {
+            Route::get('/options', [AdminUserController::class, 'options'])->name('options');
+            Route::get('/', [AdminUserController::class, 'index'])->name('index');
+            Route::post('/requester', [AdminUserController::class, 'storeRequester'])->name('store-requester');
+            Route::post('/it', [AdminUserController::class, 'storeIt'])->name('store-it');
+            Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::delete('admin/roles/{role}', [AdminRoleController::class, 'destroy'])
+            ->middleware(['permission:users.manage', 'throttle:admin-mutation'])
+            ->name('api.v1.admin.roles.destroy');
+
+        Route::prefix('admin/offices')->middleware(['permission:master_data.manage', 'throttle:admin-mutation'])->name('api.v1.admin.offices.')->group(function (): void {
+            Route::get('/', [AdminOfficeController::class, 'index'])->name('index');
+            Route::post('/', [AdminOfficeController::class, 'store'])->name('store');
+            Route::get('/{office}', [AdminOfficeController::class, 'show'])->name('show');
+            Route::put('/{office}', [AdminOfficeController::class, 'update'])->name('update');
+            Route::delete('/{office}', [AdminOfficeController::class, 'destroy'])->name('destroy');
+        });
+
         Route::prefix('admin')->middleware(['permission:master_data.manage', 'throttle:admin-mutation'])->name('api.v1.admin.')->group(function (): void {
             Route::get('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'index']);
             Route::post('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'store']);
@@ -498,7 +522,7 @@ Route::prefix('v1')->group(function (): void {
 
     if (app()->environment(['local', 'testing'])) {
         Route::prefix('protected')->middleware(['auth:sanctum', 'active'])->group(function (): void {
-            Route::get('/admin', [ProtectedAccessController::class, 'admin'])->middleware('role:admin');
+            Route::get('/admin', [ProtectedAccessController::class, 'admin'])->middleware('role:superadmin');
             Route::get('/executive', [ProtectedAccessController::class, 'executive'])
                 ->middleware('permission:executive.aggregate.view');
             Route::get('/technical-ticket-details', [ProtectedAccessController::class, 'technicalTicketDetails'])

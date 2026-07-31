@@ -16,6 +16,7 @@ import {
 import { masterDataService, type Division } from '../../services/masterDataService'
 import { ticketService, type TicketRecord } from '../../services/ticketService'
 import type { Priority, TicketStatus } from '../../types'
+import { TicketDescriptionContent } from '../../components/TicketDescriptionContent'
 
 type Action = 'validate' | 'request-revision' | 'reject' | 'transfer'
 
@@ -155,10 +156,10 @@ export default function ValidationQueue() {
                 </div>
                 <p className="text-sm font-semibold text-gray-900">{ticket.title}</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  {ticket.requester.name} · {ticket.division.name}
+                  {ticket.requester.name} · {ticket.office?.name || ticket.division?.name || 'Tanpa lokasi'}
                 </p>
                 <p className="text-xs text-gray-400 mt-2">
-                  {ticket.category.name} ·{' '}
+                  {ticket.category?.name || 'Belum dikategorikan'} ·{' '}
                   {new Date(ticket.submitted_at || ticket.created_at).toLocaleDateString('id-ID')}
                 </p>
               </button>
@@ -172,13 +173,13 @@ export default function ValidationQueue() {
                   {selected.requested_priority && (
                     <PriorityBadge priority={selected.requested_priority.key as Priority} />
                   )}
-                  <span className="text-xs px-3 py-1 bg-gray-100 rounded-full">{selected.category.name}</span>
+                  <span className="text-xs px-3 py-1 bg-gray-100 rounded-full">{selected.category?.name || 'Belum dikategorikan'}</span>
                 </div>
                 <h2 className="font-bold mb-2">{selected.title}</h2>
-                <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed mb-4">{selected.description}</p>
+                <TicketDescriptionContent html={selected.description} className="mb-4 text-gray-600" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50 rounded-xl p-4 text-sm">
                   <Info label="Requester" value={selected.requester.name} />
-                  <Info label="Divisi Pelapor" value={selected.division.name} />
+                  <Info label="Lokasi Pelapor" value={selected.office?.name || selected.division?.name || '—'} />
                   <Info label="Aplikasi" value={selected.application?.name || '—'} />
                   <Info label="Prioritas Usulan" value={selected.requested_priority?.name || '—'} />
                   <Info label="Dampak Bisnis" value={selected.business_impact || '—'} />
@@ -254,7 +255,7 @@ export default function ValidationQueue() {
               options={[
                 { value: '', label: '— Pilih divisi —' },
                 ...divisions
-                  .filter((division) => division.id !== selected?.current_division.id)
+                  .filter((division) => division.id !== selected?.current_division?.id)
                   .map((division) => ({ value: String(division.id), label: `${division.code} — ${division.name}` })),
               ]}
             />

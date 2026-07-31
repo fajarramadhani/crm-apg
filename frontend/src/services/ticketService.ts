@@ -169,8 +169,9 @@ export interface TicketRecord {
   description: string
   affected_url?: string | null
   reference?: string | null
+  request_category: { value: 'request' | 'error_bug' | 'other'; label: string } | null
   business_impact: string | null
-  urgency: string | null
+  urgency: 'low' | 'medium' | 'high' | null
   expected_result: string | null
   actual_result: string | null
   reproduction_steps: string | null
@@ -181,16 +182,23 @@ export interface TicketRecord {
   status: TicketState
   workflow_mode?: 'dynamic' | 'simplified' | 'legacy' | null
   requester: { id: number; name: string }
-  division: { id: number; code: string; name: string }
-  current_division: { id: number; code: string; name: string }
+  division: { id: number; code: string; name: string } | null
+  current_division: { id: number; code: string; name: string } | null
+  office: { id: number; name: string; office_type: 'pusat' | 'cabang' } | null
   branch?: { id: number; code: string; name: string } | null
   application: { id: number; code: string; name: string } | null
   application_module: { id: number; code: string; name: string } | null
-  category: { id: number; code: string; name: string; type: 'incident' | 'request' | 'change' | 'problem' }
+  category: { id: number; code: string; name: string; type: 'incident' | 'request' | 'change' | 'problem' } | null
   requested_priority: { id: number; key: string; name: string } | null
   final_priority: { id: number; key: string; name: string } | null
   sla_policy: { id: number; response_minutes: number | null; resolution_minutes: number } | null
   assignee: { id: number; name: string } | null
+  handling: {
+    state: 'supervisor_review' | 'assigned' | 'completed' | 'ended'
+    message: string
+    primary_pic: { id: number; name: string; role: string } | null
+    secondary_pics: Array<{ id: number; name: string; role: string }>
+  }
   assignments?: Array<{
     id: number
     assigned_to: number
@@ -1163,11 +1171,7 @@ export const ticketService = {
       ),
     ),
   uploadPicAttachment: (id: number | string, formData: FormData) =>
-    data(
-      apiClient.post<ApiResponse<TicketAttachmentRecord>>(`/pic/tickets/${id}/attachments`, formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      }),
-    ),
+    data(apiClient.postForm<ApiResponse<TicketAttachmentRecord>>(`/pic/tickets/${id}/attachments`, formData)),
   updatePicProgress: (id: number | string, payload: { progress_percentage: number; notes?: string }) =>
     data(apiClient.post<ApiResponse<TicketRecord>>(`/pic/tickets/${id}/progress`, payload)),
   requestPicInfo: (id: number | string, payload: { question: string }) =>
@@ -1213,4 +1217,5 @@ export interface PicTicketDetailData extends TicketRecord {
   user_assignment_role?: 'primary' | 'secondary' | 'supervisor' | null
   active_primary_pic?: { id: number; name: string } | null
   active_secondary_pics?: Array<{ id: number; name: string }>
+  is_legacy_workflow?: boolean
 }

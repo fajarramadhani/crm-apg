@@ -6,7 +6,7 @@ export type Role =
   | 'qa'
   | 'manager'
   | 'executive'
-  | 'admin'
+  | 'superadmin'
   | 'supervisor_it'
   | 'pic_it_support'
   | 'pic_it_develop'

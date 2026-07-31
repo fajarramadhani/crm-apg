@@ -54,8 +54,8 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
     try {
       await onUpload(formData)
       onClose()
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Gagal mengunggah file.')
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'Gagal mengunggah file.')
     } finally {
       setSubmitting(false)
     }
@@ -63,8 +63,8 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
-        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+      <div className="flex items-center justify-between border-b pb-3 border-slate-200">
+        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
           <Paperclip className="w-5 h-5 text-primary" /> Unggah Lampiran Hasil Pekerjaan
         </h3>
       </div>
@@ -77,10 +77,10 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
       )}
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
           Pilih File Lampiran <span className="text-red-500">*</span>
         </label>
-        <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-4 text-center hover:border-primary transition">
+        <div className="border-2 border-dashed border-slate-300 rounded-xl p-4 text-center hover:border-primary transition">
           <input
             type="file"
             onChange={handleFileChange}
@@ -100,13 +100,13 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
 
       <div className="grid grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
             Kategori Lampiran
           </label>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value)}
-            className="w-full p-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            className="w-full p-2 text-xs border border-slate-300 rounded-lg bg-slate-50 text-slate-900"
           >
             <option value="result">Bukti Perbaikan / Hasil</option>
             <option value="screenshot">Screenshot Layar</option>
@@ -117,13 +117,13 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+          <label className="block text-xs font-semibold text-slate-700 mb-1">
             Visibilitas File
           </label>
           <select
             value={visibility}
-            onChange={(e) => setVisibility(e.target.value as any)}
-            className="w-full p-2 text-xs border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+            onChange={(e) => setVisibility(e.target.value as 'internal' | 'requester_visible')}
+            className="w-full p-2 text-xs border border-slate-300 rounded-lg bg-slate-50 text-slate-900"
           >
             <option value="internal">Internal (Supervisor & IT Team)</option>
             <option value="requester_visible">Publik (Terlihat oleh Requester)</option>
@@ -131,12 +131,12 @@ export const PicAttachmentUploader: React.FC<PicAttachmentUploaderProps> = ({ on
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
         <button
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
         >
           Batal
         </button>

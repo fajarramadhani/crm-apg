@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Application;
 use App\Models\Division;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\User;
 use App\Services\RequesterTicketService;
+use Database\Seeders\ApplicationSystemSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -21,11 +23,15 @@ class RequesterTransactionAndNotificationTest extends TestCase
 
     private Division $division;
 
+    private Application $application;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         $this->seed(RoleSeeder::class);
+        $this->seed(ApplicationSystemSeeder::class);
+        $this->application = Application::query()->where('code', 'HRIS')->firstOrFail();
         Storage::fake(config('tickets.attachment_disk', 'local'));
 
         $this->division = Division::create(['code' => 'IT', 'name' => 'Information Technology', 'is_active' => true]);
@@ -51,9 +57,12 @@ class RequesterTransactionAndNotificationTest extends TestCase
 
         try {
             $service->createTicket($this->requester, [
+                'request_category' => 'error_bug',
+                'application_id' => $this->application->id,
                 'title' => 'Test Rollback',
                 'description' => 'Description test',
                 'affected_url' => 'https://example.com/err',
+                'urgency' => 'medium',
             ], [$file]);
 
             $this->fail('Expected DB exception was not thrown.');
@@ -79,10 +88,13 @@ class RequesterTransactionAndNotificationTest extends TestCase
 
         $response = $this->actingAs($this->requester)
             ->postJson('/api/v1/requester/tickets', [
+                'request_category' => 'error_bug',
+                'application_id' => $this->application->id,
                 'title' => 'Tiket Baru dengan Fallback Notifikasi',
                 'description' => 'Supervisor belum dimigrasikan sehingga notifikasi harus masuk ke IT Lead.',
                 'affected_url' => 'https://example.com/system',
                 'attachments' => [$file],
+                'urgency' => 'high',
             ]);
 
         $response->assertStatus(201);

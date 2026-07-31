@@ -66,7 +66,7 @@ class CrmRoleMappingCommandTest extends TestCase
 
         try {
             $this->artisan('crm:role-mapping', ['--file' => $path, '--dry-run' => true])
-                ->expectsOutputToContain('proposed_role must be one of requester, supervisor_it, pic_it_support, pic_it_develop, admin.')
+                ->expectsOutputToContain('proposed_role must be one of requester, supervisor_it, pic_it_support, pic_it_develop, superadmin.')
                 ->assertExitCode(2);
 
             $this->assertSame('qa', $user->fresh()->role->key);

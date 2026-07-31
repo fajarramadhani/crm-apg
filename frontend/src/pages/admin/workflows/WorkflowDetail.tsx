@@ -21,7 +21,7 @@ const ROLE_OPTIONS = [
   { value: 'pic_it_support', label: 'PIC IT Support' },
   { value: 'pic_it_develop', label: 'PIC IT Development' },
   { value: 'manager', label: 'Manager' },
-  { value: 'admin', label: 'Admin' },
+  { value: 'superadmin', label: 'Super Admin' },
 ]
 
 const RECIPIENT_OPTIONS: Array<{ value: WorkflowTransitionNotification['recipient_type']; label: string }> = [

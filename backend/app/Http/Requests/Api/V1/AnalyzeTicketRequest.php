@@ -19,18 +19,20 @@ final class AnalyzeTicketRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'application_id' => ['required', 'integer', 'exists:applications,id'],
-            'application_module_id' => ['nullable', 'integer', 'exists:application_modules,id'],
-            'ticket_category_id' => ['required', 'integer', 'exists:ticket_categories,id'],
-            'problem_source' => ['nullable', 'string', 'max:255'],
-            'priority_id' => ['required', 'integer', 'exists:ticket_priorities,id'],
-            'target_completion_date' => ['required', 'date', 'after_or_equal:today'],
-            'analysis_notes' => ['nullable', 'string', 'max:5000'],
-            'assign_primary_user_id' => ['nullable', 'integer', 'exists:users,id'],
-            'secondary_user_ids' => ['nullable', 'array'],
-            'secondary_user_ids.*' => ['integer', 'exists:users,id'],
-            'assignment_notes' => ['nullable', 'string', 'max:1000'],
-            'assignment_reason' => ['nullable', 'string', 'max:1000'],
+            'analysis_summary' => ['required', 'string', 'max:5000'],
+            'handling_note' => ['nullable', 'string', 'max:5000'],
+            'target_completion_date' => ['nullable', 'date', 'after_or_equal:today'],
+            'application_id' => ['prohibited'],
+            'application_module_id' => ['prohibited'],
+            'ticket_category_id' => ['prohibited'],
+            'request_category' => ['prohibited'],
+            'urgency' => ['prohibited'],
+            'priority_id' => ['prohibited'],
+            'workflow_id' => ['prohibited'],
+            'assign_primary_user_id' => ['prohibited'],
+            'secondary_user_ids' => ['prohibited'],
+            'primary_pic_id' => ['prohibited'],
+            'secondary_pic_ids' => ['prohibited'],
         ];
     }
 }

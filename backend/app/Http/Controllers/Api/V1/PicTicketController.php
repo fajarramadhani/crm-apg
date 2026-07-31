@@ -230,6 +230,11 @@ final class PicTicketController extends Controller
         $data['user_assignment_role'] = $currentAssignment?->assignment_type ?? ($user->hasRole('supervisor_it') ? 'supervisor' : null);
         $data['active_primary_pic'] = $ticket->assignments->where('assignment_type', 'primary')->where('is_current', true)->first()?->assignee;
         $data['active_secondary_pics'] = $ticket->assignments->where('assignment_type', 'secondary')->where('is_current', true)->map(fn ($a) => $a->assignee)->values();
+        $data['is_legacy_workflow'] = $ticket->workflow_mode !== 'simplified' && (
+            ($data['solution_plan_summary']['status'] ?? null) === 'approved' ||
+            in_array('start_qa', $data['allowed_actions'], true)
+        );
+        $data['allowed_actions'] = $this->workspaceAllowedActions($ticket, $currentAssignment?->assignment_type, $user->hasRole('supervisor_it'));
 
         return ApiResponse::success($request, 'PIC ticket retrieved', $data);
     }
@@ -713,6 +718,42 @@ final class PicTicketController extends Controller
     }
 
     // Helper assertions
+    /**
+     * @return list<string>
+     */
+    private function workspaceAllowedActions(Ticket $ticket, ?string $assignmentRole, bool $isSupervisor): array
+    {
+        if (in_array($ticket->status, [TicketStatus::Done, TicketStatus::Closed, TicketStatus::Rejected, TicketStatus::Cancelled], true)) {
+            return [];
+        }
+
+        $isPrimary = $assignmentRole === 'primary' || $isSupervisor;
+        $actions = [
+            'add_work_note',
+            'update_progress',
+            'upload_attachment',
+            'mark_waiting_external',
+            'internal_check',
+            'request_assistance',
+            'request_transfer',
+        ];
+
+        if ($isPrimary) {
+            $actions[] = 'request_info';
+        }
+        if ($isPrimary && in_array($ticket->status, [TicketStatus::Assigned, TicketStatus::UnderAnalysis], true)) {
+            $actions[] = 'start';
+        }
+        if (in_array($ticket->status, [TicketStatus::NeedInfo, TicketStatus::WaitingExternal, TicketStatus::OnHold], true)) {
+            $actions[] = 'resume';
+        }
+        if ($isPrimary && ! in_array($ticket->status, [TicketStatus::NeedInfo, TicketStatus::WaitingExternal], true)) {
+            $actions[] = 'submit_for_approval';
+        }
+
+        return $actions;
+    }
+
     private function ensureActiveAssignment(Ticket $ticket, $user): void
     {
         $hasAssignment = $ticket->assignments()

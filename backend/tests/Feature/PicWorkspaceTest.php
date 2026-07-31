@@ -82,6 +82,41 @@ class PicWorkspaceTest extends TestCase
             ->assertJsonCount(1, 'data');
     }
 
+    public function test_pic_detail_exposes_workspace_actions_for_assignment_role_and_status(): void
+    {
+        $primaryResponse = $this->actingAs($this->picSupport)
+            ->getJson("/api/v1/pic/tickets/{$this->ticket->id}");
+
+        $primaryResponse->assertOk()
+            ->assertJsonPath('data.user_assignment_role', 'primary')
+            ->assertJsonFragment(['allowed_actions' => [
+                'add_work_note',
+                'update_progress',
+                'upload_attachment',
+                'mark_waiting_external',
+                'internal_check',
+                'request_assistance',
+                'request_transfer',
+                'request_info',
+                'start',
+                'submit_for_approval',
+            ]]);
+
+        $this->assignmentService->addSecondary($this->ticket, $this->supervisor, $this->picDevelop, 'Assigned secondary');
+
+        $secondaryResponse = $this->actingAs($this->picDevelop)
+            ->getJson("/api/v1/pic/tickets/{$this->ticket->id}");
+
+        $secondaryResponse->assertOk()
+            ->assertJsonPath('data.user_assignment_role', 'secondary');
+
+        $secondaryActions = $secondaryResponse->json('data.allowed_actions');
+        $this->assertContains('add_work_note', $secondaryActions);
+        $this->assertNotContains('request_info', $secondaryActions);
+        $this->assertNotContains('start', $secondaryActions);
+        $this->assertNotContains('submit_for_approval', $secondaryActions);
+    }
+
     public function test_pic_ticket_list_caps_per_page_at_one_hundred(): void
     {
         $this->actingAs($this->picSupport)

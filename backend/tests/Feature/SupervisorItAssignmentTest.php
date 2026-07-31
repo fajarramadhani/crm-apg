@@ -47,7 +47,7 @@ class SupervisorItAssignmentTest extends TestCase
         $this->picSupport = $this->createUser('pic_it_support', divisionId: $div1->id, branchId: $branch1->id);
         $this->picDevelop = $this->createUser('pic_it_develop', divisionId: $div2->id, branchId: $branch2->id);
         $this->requester = $this->createUser('requester', divisionId: $div1->id, branchId: $branch1->id);
-        $this->admin = $this->createUser('admin', divisionId: $div1->id, branchId: $branch1->id);
+        $this->admin = $this->createUser('superadmin', divisionId: $div1->id, branchId: $branch1->id);
     }
 
     public function test_supervisor_it_can_view_all_tickets_across_divisions_and_branches(): void

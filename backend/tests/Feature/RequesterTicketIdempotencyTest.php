@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\Models\Application;
 use App\Models\Division;
 use App\Models\IdempotencyRecord;
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\ApplicationSystemSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -22,12 +24,16 @@ class RequesterTicketIdempotencyTest extends TestCase
 
     private Division $division;
 
+    private Application $application;
+
     protected function setUp(): void
     {
         parent::setUp();
 
         Storage::fake(config('tickets.attachment_disk', 'local'));
         $this->seed(RoleSeeder::class);
+        $this->seed(ApplicationSystemSeeder::class);
+        $this->application = Application::query()->where('code', 'HRIS')->firstOrFail();
 
         $this->division = Division::query()->create([
             'code' => 'IT',
@@ -132,11 +138,14 @@ class RequesterTicketIdempotencyTest extends TestCase
         $headers = $key === null ? [] : ['Idempotency-Key' => $key];
 
         return $this->actingAs($user)->withHeaders($headers)->postJson('/api/v1/requester/tickets', [
+            'request_category' => 'error_bug',
+            'application_id' => $this->application->id,
             'title' => $title,
             'description' => 'The same logical request should create one ticket.',
             'affected_url' => 'https://example.com/idempotency',
             'reference' => 'REF-100',
             'attachments' => [UploadedFile::fake()->create('evidence.pdf', 10, 'application/pdf')],
+            'urgency' => 'medium',
         ]);
     }
 

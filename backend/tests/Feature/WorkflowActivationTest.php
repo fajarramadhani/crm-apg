@@ -20,7 +20,7 @@ class WorkflowActivationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $adminRole = Role::factory()->create(['key' => 'admin']);
+        $adminRole = Role::factory()->create(['key' => 'superadmin']);
         $this->admin = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
     }
 

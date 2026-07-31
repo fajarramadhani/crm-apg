@@ -23,8 +23,8 @@ export const PicTransferRequestForm: React.FC<PicTransferRequestFormProps> = ({ 
     try {
       await onSubmit({ reason: reason.trim() })
       onClose()
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Gagal mengirim permintaan pengalihan.')
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'Gagal mengirim permintaan pengalihan.')
     } finally {
       setSubmitting(false)
     }
@@ -32,8 +32,8 @@ export const PicTransferRequestForm: React.FC<PicTransferRequestFormProps> = ({ 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
-        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+      <div className="flex items-center justify-between border-b pb-3 border-slate-200">
+        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
           <ArrowRightLeft className="w-5 h-5 text-amber-600" /> Ajukan Pengalihan Tiket (Transfer)
         </h3>
       </div>
@@ -46,7 +46,7 @@ export const PicTransferRequestForm: React.FC<PicTransferRequestFormProps> = ({ 
       )}
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
           Alasan Pengalihan <span className="text-red-500">*</span>
         </label>
         <textarea
@@ -54,22 +54,22 @@ export const PicTransferRequestForm: React.FC<PicTransferRequestFormProps> = ({ 
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           placeholder="Jelaskan secara spesifik alasan pengalihan tiket (misal: terkait sistem eksternal lain, pergantian shift, beban pengerjaan)..."
-          className="w-full p-3 text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-amber-500 focus:outline-none"
+          className="w-full p-3 text-sm border border-slate-300 rounded-lg bg-slate-50 text-slate-900 focus:ring-2 focus:ring-amber-500 focus:outline-none"
           required
         />
       </div>
 
-      <div className="p-3 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800 dark:text-amber-300">
+      <div className="p-3 bg-amber-50 border border-amber-200 dark:border-amber-800 rounded-lg text-xs text-amber-800">
         Pengalihan tidak otomatis memindahkan penugasan tiket. Permintaan akan dievaluasi dan diputuskan oleh Supervisor
         IT.
       </div>
 
-      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
         <button
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
         >
           Batal
         </button>

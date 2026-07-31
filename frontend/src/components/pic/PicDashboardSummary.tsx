@@ -1,98 +1,124 @@
 import React from 'react'
 import type { PicDashboardStats } from '../../types'
-import { Inbox, Clock, HelpCircle, ExternalLink, AlertTriangle, AlertCircle, CheckSquare } from 'lucide-react'
+import { AlertCircle, AlertTriangle, CheckSquare, Clock, ExternalLink, HelpCircle, Inbox } from 'lucide-react'
 
 interface PicDashboardSummaryProps {
   stats: PicDashboardStats
   activeFilter?: string
+  loading?: boolean
   onSelectFilter?: (filterKey: string) => void
 }
 
-export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({ stats, activeFilter, onSelectFilter }) => {
+export const PicDashboardSummary: React.FC<PicDashboardSummaryProps> = ({
+  stats,
+  activeFilter,
+  loading = false,
+  onSelectFilter,
+}) => {
   const cards = [
     {
       key: 'new_assigned',
       title: 'Baru Ditugaskan',
       count: stats.new_assigned,
       icon: Inbox,
-      color: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+      accent: 'border-l-blue-500 text-blue-600 bg-blue-50',
     },
     {
       key: 'in_progress',
       title: 'Sedang Ditangani',
       count: stats.in_progress,
       icon: Clock,
-      color:
-        'bg-indigo-50 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800',
+      accent: 'border-l-indigo-500 text-indigo-600 bg-indigo-50',
     },
     {
       key: 'waiting_info',
       title: 'Menunggu Informasi',
       count: stats.waiting_info,
       icon: HelpCircle,
-      color:
-        'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400 border-amber-200 dark:border-amber-800',
+      accent: 'border-l-amber-500 text-amber-600 bg-amber-50',
     },
     {
       key: 'waiting_external',
       title: 'Menunggu Eksternal',
       count: stats.waiting_external,
       icon: ExternalLink,
-      color:
-        'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400 border-purple-200 dark:border-purple-800',
+      accent: 'border-l-violet-500 text-violet-600 bg-violet-50',
     },
     {
       key: 'need_revision',
       title: 'Perlu Perbaikan',
       count: stats.need_revision,
       icon: AlertTriangle,
-      color:
-        'bg-orange-50 text-orange-600 dark:bg-orange-900/20 dark:text-orange-400 border-orange-200 dark:border-orange-800',
+      accent: 'border-l-orange-500 text-orange-600 bg-orange-50',
     },
     {
       key: 'nearing_due',
       title: 'Mendekati Target',
       count: stats.nearing_due,
       icon: AlertCircle,
-      color:
-        'bg-yellow-50 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
+      accent: 'border-l-yellow-600 text-yellow-700 bg-yellow-50',
     },
     {
       key: 'overdue',
       title: 'Melewati Target',
       count: stats.overdue,
       icon: AlertCircle,
-      color: 'bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 border-red-200 dark:border-red-800',
+      accent: 'border-l-red-500 text-red-600 bg-red-50',
     },
     {
       key: 'pending_supervisor_check',
       title: 'Menunggu Supervisor',
       count: stats.pending_supervisor_check,
       icon: CheckSquare,
-      color:
-        'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800',
+      accent: 'border-l-teal-500 text-teal-600 bg-teal-50',
     },
   ]
 
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-live="polite" aria-busy="true">
+        {cards.map((card) => (
+          <div key={card.key} className="h-[118px] animate-pulse rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div className="h-4 w-28 rounded bg-slate-200" />
+              <div className="h-10 w-10 rounded-xl bg-slate-200" />
+            </div>
+            <div className="h-8 w-16 rounded bg-slate-200" />
+            <div className="mt-2 h-4 w-14 rounded bg-slate-100" />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   return (
-    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {cards.map((card) => {
         const IconComponent = card.icon
         const isSelected = activeFilter === card.key
+        const clickable = Boolean(onSelectFilter)
 
         return (
           <button
             key={card.key}
+            type="button"
             onClick={() => onSelectFilter?.(card.key)}
-            className={`flex flex-col p-4 rounded-xl border transition-all text-left ${card.color} ${
-              isSelected ? 'ring-2 ring-primary border-transparent shadow-md' : 'hover:shadow-sm hover:border-slate-300'
-            }`}
+            className={`flex min-h-[118px] flex-col rounded-2xl border border-slate-200 border-l-4 bg-white p-5 text-left shadow-sm transition ${
+              card.accent
+            } ${
+              clickable
+                ? 'cursor-pointer hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500/30'
+                : 'cursor-default'
+            } ${isSelected ? 'ring-2 ring-blue-500/30 border-slate-300' : ''}`}
           >
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-xs font-semibold uppercase tracking-wider opacity-80">{card.title}</span>
-              <IconComponent className="w-5 h-5 opacity-80" />
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <span className="text-sm font-semibold text-slate-700">{card.title}</span>
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-current/10 bg-current/10">
+                <IconComponent className="h-5 w-5" aria-hidden="true" />
+              </span>
             </div>
-            <div className="text-2xl font-bold">{card.count}</div>
+            <span className="text-3xl font-bold leading-none text-slate-950">{card.count}</span>
+            <span className="mt-2 text-sm text-slate-500">tiket</span>
           </button>
         )
       })}

@@ -220,23 +220,25 @@ final class SupervisorItControlCenterTest extends TestCase
             ->assertJsonPath('data.audit_timeline_meta.has_more', true);
     }
 
-    public function test_supervisor_it_can_analyze_and_atomically_assign_pic(): void
+    public function test_supervisor_it_can_save_analysis_without_changing_requester_classification_or_assignment(): void
     {
+        $requesterTarget = now()->addDays(10)->startOfDay();
         $ticket = Ticket::factory()->create([
             'requester_id' => $this->requester->id,
             'division_id' => $this->division->id,
+            'application_id' => $this->appModel->id,
+            'ticket_category_id' => $this->category->id,
+            'final_priority_id' => $this->priority->id,
+            'request_category' => 'error_bug',
+            'urgency' => 'high',
+            'target_needed_at' => $requesterTarget,
             'status' => TicketStatus::PendingValidation,
         ]);
 
         $payload = [
-            'application_id' => $this->appModel->id,
-            'ticket_category_id' => $this->category->id,
-            'priority_id' => $this->priority->id,
             'target_completion_date' => now()->addDays(3)->toDateString(),
-            'analysis_notes' => 'Catatan analisis awal supervisor',
-            'assign_primary_user_id' => $this->picSupport->id,
-            'secondary_user_ids' => [$this->picDevelop->id],
-            'assignment_notes' => 'Tolong ditangani secepatnya',
+            'analysis_summary' => 'Masalah teridentifikasi pada integrasi internal.',
+            'handling_note' => 'Periksa log integrasi sebelum melakukan perbaikan.',
         ];
 
         $response = $this->actingAs($this->supervisorIt)
@@ -249,22 +251,57 @@ final class SupervisorItControlCenterTest extends TestCase
         $this->assertEquals($this->appModel->id, $ticket->application_id);
         $this->assertEquals($this->category->id, $ticket->ticket_category_id);
         $this->assertEquals($this->priority->id, $ticket->final_priority_id);
-        $this->assertEquals($this->picSupport->id, $ticket->current_assignee_id);
-        $this->assertEquals(TicketStatus::Assigned, $ticket->status);
+        $this->assertEquals('error_bug', $ticket->request_category);
+        $this->assertEquals('high', $ticket->urgency);
+        $this->assertTrue($ticket->target_needed_at->equalTo($requesterTarget));
+        $this->assertNull($ticket->current_assignee_id);
+        $this->assertEquals(TicketStatus::UnderAnalysis, $ticket->status);
+        $this->assertNotNull($ticket->analysis_started_at);
 
-        $this->assertDatabaseHas('ticket_assignments', [
+        $this->assertDatabaseHas('ticket_comments', [
             'ticket_id' => $ticket->id,
-            'assigned_to' => $this->picSupport->id,
-            'assignment_type' => 'primary',
-            'is_current' => true,
+            'type' => 'analysis_summary',
+            'comment' => 'Masalah teridentifikasi pada integrasi internal.',
         ]);
 
-        $this->assertDatabaseHas('ticket_assignments', [
+        $this->assertDatabaseHas('ticket_comments', [
             'ticket_id' => $ticket->id,
-            'assigned_to' => $this->picDevelop->id,
-            'assignment_type' => 'secondary',
-            'is_current' => true,
+            'type' => 'handling_note',
+            'comment' => 'Periksa log integrasi sebelum melakukan perbaikan.',
         ]);
+    }
+
+    public function test_analysis_rejects_requester_classification_and_assignment_fields(): void
+    {
+        $ticket = Ticket::factory()->create([
+            'requester_id' => $this->requester->id,
+            'division_id' => $this->division->id,
+            'status' => TicketStatus::PendingValidation,
+        ]);
+
+        $this->actingAs($this->supervisorIt)
+            ->postJson("/api/v1/supervisor-it/tickets/{$ticket->id}/analyze", [
+                'analysis_summary' => 'Analisis yang valid.',
+                'application_id' => $this->appModel->id,
+                'application_module_id' => 1,
+                'ticket_category_id' => $this->category->id,
+                'urgency' => 'low',
+                'priority_id' => $this->priority->id,
+                'assign_primary_user_id' => $this->picSupport->id,
+                'secondary_user_ids' => [$this->picDevelop->id],
+            ])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors([
+                'application_id',
+                'application_module_id',
+                'ticket_category_id',
+                'urgency',
+                'priority_id',
+                'assign_primary_user_id',
+                'secondary_user_ids',
+            ]);
+
+        $this->assertDatabaseCount('ticket_assignments', 0);
     }
 
     public function test_supervisor_can_assign_self_as_pic(): void

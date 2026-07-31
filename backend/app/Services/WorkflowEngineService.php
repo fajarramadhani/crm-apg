@@ -510,7 +510,10 @@ final class WorkflowEngineService
             $roleKey = $perm['role_key'] ?? null;
 
             // Role-based check
-            if ($roleKey && $actorRole === $roleKey) {
+            $roleMatches = $actorRole === $roleKey
+                || ($actorRole === 'superadmin' && $roleKey === 'admin');
+
+            if ($roleKey && $roleMatches) {
                 // Additional assignment checks
                 if (! $this->checkAssignmentRule($transition['action_key'], $ticket, $actor, $roleKey)) {
                     continue;

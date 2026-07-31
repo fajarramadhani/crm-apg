@@ -29,7 +29,7 @@ class RequesterTicketController extends Controller
 
         $ticket = $service->createTicket($user, $request->validated(), $files, $idempotencyKey);
 
-        $ticket->load(['requester', 'division', 'branch', 'attachments']);
+        $ticket->load(['requester', 'division', 'branch', 'office', 'application', 'publicHandlingAssignments.assignee.role', 'attachments']);
 
         return ApiResponse::success(
             $request,

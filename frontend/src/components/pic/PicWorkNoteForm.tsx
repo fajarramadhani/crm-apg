@@ -24,8 +24,8 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
     try {
       await onSubmit({ content: content.trim(), visibility })
       onClose()
-    } catch (err: any) {
-      setError(err?.response?.data?.message || 'Gagal menyimpan catatan pekerjaan.')
+    } catch (cause: unknown) {
+      setError(cause instanceof Error ? cause.message : 'Gagal menyimpan catatan pekerjaan.')
     } finally {
       setSubmitting(false)
     }
@@ -33,8 +33,8 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="flex items-center justify-between border-b pb-3 border-slate-200 dark:border-slate-800">
-        <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+      <div className="flex items-center justify-between border-b pb-3 border-slate-200">
+        <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
           <MessageSquare className="w-5 h-5 text-primary" /> Tambah Catatan Pekerjaan
         </h3>
       </div>
@@ -42,7 +42,7 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
       {error && <div className="p-3 text-xs bg-red-50 text-red-600 rounded-lg border border-red-200">{error}</div>}
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
           Isi Catatan Pekerjaan <span className="text-red-500">*</span>
         </label>
         <textarea
@@ -50,13 +50,13 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
           value={content}
           onChange={(e) => setContent(e.target.value)}
           placeholder="Tuliskan detail perbaikan, temuan teknis, atau perkembangan pengerjaan..."
-          className="w-full p-3 text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-primary focus:outline-none"
+          className="w-full p-3 text-sm border border-slate-300 rounded-lg bg-slate-50 text-slate-900 focus:ring-2 focus:ring-primary focus:outline-none"
           required
         />
       </div>
 
       <div>
-        <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+        <label className="block text-xs font-semibold text-slate-700 mb-1">
           Visibilitas Catatan
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -64,7 +64,7 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
             className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer text-xs font-medium transition ${
               visibility === 'internal'
                 ? 'border-primary bg-primary/5 text-primary'
-                : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                : 'border-slate-200 text-slate-600'
             }`}
           >
             <input
@@ -86,7 +86,7 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
             className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer text-xs font-medium transition ${
               visibility === 'requester_visible'
                 ? 'border-primary bg-primary/5 text-primary'
-                : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400'
+                : 'border-slate-200 text-slate-600'
             }`}
           >
             <input
@@ -106,12 +106,12 @@ export const PicWorkNoteForm: React.FC<PicWorkNoteFormProps> = ({ onSubmit, onCl
         </div>
       </div>
 
-      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
         <button
           type="button"
           onClick={onClose}
           disabled={submitting}
-          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition"
+          className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
         >
           Batal
         </button>

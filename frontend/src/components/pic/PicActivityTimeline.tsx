@@ -1,6 +1,6 @@
 import React from 'react'
 import type { PicTicketDetailData } from '../../services/ticketService'
-import { STATUS_LABELS } from '../../presentation'
+import { getPublicStatusLabel } from '../../presentation'
 import { Clock, MessageSquare, Paperclip, HelpCircle, ExternalLink, Users, ArrowRightLeft, Lock } from 'lucide-react'
 
 interface PicActivityTimelineProps {
@@ -18,7 +18,7 @@ export const PicActivityTimeline: React.FC<PicActivityTimelineProps> = ({ ticket
       id: `h-${h.id}`,
       type: 'history' as const,
       timestamp: h.created_at,
-      title: h.action ? `Aksi: ${h.action}` : `Status: ${STATUS_LABELS[h.to_status] ?? h.to_status}`,
+      title: h.action ? `Aksi: ${h.action}` : `Status: ${getPublicStatusLabel(h.to_status)}`,
       actor: h.actor?.name ?? 'Sistem',
       comment: h.notes ?? null,
       from_status: h.from_status,
@@ -28,7 +28,7 @@ export const PicActivityTimeline: React.FC<PicActivityTimelineProps> = ({ ticket
       id: `c-${c.id}`,
       type: 'comment' as const,
       timestamp: c.created_at,
-      title: c.type ? `Catatan [${c.type.toUpperCase()}]` : 'Komentar',
+      title: c.type ? `Catatan [Catatan Internal PIC]` : 'Komentar',
       actor: c.user?.name ?? 'User',
       comment: c.comment,
       is_internal: c.is_internal,
@@ -39,27 +39,27 @@ export const PicActivityTimeline: React.FC<PicActivityTimelineProps> = ({ ticket
       timestamp: a.created_at,
       title: `Lampiran: ${a.original_name}`,
       actor: a.uploader?.name ?? 'User',
-      comment: `Ukuran: ${Math.round(a.size / 1024)} KB (${a.visibility})`,
+      comment: `Ukuran: ${Math.round(a.size / 1024)} KB`,
       visibility: a.visibility,
     })),
   ].sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
 
   const getIcon = (item: (typeof timelineItems)[0]) => {
-    if (item.type === 'attachment') return <Paperclip className="w-4 h-4 text-purple-500" />
+    if (item.type === 'attachment') return <Paperclip className="w-3.5 h-3.5 text-purple-500" />
     if (item.type === 'comment') {
-      if (item.title.includes('INFO_REQUEST')) return <HelpCircle className="w-4 h-4 text-amber-500" />
-      if (item.title.includes('WAITING_EXTERNAL')) return <ExternalLink className="w-4 h-4 text-purple-500" />
-      if (item.title.includes('ASSISTANCE')) return <Users className="w-4 h-4 text-blue-500" />
-      if (item.title.includes('TRANSFER')) return <ArrowRightLeft className="w-4 h-4 text-amber-500" />
-      return <MessageSquare className="w-4 h-4 text-blue-500" />
+      if (item.title.includes('INFO_REQUEST')) return <HelpCircle className="w-3.5 h-3.5 text-amber-500" />
+      if (item.title.includes('WAITING_EXTERNAL')) return <ExternalLink className="w-3.5 h-3.5 text-purple-500" />
+      if (item.title.includes('ASSISTANCE')) return <Users className="w-3.5 h-3.5 text-blue-500" />
+      if (item.title.includes('TRANSFER')) return <ArrowRightLeft className="w-3.5 h-3.5 text-amber-500" />
+      return <MessageSquare className="w-3.5 h-3.5 text-blue-500" />
     }
-    return <Clock className="w-4 h-4 text-slate-400" />
+    return <Clock className="w-3.5 h-3.5 text-slate-400" />
   }
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
-      <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2 border-b pb-3 border-slate-100 dark:border-slate-800">
-        <Clock className="w-4 h-4 text-primary" /> Riwayat & Audit Trail Pekerjaan
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
+      <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2 border-b pb-3 border-slate-100">
+        <Clock className="w-4 h-4 text-[#1E3A8A]" /> Timeline Aktivitas
       </h3>
 
       {timelineItems.length === 0 ? (
@@ -67,20 +67,20 @@ export const PicActivityTimeline: React.FC<PicActivityTimelineProps> = ({ ticket
           Belum ada aktivitas tercatat pada tiket ini.
         </div>
       ) : (
-        <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200 dark:before:bg-slate-800">
+        <div className="relative pl-6 space-y-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-200">
           {timelineItems.map((item) => (
             <div key={item.id} className="relative group">
-              <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 flex items-center justify-center">
+              <div className="absolute -left-6 top-0.5 w-5 h-5 rounded-full bg-white border border-slate-300 flex items-center justify-center">
                 {getIcon(item)}
               </div>
 
               <div className="space-y-1">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                  <span className="font-semibold text-slate-900 flex items-center gap-1.5">
                     {item.title}
                     {'is_internal' in item && item.is_internal && (
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold px-1.5 py-0.2 rounded bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                        <Lock className="w-2.5 h-2.5" /> Internal
+                      <span className="inline-flex items-center gap-0.5 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-amber-50 text-amber-700">
+                        <Lock className="w-2.5 h-2.5" /> Catatan Internal PIC
                       </span>
                     )}
                   </span>
@@ -95,12 +95,12 @@ export const PicActivityTimeline: React.FC<PicActivityTimelineProps> = ({ ticket
                   </span>
                 </div>
 
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Oleh: <span className="font-medium text-slate-700 dark:text-slate-300">{item.actor}</span>
+                <div className="text-xs text-slate-500">
+                  Oleh: <span className="font-medium text-slate-700">{item.actor}</span>
                 </div>
 
                 {item.comment && (
-                  <p className="text-xs text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 mt-1 whitespace-pre-line">
+                  <p className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 mt-1 whitespace-pre-line leading-relaxed">
                     {item.comment}
                   </p>
                 )}

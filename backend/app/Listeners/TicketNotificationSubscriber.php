@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Enums\RequesterCategory;
 use App\Events\TicketAssigned;
 use App\Events\TicketClosed;
 use App\Events\TicketDeploymentFailed;
@@ -26,21 +27,26 @@ class TicketNotificationSubscriber
 
     public function handleTicketSubmitted(TicketSubmitted $event): void
     {
+        $ticket = $event->ticket->loadMissing(['requester:id,name', 'application:id,name']);
+        $category = RequesterCategory::tryFrom((string) $ticket->request_category)?->label() ?? 'Belum tersedia';
+        $system = $ticket->application?->name ?? 'Belum tersedia';
+        $urgency = $ticket->urgency ? strtoupper($ticket->urgency) : 'Belum tersedia';
+
         $this->notificationService->dispatch(
-            ticket: $event->ticket,
+            ticket: $ticket,
             type: 'supervisor_validation_required',
             severity: 'info',
-            title: 'Ticket Validation Required',
-            message: "New ticket {$event->ticket->ticket_number} requires validation.",
+            title: 'Pengajuan Tiket Baru',
+            message: "{$ticket->ticket_number} | {$category} | {$system} | {$urgency} | {$ticket->title} | Requester: {$ticket->requester?->name}",
             actionUrl: '/supervisor/validation-queue'
         );
         $this->notificationService->dispatch(
-            ticket: $event->ticket,
+            ticket: $ticket,
             type: 'ticket_submitted',
             severity: 'success',
-            title: 'Ticket Submitted',
-            message: "Your ticket {$event->ticket->ticket_number} has been submitted successfully.",
-            actionUrl: "/tickets/{$event->ticket->id}"
+            title: 'Tiket Berhasil Diajukan',
+            message: "Tiket {$ticket->ticket_number} berhasil diajukan.",
+            actionUrl: "/user/tickets/{$ticket->id}"
         );
     }
 

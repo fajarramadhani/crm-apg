@@ -137,7 +137,7 @@ class SeedStage9BrowserFixturesCommand extends Command
             'supervisor' => ['name' => 'Stage 9 Supervisor IT', 'email' => 'supervisor-it@stage9.invalid', 'role' => 'supervisor_it'],
             'support' => ['name' => 'Stage 9 Support PIC', 'email' => 'support-pic@stage9.invalid', 'role' => 'pic_it_support'],
             'develop' => ['name' => 'Stage 9 Develop PIC', 'email' => 'develop-pic@stage9.invalid', 'role' => 'pic_it_develop'],
-            'admin' => ['name' => 'Stage 9 Admin', 'email' => 'admin@stage9.invalid', 'role' => 'admin'],
+            'superadmin' => ['name' => 'Stage 9 Super Admin', 'email' => 'admin@stage9.invalid', 'role' => 'superadmin'],
             'legacy_it_lead' => ['name' => 'Stage 9 Legacy IT Lead', 'email' => 'legacy-it-lead@stage9.invalid', 'role' => 'it_lead'],
             'legacy_pic' => ['name' => 'Stage 9 Legacy PIC', 'email' => 'legacy-pic@stage9.invalid', 'role' => 'pic'],
             'legacy_qa' => ['name' => 'Stage 9 Legacy QA', 'email' => 'legacy-qa@stage9.invalid', 'role' => 'qa'],

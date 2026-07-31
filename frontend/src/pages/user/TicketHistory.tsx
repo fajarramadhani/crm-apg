@@ -5,15 +5,13 @@ import {
   FilterBar,
   Input,
   PageHeader,
-  PriorityBadge,
   Select,
-  StatusBadge,
   Table,
   TD,
   TR,
 } from '../../components/ui'
 import { ticketService, type TicketRecord } from '../../services/ticketService'
-import type { Priority, TicketStatus } from '../../types'
+import { getPublicStatusLabel } from '../../presentation'
 
 import { useAuth } from '../../context/AuthContext'
 
@@ -120,7 +118,7 @@ export default function TicketHistory() {
             <p className="text-sm text-gray-500 mt-1">Buat tiket baru atau ubah filter pencarian.</p>
           </div>
         ) : (
-          <Table headers={['Nomor', 'Judul', 'Kategori', 'Prioritas Usulan', 'Status', 'Dibuat']}>
+          <Table headers={['Nomor', 'Judul', 'Kategori', 'Sistem', 'Urgency', 'Status', 'Informasi Penanganan', 'Tanggal Pengajuan']}>
             {tickets.map((ticket) => (
               <TR key={ticket.id} onClick={() => navigate(`/user/tickets/${ticket.id}`)}>
                 <TD>
@@ -129,21 +127,22 @@ export default function TicketHistory() {
                 <TD>
                   <div className="max-w-[280px]">
                     <p className="font-medium text-sm truncate">{ticket.title}</p>
-                    <p className="text-xs text-gray-400 truncate">{ticket.application?.name || 'Tanpa aplikasi'}</p>
                   </div>
                 </TD>
                 <TD>
-                  <span className="text-xs">{ticket.category?.name || '—'}</span>
+                  <span className="text-xs">{ticket.request_category?.label || 'Kategori belum tersedia'}</span>
                 </TD>
                 <TD>
-                  {ticket.requested_priority ? (
-                    <PriorityBadge priority={ticket.requested_priority.key as Priority} />
-                  ) : (
-                    <span className="text-xs text-gray-400">—</span>
-                  )}
+                  <span className="text-xs">{ticket.application?.name || 'Sistem belum tersedia'}</span>
                 </TD>
                 <TD>
-                  <StatusBadge status={ticket.status as TicketStatus} />
+                  <span className="rounded-full bg-gray-100 px-2 py-1 text-xs font-semibold">{ticket.urgency?.toUpperCase() || 'Urgency belum tersedia'}</span>
+                </TD>
+                <TD>
+                  <span className="rounded-full bg-blue-50 px-2 py-1 text-xs font-semibold text-blue-800">{getPublicStatusLabel(ticket.status)}</span>
+                </TD>
+                <TD>
+                  <p className="min-w-52 text-xs leading-relaxed text-gray-600">{ticket.handling.message}</p>
                 </TD>
                 <TD>
                   <span className="text-xs whitespace-nowrap text-gray-500">

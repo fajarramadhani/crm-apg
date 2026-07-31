@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Application;
 use App\Models\Branch;
 use App\Models\Division;
+use App\Models\Office;
 use App\Models\Role;
 use App\Models\TicketCategory;
 use App\Models\TicketPriority;
@@ -22,15 +23,16 @@ class DatabaseSeederSafetyTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_default_seeder_creates_only_canonical_roles(): void
+    public function test_default_seeder_creates_canonical_roles_offices_and_requester_systems(): void
     {
         $this->seed(DatabaseSeeder::class);
 
         $this->assertSame(11, Role::query()->count());
         $this->assertSame(0, User::query()->count());
+        $this->assertSame(4, Office::query()->count());
         $this->assertSame(0, Division::query()->count());
         $this->assertSame(0, Branch::query()->count());
-        $this->assertSame(0, Application::query()->count());
+        $this->assertSame(7, Application::query()->count());
         $this->assertSame(0, TicketCategory::query()->count());
         $this->assertSame(0, TicketPriority::query()->count());
         $this->assertSame(0, WorkingCalendar::query()->count());

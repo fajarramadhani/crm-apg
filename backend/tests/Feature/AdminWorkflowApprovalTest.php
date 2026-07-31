@@ -20,7 +20,7 @@ class AdminWorkflowApprovalTest extends TestCase
     {
         parent::setUp();
 
-        $adminRole = Role::factory()->create(['key' => 'admin', 'name' => 'Admin']);
+        $adminRole = Role::factory()->create(['key' => 'superadmin', 'name' => 'Super Admin']);
         $requesterRole = Role::factory()->create(['key' => 'requester', 'name' => 'Requester']);
         $this->admin = User::factory()->create(['role_id' => $adminRole->id, 'is_active' => true]);
         $this->requester = User::factory()->create(['role_id' => $requesterRole->id, 'is_active' => true]);

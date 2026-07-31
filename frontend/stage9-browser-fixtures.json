@@ -21,7 +21,7 @@
     "supervisor": { "id": 2, "email": "supervisor-it@stage9.invalid", "role": "supervisor_it" },
     "support": { "id": 3, "email": "support-pic@stage9.invalid", "role": "pic_it_support" },
     "develop": { "id": 4, "email": "develop-pic@stage9.invalid", "role": "pic_it_develop" },
-    "admin": { "id": 5, "email": "admin@stage9.invalid", "role": "admin" },
+    "superadmin": { "id": 5, "email": "admin@stage9.invalid", "role": "superadmin" },
     "legacy_it_lead": { "id": 6, "email": "legacy-it-lead@stage9.invalid", "role": "it_lead" },
     "legacy_pic": { "id": 7, "email": "legacy-pic@stage9.invalid", "role": "pic" },
     "legacy_qa": { "id": 8, "email": "legacy-qa@stage9.invalid", "role": "qa" }

@@ -304,86 +304,53 @@ final class SupervisorItTicketController extends Controller
 
     public function analyze(
         AnalyzeTicketRequest $request,
-        Ticket $ticket,
-        DynamicAssignmentService $assignmentService
+        Ticket $ticket
     ): JsonResponse {
         Gate::authorize('view', $ticket);
 
-        DB::transaction(function () use ($request, $ticket, $assignmentService): void {
+        DB::transaction(function () use ($request, $ticket): void {
             $locked = Ticket::query()->lockForUpdate()->findOrFail($ticket->id);
 
             $oldStatus = $locked->status;
-            $locked->application_id = $request->integer('application_id');
-            $locked->application_module_id = $request->filled('application_module_id') ? $request->integer('application_module_id') : null;
-            $locked->ticket_category_id = $request->integer('ticket_category_id');
-            $locked->final_priority_id = $request->integer('priority_id');
-            $locked->resolution_due_at = $request->date('target_completion_date');
-            $locked->target_needed_at = $request->date('target_completion_date');
+            if ($request->filled('target_completion_date')) {
+                $locked->resolution_due_at = $request->date('target_completion_date');
+            }
 
-            if ($request->filled('analysis_notes')) {
+            if (in_array($locked->status, [TicketStatus::PendingValidation, TicketStatus::Submitted, TicketStatus::Draft], true)) {
+                $locked->status = TicketStatus::UnderAnalysis;
+            }
+            $locked->analysis_started_at ??= now();
+
+            $locked->save();
+
+            $locked->comments()->create([
+                'user_id' => $request->user()->id,
+                'type' => 'analysis_summary',
+                'comment' => $request->string('analysis_summary'),
+                'is_internal' => true,
+            ]);
+
+            if ($request->filled('handling_note')) {
                 $locked->comments()->create([
                     'user_id' => $request->user()->id,
-                    'type' => 'analysis_note',
-                    'comment' => $request->string('analysis_notes'),
+                    'type' => 'handling_note',
+                    'comment' => $request->string('handling_note'),
                     'is_internal' => true,
                 ]);
             }
 
-            // Status transition if initial stage
-            if ($request->filled('assign_primary_user_id')) {
-                $locked->status = TicketStatus::Assigned;
-                $locked->assigned_at = now();
-            } elseif (in_array($locked->status, [TicketStatus::PendingValidation, TicketStatus::Submitted, TicketStatus::Draft], true)) {
-                $locked->status = TicketStatus::UnderAnalysis;
-                $locked->analysis_started_at = now();
-            }
-
-            $locked->save();
-
-            // Record status history
             $locked->histories()->create([
                 'from_status' => $oldStatus->value,
                 'to_status' => $locked->status->value,
                 'action' => 'analyzed',
                 'actor_id' => $request->user()->id,
                 'actor_role' => $request->user()->role?->key ?? 'supervisor_it',
-                'notes' => $request->input('analysis_notes'),
+                'notes' => $request->input('analysis_summary'),
                 'metadata' => [
-                    'problem_source' => $request->input('problem_source'),
-                    'priority_id' => $request->integer('priority_id'),
+                    'handling_note' => $request->input('handling_note'),
                     'target_completion_date' => $request->input('target_completion_date'),
                 ],
             ]);
-
-            // Atomic assignment if primary user provided
-            if ($request->filled('assign_primary_user_id')) {
-                $targetUser = User::query()->findOrFail($request->integer('assign_primary_user_id'));
-                $assignmentService->assignPrimary(
-                    $locked,
-                    $request->user(),
-                    $targetUser,
-                    $request->input('assignment_notes'),
-                    $request->input('assignment_reason'),
-                    $request->date('target_completion_date')
-                );
-
-                if ($request->filled('secondary_user_ids') && is_array($request->input('secondary_user_ids'))) {
-                    foreach ($request->input('secondary_user_ids') as $secId) {
-                        if ($secId != $targetUser->id) {
-                            $secUser = User::query()->find($secId);
-                            if ($secUser) {
-                                $assignmentService->addSecondary(
-                                    $locked,
-                                    $request->user(),
-                                    $secUser,
-                                    $request->input('assignment_notes'),
-                                    $request->input('assignment_reason')
-                                );
-                            }
-                        }
-                    }
-                }
-            }
         });
 
         $ticket->load([...self::RELATIONS, 'assignments.assignee.role', 'assignmentHistories']);

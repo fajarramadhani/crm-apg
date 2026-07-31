@@ -1,9 +1,19 @@
 import React from 'react'
 import type { PicTicketDetailData } from '../../services/ticketService'
-import { UserCheck, Users, ShieldAlert, Calendar, Clock } from 'lucide-react'
+import { UserCheck, Users, Calendar, Clock, ShieldAlert } from 'lucide-react'
+import { getPriorityColor, getSlaLabel, PRIORITY_LABELS } from '../../presentation'
 
 interface PicAssignmentSummaryProps {
   ticket: PicTicketDetailData
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return 'Belum tersedia'
+  return new Date(value).toLocaleDateString('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
 
 export const PicAssignmentSummary: React.FC<PicAssignmentSummaryProps> = ({ ticket }) => {
@@ -11,76 +21,102 @@ export const PicAssignmentSummary: React.FC<PicAssignmentSummaryProps> = ({ tick
   const secondaryPics = ticket.active_secondary_pics ?? []
   const userRole = ticket.user_assignment_role
 
+  const now = new Date()
+  const isOverdue =
+    ticket.resolution_due_at &&
+    new Date(ticket.resolution_due_at) < now &&
+    !['done', 'closed', 'rejected', 'cancelled'].includes(ticket.status)
+
+  const slaRemainingHours = ticket.resolution_due_at
+    ? Math.round((new Date(ticket.resolution_due_at).getTime() - now.getTime()) / (1000 * 60 * 60))
+    : 0
+
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 space-y-4 shadow-sm">
-      <div className="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
-        <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-          <UserCheck className="w-4 h-4 text-primary" /> Informasi Penugasan (Assignment)
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 space-y-4 shadow-sm">
+      <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+        <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
+          <UserCheck className="w-4 h-4 text-[#1E3A8A]" /> Tim Penanganan
         </h3>
         {userRole && (
-          <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-primary/10 text-primary uppercase tracking-wider">
-            Peran Anda: {userRole}
+          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 uppercase tracking-wide">
+            Peran Anda: {userRole === 'primary' ? 'PIC Utama' : userRole === 'secondary' ? 'PIC Pendamping' : 'Supervisor'}
           </span>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="space-y-3">
         {/* Primary PIC */}
-        <div className="p-3 bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/40 rounded-lg">
-          <div className="text-xs text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wider mb-1 flex items-center gap-1">
-            <UserCheck className="w-3.5 h-3.5" /> PIC Utama (Primary)
-          </div>
-          <div className="text-sm font-bold text-slate-900 dark:text-slate-100">
-            {primaryPic?.name ?? 'Belum Ditunjuk'}
+        <div className="p-3 bg-blue-50/50 border border-blue-100 rounded-xl flex items-center gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-blue-700 shrink-0">
+            <UserCheck className="h-4 w-4" />
+          </span>
+          <div className="min-w-0">
+            <span className="block text-[10px] font-semibold text-blue-600 uppercase tracking-wider">
+              PIC Utama
+            </span>
+            <span className="block text-sm font-semibold text-slate-900 truncate">
+              {primaryPic?.name ?? 'Belum Ditunjuk'}
+            </span>
           </div>
         </div>
 
         {/* Secondary PICs */}
-        <div className="p-3 bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/40 rounded-lg">
-          <div className="text-xs text-purple-600 dark:text-purple-400 font-semibold uppercase tracking-wider mb-1 flex items-center gap-1">
-            <Users className="w-3.5 h-3.5" /> PIC Pendamping (Secondary)
+        <div className="p-3 bg-purple-50/50 border border-purple-100 rounded-xl flex items-start gap-2.5">
+          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple-100 text-purple-700 shrink-0 mt-0.5">
+            <Users className="h-4 w-4" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <span className="block text-[10px] font-semibold text-purple-600 uppercase tracking-wider mb-1">
+              PIC Pendamping
+            </span>
+            {secondaryPics.length > 0 ? (
+              <div className="flex flex-wrap gap-1">
+                {secondaryPics.map((pic) => (
+                  <span
+                    key={pic.id}
+                    className="px-2 py-0.5 text-xs font-semibold bg-purple-100/80 text-purple-800 rounded-md"
+                  >
+                    {pic.name}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400 italic">Belum ada PIC pendamping.</span>
+            )}
           </div>
-          {secondaryPics.length > 0 ? (
-            <div className="flex flex-wrap gap-1.5 mt-1">
-              {secondaryPics.map((pic) => (
-                <span
-                  key={pic.id}
-                  className="px-2 py-0.5 text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-200 rounded"
-                >
-                  {pic.name}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <div className="text-xs text-slate-400 italic">Tidak ada PIC pendamping</div>
-          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs text-slate-600 dark:text-slate-400 pt-2">
-        <div className="flex items-center gap-1.5">
-          <Calendar className="w-3.5 h-3.5 text-slate-400" />
-          <span>
-            Ditugaskan:{' '}
-            <strong>{ticket.assigned_at ? new Date(ticket.assigned_at).toLocaleDateString('id-ID') : '-'}</strong>
+      <div className="space-y-2.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-slate-400">
+            <Calendar className="w-4 h-4 shrink-0" /> Ditugaskan
           </span>
+          <span className="font-semibold text-slate-800">{formatDate(ticket.assigned_at)}</span>
         </div>
-        <div className="flex items-center gap-1.5">
-          <Clock className="w-3.5 h-3.5 text-slate-400" />
-          <span>
-            Target SLA:{' '}
-            <strong>
-              {ticket.resolution_due_at ? new Date(ticket.resolution_due_at).toLocaleDateString('id-ID') : '-'}
-            </strong>
+
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-slate-400">
+            <Clock className="w-4 h-4 shrink-0" /> Target Penyelesaian
           </span>
+          <div className="text-right">
+            <span className={`font-semibold block ${isOverdue ? 'text-red-600' : 'text-slate-800'}`}>
+              {formatDate(ticket.resolution_due_at)}
+            </span>
+            {ticket.resolution_due_at && (
+              <span className={`text-[10px] font-semibold block mt-0.5 ${isOverdue ? 'text-red-500' : 'text-slate-500'}`}>
+                {getSlaLabel(slaRemainingHours, Boolean(isOverdue))}
+              </span>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-1.5">
-          <ShieldAlert className="w-3.5 h-3.5 text-slate-400" />
-          <span>
-            Prioritas:{' '}
-            <strong className="uppercase">
-              {ticket.final_priority?.name ?? ticket.requested_priority?.name ?? 'Normal'}
-            </strong>
+
+        <div className="flex items-center justify-between">
+          <span className="flex items-center gap-1.5 text-slate-400">
+            <ShieldAlert className="w-4 h-4 shrink-0" /> Urgency
+          </span>
+          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${getPriorityColor(ticket.final_priority?.key ?? 'medium')}`}>
+            {ticket.final_priority?.key ? PRIORITY_LABELS[ticket.final_priority.key]?.toUpperCase() : 'MEDIUM'}
           </span>
         </div>
       </div>
