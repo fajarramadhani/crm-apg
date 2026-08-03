@@ -51,6 +51,12 @@ class TicketPolicy
         return $user->hasPermission('ticket.triage_queue.view');
     }
 
+    public function managePublicTracking(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.public_tracking.manage')
+            && $ticket->submission_source === 'public_form';
+    }
+
     public function assignQa(User $user, Ticket $ticket): bool
     {
         return $user->hasPermission('ticket.qa.assign');
@@ -95,7 +101,7 @@ class TicketPolicy
 
     public function businessApprove(User $user, Ticket $ticket): bool
     {
-        return $user->hasPermission('ticket.business_approval.approve') && $ticket->requester?->division_id === $user->division_id;
+        return $user->hasPermission('ticket.business_approval.approve') && $ticket->division_id === $user->division_id;
     }
 
     public function technicalApprove(User $user, Ticket $ticket): bool

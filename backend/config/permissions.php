@@ -344,6 +344,7 @@ return [
             'ticket.reopen',
             'ticket.close',
             'ticket.audit_trail.view',
+            'ticket.public_tracking.manage',
         ],
         'pic_it_support' => [
             'master_data.view',

@@ -3,6 +3,8 @@
 use App\Exceptions\IdempotencyConflict;
 use App\Exceptions\InvalidTicketTransition;
 use App\Exceptions\KnowledgeBaseConflict;
+use App\Exceptions\PublicHistoryAccessDenied;
+use App\Http\Middleware\AddPublicTrackingHeaders;
 use App\Http\Middleware\AddSecurityHeaders;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureUserHasPermission;
@@ -39,6 +41,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'active' => EnsureUserIsActive::class,
             'role' => EnsureUserHasRole::class,
             'permission' => EnsureUserHasPermission::class,
+            'public_tracking_headers' => AddPublicTrackingHeaders::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -60,6 +63,14 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             return ApiResponse::error($request, 'Unauthenticated.', 'UNAUTHENTICATED', 401);
+        });
+
+        $exceptions->render(function (PublicHistoryAccessDenied $exception, Request $request) {
+            if (! $request->is('api/v1/public/ticket-history*')) {
+                return null;
+            }
+
+            return ApiResponse::error($request, 'Public history access is invalid or expired.', 'INVALID_ACCESS', 401);
         });
 
         $exceptions->render(function (AuthorizationException $exception, Request $request) {
@@ -111,7 +122,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            return ApiResponse::error($request, 'Terlalu banyak percobaan login. Silakan coba lagi nanti.', 'TOO_MANY_ATTEMPTS', 429);
+            $message = $request->is('api/v1/public/ticket-history*')
+                ? 'Too many requests. Please try again later.'
+                : ($request->is('api/v1/public/tickets')
+                ? 'Too many ticket submissions. Please try again later.'
+                : 'Terlalu banyak percobaan login. Silakan coba lagi nanti.');
+
+            return ApiResponse::error($request, $message, 'TOO_MANY_ATTEMPTS', 429);
         });
 
         $exceptions->render(function (HttpExceptionInterface $exception, Request $request) {

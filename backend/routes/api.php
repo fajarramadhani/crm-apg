@@ -39,6 +39,9 @@ use App\Http\Controllers\Api\V1\PicReworkController;
 use App\Http\Controllers\Api\V1\PicTicketController;
 use App\Http\Controllers\Api\V1\PicUatReworkController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
+use App\Http\Controllers\Api\V1\PublicRequestHistoryController;
+use App\Http\Controllers\Api\V1\PublicTicketController;
+use App\Http\Controllers\Api\V1\PublicTicketTrackingController;
 use App\Http\Controllers\Api\V1\QaController;
 use App\Http\Controllers\Api\V1\RequesterTicketController;
 use App\Http\Controllers\Api\V1\RequesterUatController;
@@ -57,6 +60,21 @@ Route::get('/health', HealthController::class)->middleware('throttle:60,1')->nam
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->middleware('throttle:60,1')->name('api.v1.health');
+
+    Route::get('/public/ticket-form-options', [PublicTicketController::class, 'options'])
+        ->middleware('throttle:60,1')->name('api.v1.public.ticket-form-options');
+    Route::post('/public/tickets', [PublicTicketController::class, 'store'])
+        ->middleware(['public_tracking_headers', 'throttle:public-ticket-submissions'])->name('api.v1.public.tickets.store');
+    Route::get('/public/tickets/track/{token}', [PublicTicketTrackingController::class, 'show'])
+        ->middleware(['public_tracking_headers', 'throttle:public-ticket-tracking'])->name('api.v1.public.tickets.track');
+    Route::post('/public/ticket-history/challenges', [PublicRequestHistoryController::class, 'challenge'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-challenge'])->name('api.v1.public.ticket-history.challenge');
+    Route::post('/public/ticket-history/challenges/{challengeToken}/verify', [PublicRequestHistoryController::class, 'verify'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-verify'])->name('api.v1.public.ticket-history.verify');
+    Route::get('/public/ticket-history', [PublicRequestHistoryController::class, 'index'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-access'])->name('api.v1.public.ticket-history.index');
+    Route::post('/public/ticket-history/tickets/{ticketNumber}/tracking-link', [PublicRequestHistoryController::class, 'trackingLink'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-access'])->name('api.v1.public.ticket-history.tracking-link');
 
     Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         Route::post('/login', [AuthController::class, 'login'])
@@ -189,6 +207,10 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/cancel', [SupervisorItTicketController::class, 'cancel']);
             Route::post('/tickets/{ticket}/reopen', [SupervisorItTicketController::class, 'reopen']);
             Route::post('/tickets/{ticket}/close', [SupervisorItTicketController::class, 'close']);
+            Route::post('/tickets/{ticket}/public-tracking/rotate', [PublicTicketTrackingController::class, 'rotate'])
+                ->middleware(['public_tracking_headers', 'permission:ticket.public_tracking.manage']);
+            Route::post('/tickets/{ticket}/public-tracking/revoke', [PublicTicketTrackingController::class, 'revoke'])
+                ->middleware(['public_tracking_headers', 'permission:ticket.public_tracking.manage']);
         });
 
         Route::prefix('it-lead')->name('api.v1.it-lead.')->group(function (): void {

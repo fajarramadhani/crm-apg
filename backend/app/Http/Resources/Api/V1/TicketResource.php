@@ -11,8 +11,9 @@ class TicketResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $own = $request->user()?->id === $this->requester_id;
+        $own = $request->user() !== null && $request->user()->id === $this->requester_id;
         $technical = $request->user()?->hasPermission('ticket.technical.view') ?? false;
+        $canViewRequesterContact = $technical || ($request->user()?->hasPermission('ticket.validate') ?? false);
         $safeAttachments = $this->relationLoaded('attachments')
             ? ($technical ? $this->attachments : $this->attachments->filter(fn ($attachment) => $attachment->defect_id === null && $attachment->uat_finding_id === null && (! in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation', 'qa_evidence', 'defect_evidence', 'retest_evidence', 'uat_evidence', 'uat_finding_evidence', 'uat_retest_evidence', 'uat_signoff_document'], true) || ($attachment->visibility ?? 'internal') === 'requester')))
             : null;
@@ -34,7 +35,13 @@ class TicketResource extends JsonResource
             'workflow_mode' => $this->workflow_mode,
             'workflow_version' => $this->workflow_version,
             'current_workflow_stage' => $this->current_workflow_stage,
-            'requester' => $this->whenLoaded('requester', fn () => ['id' => $this->requester->id, 'name' => $this->requester->name]),
+            'requester' => [
+                'id' => $this->relationLoaded('requester') ? $this->requester?->id : $this->requester_id,
+                'name' => ($this->relationLoaded('requester') ? $this->requester?->name : null) ?? $this->requester_name,
+                'email' => $canViewRequesterContact ? ($this->requester_email ?? ($this->relationLoaded('requester') ? $this->requester?->email : null)) : null,
+                'phone' => $canViewRequesterContact ? ($this->requester_phone ?? ($this->relationLoaded('requester') ? $this->requester?->phone : null)) : null,
+            ],
+            'submission_source' => $this->submission_source,
             'division' => $this->whenLoaded('division', fn () => $this->division ? ['id' => $this->division->id, 'code' => $this->division->code, 'name' => $this->division->name] : null),
             'current_division' => $this->whenLoaded('currentDivision', fn () => $this->currentDivision ? ['id' => $this->currentDivision->id, 'code' => $this->currentDivision->code, 'name' => $this->currentDivision->name] : null),
             'branch' => $this->whenLoaded('branch', fn () => $this->branch ? ['id' => $this->branch->id, 'code' => $this->branch->code, 'name' => $this->branch->name] : null),

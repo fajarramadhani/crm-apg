@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\IdempotencyRecord;
+use App\Models\PublicTicketSubmission;
 use Illuminate\Console\Command;
 
 class CleanupExpiredIdempotencyRecordsCommand extends Command
@@ -14,6 +15,9 @@ class CleanupExpiredIdempotencyRecordsCommand extends Command
     public function handle(): int
     {
         $deleted = IdempotencyRecord::query()
+            ->where('expires_at', '<=', now())
+            ->delete();
+        $deleted += PublicTicketSubmission::query()
             ->where('expires_at', '<=', now())
             ->delete();
 

@@ -37,8 +37,10 @@ class TicketNotificationSubscriber
             type: 'supervisor_validation_required',
             severity: 'info',
             title: 'Pengajuan Tiket Baru',
-            message: "{$ticket->ticket_number} | {$category} | {$system} | {$urgency} | {$ticket->title} | Requester: {$ticket->requester?->name}",
-            actionUrl: '/supervisor/validation-queue'
+            message: "{$ticket->ticket_number} | {$category} | {$system} | {$urgency} | {$ticket->title} | Requester: ".($ticket->requester?->name ?? $ticket->requester_name),
+            actionUrl: $ticket->workflow_mode === 'dynamic'
+                ? "/supervisor-it/tickets/{$ticket->id}"
+                : '/supervisor/validation-queue'
         );
         $this->notificationService->dispatch(
             ticket: $ticket,

@@ -27,7 +27,7 @@ class TicketNotificationRecipientResolver
                 // Find supervisors using role key (supervisor_it or supervisor) in same division
                 $supervisors = User::whereHas('role', function ($q) {
                     $q->whereIn('key', ['supervisor_it', 'supervisor'])->orWhere('name', 'Supervisor');
-                })->with('role')->where('division_id', $ticket->requester?->division_id)
+                })->with('role')->where('division_id', $ticket->division_id)
                     ->where('is_active', true)
                     ->get();
 
@@ -65,7 +65,7 @@ class TicketNotificationRecipientResolver
                 // Managers scoped to division
                 $managers = User::whereHas('role', function ($q) {
                     $q->where('name', 'Manager');
-                })->with('role')->where('division_id', $ticket->requester?->division_id)
+                })->with('role')->where('division_id', $ticket->division_id)
                     ->where('is_active', true)->get();
                 $recipients = $recipients->merge($managers);
                 break;
