@@ -72,7 +72,9 @@ async function request<T>(path: string, init: RequestInit = {}, retriedCsrf = fa
 
   if (!response.ok) {
     const error = payload as ApiError | null
-    if (response.status === 401 && path !== '/auth/login') window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+    if (response.status === 401 && path !== '/auth/login' && !path.startsWith('/public/')) {
+      window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+    }
     throw new ApiRequestError(
       error?.message || 'Permintaan tidak dapat diproses.',
       response.status,

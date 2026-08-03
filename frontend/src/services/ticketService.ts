@@ -181,7 +181,8 @@ export interface TicketRecord {
   recurring_indication: string | null
   status: TicketState
   workflow_mode?: 'dynamic' | 'simplified' | 'legacy' | null
-  requester: { id: number; name: string }
+  requester: { id: number | null; name: string; email?: string | null; phone?: string | null }
+  submission_source?: 'authenticated_requester' | 'public_form'
   division: { id: number; code: string; name: string } | null
   current_division: { id: number; code: string; name: string } | null
   office: { id: number; name: string; office_type: 'pusat' | 'cabang' } | null

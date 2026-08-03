@@ -124,6 +124,11 @@ export const PicTicketTable: React.FC<PicTicketTableProps> = ({ tickets, loading
                   <td className="px-4 py-4 align-top">
                     <div className="font-semibold text-slate-900">{ticket.ticket_number}</div>
                     <div className="mt-1 text-xs text-slate-500">{ticket.requester?.name ?? '-'}</div>
+                    {ticket.submission_source === 'public_form' && (
+                      <span className="mt-1 inline-flex rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-800">
+                        Public Form
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-4 align-top">
                     <div className="font-medium text-slate-900">{ticket.title}</div>

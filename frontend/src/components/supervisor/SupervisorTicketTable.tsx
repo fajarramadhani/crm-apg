@@ -139,7 +139,14 @@ export const SupervisorTicketTable: React.FC<SupervisorTicketTableProps> = ({ ti
                     </div>
                   )}
                 </td>
-                <td className="whitespace-nowrap px-4 py-3.5 text-gray-700">{t.requester?.name || '-'}</td>
+                <td className="whitespace-nowrap px-4 py-3.5 text-gray-700">
+                  <div>{t.requester?.name || '-'}</div>
+                  {t.submission_source === 'public_form' && (
+                    <span className="mt-1 inline-flex rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-800">
+                      Public Form
+                    </span>
+                  )}
+                </td>
                 <td className="whitespace-nowrap px-4 py-3.5 text-gray-600 text-xs">
                   <div>{t.division?.name || '-'}</div>
                   <div className="text-gray-400">{t.branch?.name || '-'}</div>

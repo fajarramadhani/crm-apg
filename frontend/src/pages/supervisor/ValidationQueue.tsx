@@ -158,6 +158,11 @@ export default function ValidationQueue() {
                 <p className="text-xs text-gray-500 mt-1">
                   {ticket.requester.name} · {ticket.office?.name || ticket.division?.name || 'Tanpa lokasi'}
                 </p>
+                {ticket.submission_source === 'public_form' && (
+                  <span className="mt-2 inline-flex rounded-full bg-cyan-50 px-2 py-0.5 text-[11px] font-semibold text-cyan-800">
+                    Public Form
+                  </span>
+                )}
                 <p className="text-xs text-gray-400 mt-2">
                   {ticket.category?.name || 'Belum dikategorikan'} ·{' '}
                   {new Date(ticket.submitted_at || ticket.created_at).toLocaleDateString('id-ID')}
@@ -176,6 +181,11 @@ export default function ValidationQueue() {
                   <span className="text-xs px-3 py-1 bg-gray-100 rounded-full">
                     {selected.category?.name || 'Belum dikategorikan'}
                   </span>
+                  {selected.submission_source === 'public_form' && (
+                    <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
+                      Public Form
+                    </span>
+                  )}
                 </div>
                 <h2 className="font-bold mb-2">{selected.title}</h2>
                 <TicketDescriptionContent html={selected.description} className="mb-4 text-gray-600" />

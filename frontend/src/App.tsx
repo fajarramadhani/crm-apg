@@ -11,6 +11,9 @@ import Unauthorized from './pages/Unauthorized'
 import NotFound from './pages/NotFound'
 
 const CreateTicket = lazy(() => import('./pages/user/CreateTicket'))
+const PublicRequest = lazy(() => import('./pages/public/PublicRequest'))
+const PublicTicketTracking = lazy(() => import('./pages/public/PublicTicketTracking'))
+const PublicRequestHistory = lazy(() => import('./pages/public/PublicRequestHistory'))
 const TicketHistory = lazy(() => import('./pages/user/TicketHistory'))
 const TicketDetail = lazy(() => import('./pages/user/TicketDetail'))
 const Confirmations = lazy(() => import('./pages/user/Confirmations'))
@@ -227,6 +230,30 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<LoginRoute />} />
+      <Route
+        path="/request"
+        element={
+          <Suspense fallback={<LoadingPage />}>
+            <PublicRequest />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/track/:token"
+        element={
+          <Suspense fallback={<LoadingPage />}>
+            <PublicTicketTracking />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/request/history"
+        element={
+          <Suspense fallback={<LoadingPage />}>
+            <PublicRequestHistory />
+          </Suspense>
+        }
+      />
       <Route
         element={
           <RequireAuth>
