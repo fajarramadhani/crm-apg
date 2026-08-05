@@ -14,10 +14,20 @@ class CleanupPublicRequestHistoryCommand extends Command
 
     public function handle(): int
     {
-        PublicRequestHistoryChallenge::query()->where('expires_at', '<=', now())->delete();
-        PublicRequestHistoryAccessToken::query()->where('expires_at', '<=', now())->delete();
+        $this->deleteExpired(PublicRequestHistoryChallenge::query());
+        $this->deleteExpired(PublicRequestHistoryAccessToken::query());
         $this->info('Expired public request history credentials were cleaned up.');
 
         return self::SUCCESS;
+    }
+
+    private function deleteExpired($query): void
+    {
+        do {
+            $ids = (clone $query)->where('expires_at', '<=', now())->orderBy('id')->limit(500)->pluck('id');
+            if ($ids->isNotEmpty()) {
+                (clone $query)->whereKey($ids)->delete();
+            }
+        } while ($ids->count() === 500);
     }
 }

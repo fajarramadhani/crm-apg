@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 
-#[Fillable(['challenge_token_hash', 'branch_id', 'identity_type', 'identity_hash', 'identity_ciphertext', 'otp_hash', 'expires_at', 'attempts_remaining', 'resend_available_at', 'sent_at', 'consumed_at', 'superseded_at'])]
+#[Fillable(['derivation_nonce', 'challenge_token_hash', 'branch_id', 'identity_type', 'identity_hash', 'identity_ciphertext', 'otp_hash', 'expires_at', 'attempts_remaining', 'resend_available_at', 'sent_at', 'consumed_at', 'superseded_at'])]
 class PublicRequestHistoryChallenge extends Model
 {
     protected function casts(): array

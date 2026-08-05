@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::create('public_request_history_challenges', function (Blueprint $table): void {
             $table->id();
+            $table->char('derivation_nonce', 64)->unique();
             $table->char('challenge_token_hash', 64)->unique();
             $table->foreignId('branch_id')->constrained()->cascadeOnDelete();
             $table->string('identity_type', 20);

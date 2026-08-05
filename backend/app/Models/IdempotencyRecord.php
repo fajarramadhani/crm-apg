@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['user_id', 'endpoint', 'action', 'key_hash', 'request_hash', 'ticket_id', 'response_status', 'expires_at'])]
+#[Fillable(['user_id', 'endpoint', 'action', 'key_hash', 'request_hash', 'ticket_id', 'public_tracking_token_id', 'response_status', 'expires_at'])]
 class IdempotencyRecord extends Model
 {
     protected function casts(): array
@@ -25,5 +25,10 @@ class IdempotencyRecord extends Model
     public function ticket(): BelongsTo
     {
         return $this->belongsTo(Ticket::class);
+    }
+
+    public function publicTrackingToken(): BelongsTo
+    {
+        return $this->belongsTo(PublicTicketTrackingToken::class);
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Services\PublicTicketActionService;
 use App\Services\PublicTicketStatusMapper;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -46,6 +47,7 @@ class PublicTicketTrackingResource extends JsonResource
             'timeline' => $timeline,
             'requester_updates' => $updates,
             'last_updated_at' => $lastUpdatedAt?->toISOString(),
+            'action_available' => app(PublicTicketActionService::class)->available($this->resource)['type'] !== null,
         ];
     }
 

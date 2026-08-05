@@ -17,7 +17,6 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
 
@@ -32,6 +31,7 @@ class RequesterTicketService
         private WorkflowEngineService $workflowEngine,
         private TicketDescriptionSanitizer $descriptionSanitizer,
         private PublicTicketTrackingService $publicTracking,
+        private TicketAttachmentService $attachments,
     ) {}
 
     /**
@@ -70,7 +70,7 @@ class RequesterTicketService
             ]);
         }
 
-        $disk = config('tickets.attachment_disk', 'local');
+        $disk = $this->attachments->disk();
         $storedPaths = [];
         $keyHash = $idempotencyKey === null ? null : hash('sha256', $idempotencyKey);
         $requestHash = $keyHash === null ? null : $this->requestHash($validated, $files);
@@ -189,7 +189,7 @@ class RequesterTicketService
             throw ValidationException::withMessages(['workflow' => ['No active workflow is available.']]);
         }
 
-        $disk = config('tickets.attachment_disk', 'local');
+        $disk = $this->attachments->disk();
         $storedPaths = [];
         $keyHash = hash('sha256', $idempotencyKey);
         $requestHash = $this->publicRequestHash($validated, $files);
@@ -296,15 +296,8 @@ class RequesterTicketService
         }
 
         foreach ($files as $file) {
-            $storedName = Str::uuid()->toString();
-            $path = $file->storeAs("tickets/{$ticket->id}", $storedName, $disk);
-            $storedPaths[] = $path;
-            $ticket->attachments()->create([
-                'uploaded_by' => $actorId, 'original_name' => $file->getClientOriginalName(),
-                'stored_name' => $storedName, 'disk' => $disk, 'path' => $path,
-                'mime_type' => $file->getMimeType() ?: 'application/octet-stream', 'size' => $file->getSize(),
-                'category' => 'attachment', 'visibility' => 'requester',
-            ]);
+            $attachment = $this->attachments->store($ticket, $file, $actorId, 'attachment', 'requester');
+            $storedPaths[] = $attachment->path;
         }
 
         $metadata = ['source' => $attributes['submission_source']];

@@ -30,10 +30,10 @@ class PublicRequestHistoryController extends Controller
         return ApiResponse::success($request, 'If the details are valid, a verification code has been sent.', $data, 202);
     }
 
-    public function verify(VerifyPublicHistoryChallengeRequest $request, string $challengeToken, PublicRequestHistoryService $service): JsonResponse
+    public function verify(VerifyPublicHistoryChallengeRequest $request, PublicRequestHistoryService $service): JsonResponse
     {
         try {
-            $data = $service->verify($challengeToken, $request->validated('code'));
+            $data = $service->verify($request->validated('challenge_token'), $request->validated('code'));
         } catch (PublicHistoryVerificationFailed) {
             return ApiResponse::error($request, 'The verification code is invalid or no longer available.', 'VERIFICATION_FAILED', 422);
         }
@@ -59,6 +59,14 @@ class PublicRequestHistoryController extends Controller
         ]);
     }
 
+    public function revoke(Request $request, PublicRequestHistoryService $service): JsonResponse
+    {
+        $access = $this->access($request, $service);
+        $service->revoke($access);
+
+        return ApiResponse::success($request, 'Public request history access revoked.');
+    }
+
     public function trackingLink(
         Request $request,
         string $ticketNumber,
@@ -77,7 +85,7 @@ class PublicRequestHistoryController extends Controller
 
         return ApiResponse::success($request, 'Tracking link retrieved.', [
             'tracking_path' => '/track/'.$receipt['raw_token'],
-            'expires_at' => $record->expires_at?->toISOString(),
+            'tracking_expires_at' => $record->expires_at?->toISOString(),
         ]);
     }
 

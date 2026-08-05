@@ -3,6 +3,7 @@
 use App\Exceptions\IdempotencyConflict;
 use App\Exceptions\InvalidTicketTransition;
 use App\Exceptions\KnowledgeBaseConflict;
+use App\Exceptions\PublicActionAccessDenied;
 use App\Exceptions\PublicHistoryAccessDenied;
 use App\Http\Middleware\AddPublicTrackingHeaders;
 use App\Http\Middleware\AddSecurityHeaders;
@@ -73,6 +74,14 @@ return Application::configure(basePath: dirname(__DIR__))
             return ApiResponse::error($request, 'Public history access is invalid or expired.', 'INVALID_ACCESS', 401);
         });
 
+        $exceptions->render(function (PublicActionAccessDenied $exception, Request $request) {
+            if (! $request->is('api/v1/public/tickets/track/*')) {
+                return null;
+            }
+
+            return ApiResponse::error($request, 'Public ticket action access is invalid or expired.', 'INVALID_ACTION_ACCESS', 401);
+        });
+
         $exceptions->render(function (AuthorizationException $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;
@@ -122,7 +131,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            $message = $request->is('api/v1/public/ticket-history*')
+            $message = $request->is('api/v1/public/ticket-history*') || $request->is('api/v1/public/tickets/track/*')
                 ? 'Too many requests. Please try again later.'
                 : ($request->is('api/v1/public/tickets')
                 ? 'Too many ticket submissions. Please try again later.'
@@ -185,10 +194,13 @@ return Application::configure(basePath: dirname(__DIR__))
                 return null;
             }
 
-            Log::error('Unhandled API exception', [
-                'request_id' => $request->attributes->get('request_id'),
-                'exception' => $exception,
-            ]);
+            $context = ['request_id' => $request->attributes->get('request_id')];
+            if ($request->is('api/v1/public/tickets/track/*')) {
+                $context['exception_class'] = $exception::class;
+            } else {
+                $context['exception'] = $exception;
+            }
+            Log::error('Unhandled API exception', $context);
 
             return ApiResponse::error($request, 'An unexpected error occurred', 'SERVER_ERROR', 500);
         });
