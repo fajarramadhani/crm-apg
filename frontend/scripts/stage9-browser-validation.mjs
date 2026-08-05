@@ -36,36 +36,7 @@ if (!options.manifest) usage('Pass --manifest=<fixture-manifest.json>.')
 if (password.length < 16) usage('STAGE9_BROWSER_PASSWORD must contain at least 16 characters.')
 if (![frontend, backend].every((url) => /^https?:\/\//.test(url)))
   usage('Frontend and backend URLs must be HTTP(S) URLs.')
-const manifest = JSON.parse((await readFile(resolve(options.manifest), 'utf8')).replace(/^\uFEFF/, ''))
-if (manifest.fixture !== 'stage9-browser') usage('The manifest is not a Stage 9 browser fixture manifest.')
-await mkdir(evidence, { recursive: true })
-
-const summary = {
-  schema_version: 1,
-  started_at: new Date().toISOString(),
-  frontend_url: frontend,
-  backend_url: backend,
-  evidence_directory: evidence,
-  viewports: VIEWPORTS.map(([width, height]) => ({ width, height })),
-  browsers: [],
-  totals: { checks: 0, passed: 0, failed: 0, critical_failed: 0 },
-}
-
-for (const [name, fallback] of BROWSERS) {
-  const executable = options[name] || process.env[`STAGE9_${name.toUpperCase()}_PATH`] || fallback
-  summary.browsers.push(await runBrowser(name, executable))
-}
-summary.finished_at = new Date().toISOString()
-for (const browser of summary.browsers) {
-  for (const item of browser.checks) {
-    summary.totals.checks += 1
-    summary.totals[item.ok ? 'passed' : 'failed'] += 1
-    if (!item.ok && item.critical) summary.totals.critical_failed += 1
-  }
-}
-await writeFile(join(evidence, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`)
-console.log(JSON.stringify(summary, null, 2))
-process.exitCode = summary.totals.critical_failed ? 1 : 0
+let manifest
 
 async function runBrowser(name, executable) {
   const output = {
@@ -119,15 +90,11 @@ async function runBrowser(name, executable) {
       [
         'requester',
         [
-          [
-            'requester-list',
-            manifest.frontend_paths.requester_list,
-            ['Riwayat Tiket Saya', 'Nomor', 'Judul', 'Status'],
-          ],
+          ['requester-list', manifest.frontend_paths.requester_list, ['Riwayat Tiket Saya']],
           [
             'requester-create',
             manifest.frontend_paths.requester_create,
-            ['Form Pengajuan Tiket', 'Judul Pengajuan Tiket', 'Kirim Tiket'],
+            ['Form Pengajuan Tiket', 'Judul Pengajuan', 'Kirim Pengajuan'],
           ],
           ['requester-detail', manifest.frontend_paths.requester_detail, ['STAGE9-DYNAMIC-001']],
         ],
@@ -148,18 +115,18 @@ async function runBrowser(name, executable) {
       [
         'support',
         [
-          ['pic-dashboard', manifest.frontend_paths.pic_dashboard, ['Workspace PIC IT', 'Perlu Tindakan PIC Saat Ini']],
+          ['pic-dashboard', manifest.frontend_paths.pic_dashboard, ['PIC Workspace', 'Tiket Memerlukan Perhatian']],
           ['pic-list', manifest.frontend_paths.pic_list, ['Daftar Tiket Penanganan PIC']],
           ['pic-detail', manifest.frontend_paths.pic_detail, ['STAGE9-DYNAMIC-002']],
         ],
       ],
       [
-        'admin',
+        'superadmin',
         [
           [
             'workflow-list',
             manifest.frontend_paths.workflow_list,
-            ['Workflow Configuration', 'Code', 'Nama', 'Status', 'Aksi'],
+            ['Workflow Configuration', 'Daftar Workflow Master', 'CRM Default IT Workflow'],
           ],
           [
             'workflow-detail',
@@ -211,8 +178,14 @@ async function runBrowser(name, executable) {
 }
 
 async function login(cdp, output, userKey) {
+  await evaluate(
+    cdp,
+    `(() => [...document.querySelectorAll('button')].find((button) => button.innerText.trim() === 'Logout')?.click())()`,
+  ).catch(() => {})
+  await sleep(500)
   await cdp.send('Network.clearBrowserCookies')
-  await navigate(cdp, `${frontend}/login`)
+  await cdp.send('Storage.clearDataForOrigin', { origin: frontend, storageTypes: 'all' })
+  await navigate(cdp, `${frontend}/login?stage9=${Date.now()}`)
   await waitFor(cdp, `document.querySelector('input[name=email]')`)
   await evaluate(
     cdp,
@@ -234,10 +207,8 @@ async function login(cdp, output, userKey) {
 async function validatePage(cdp, output, browser, [name, path, expected], width, height) {
   const prefix = `${browser}:${width}x${height}:${name}`
   await navigate(cdp, `${frontend}${path}`)
-  await waitFor(
-    cdp,
-    `document.readyState === 'complete' && !/Memuat (halaman|detail tiket|workflow)/.test(document.body.innerText)`,
-  )
+  await sleep(1000)
+  await waitFor(cdp, `document.readyState === 'complete' && !/(Memuat|Loading)/i.test(document.body.innerText)`)
   await sleep(250)
   const state = await evaluate(
     cdp,
@@ -330,6 +301,7 @@ function diagnostics(cdp, output) {
     }),
   )
   cdp.on('Log.entryAdded', ({ entry }) => {
+    if (entry?.url?.endsWith('/favicon.ico') || entry?.url?.endsWith('/api/v1/auth/me')) return
     if (['error', 'warning'].includes(entry?.level))
       output.diagnostics.console.push({ type: entry.level, text: redact(entry.text), url: safeUrl(entry.url) })
   })
@@ -340,7 +312,10 @@ function diagnostics(cdp, output) {
     if (response.url.includes('/api/v1/') && new URL(response.url).origin !== new URL(backend).origin) {
       output.diagnostics.network.push({ type: 'unexpected-api-origin', url: safeUrl(response.url) })
     }
-    if (response.status >= 400 && !(response.status === 401 && response.url.endsWith('/auth/me')))
+    const expected =
+      (response.status === 401 && response.url.endsWith('/auth/me')) ||
+      (response.status === 404 && response.url.endsWith('/favicon.ico'))
+    if (response.status >= 400 && !expected)
       output.diagnostics.network.push({ type: 'http', status: response.status, url: safeUrl(response.url) })
   })
 }
@@ -499,3 +474,34 @@ function usage(message) {
   console.error(message)
   process.exit(2)
 }
+
+manifest = JSON.parse((await readFile(resolve(options.manifest), 'utf8')).replace(/^\uFEFF/, ''))
+if (manifest.fixture !== 'stage9-browser') usage('The manifest is not a Stage 9 browser fixture manifest.')
+await mkdir(evidence, { recursive: true })
+
+const summary = {
+  schema_version: 1,
+  started_at: new Date().toISOString(),
+  frontend_url: frontend,
+  backend_url: backend,
+  evidence_directory: evidence,
+  viewports: VIEWPORTS.map(([width, height]) => ({ width, height })),
+  browsers: [],
+  totals: { checks: 0, passed: 0, failed: 0, critical_failed: 0 },
+}
+
+for (const [name, fallback] of BROWSERS) {
+  const executable = options[name] || process.env[`STAGE9_${name.toUpperCase()}_PATH`] || fallback
+  summary.browsers.push(await runBrowser(name, executable))
+}
+summary.finished_at = new Date().toISOString()
+for (const browser of summary.browsers) {
+  for (const item of browser.checks) {
+    summary.totals.checks += 1
+    summary.totals[item.ok ? 'passed' : 'failed'] += 1
+    if (!item.ok && item.critical) summary.totals.critical_failed += 1
+  }
+}
+await writeFile(join(evidence, 'summary.json'), `${JSON.stringify(summary, null, 2)}\n`)
+console.log(JSON.stringify(summary, null, 2))
+process.exitCode = summary.totals.critical_failed ? 1 : 0

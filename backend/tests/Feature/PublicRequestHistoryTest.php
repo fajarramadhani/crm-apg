@@ -9,8 +9,10 @@ use App\Models\Division;
 use App\Models\PublicRequestHistoryAccessToken;
 use App\Models\PublicRequestHistoryChallenge;
 use App\Models\PublicTicketTrackingToken;
+use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
+use App\Models\User;
 use App\Services\InMemoryPublicHistoryOtpDelivery;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RoleSeeder;
@@ -84,7 +86,8 @@ class PublicRequestHistoryTest extends TestCase
         $this->assertStringNotContainsString($code, $serialized);
         $second = $this->requestCode('private@example.com')->assertAccepted();
         $this->assertSame($first->json('message'), $second->json('message'));
-        $this->assertNotSame($token, $second->json('data.challenge_token'));
+        $this->assertSame($token, $second->json('data.challenge_token'));
+        $this->assertSame($first->json('data.expires_at'), $second->json('data.expires_at'));
         $this->assertCount(1, $this->delivery->deliveries());
         $this->assertDatabaseCount('public_request_history_challenges', 1);
     }
@@ -92,14 +95,14 @@ class PublicRequestHistoryTest extends TestCase
     public function test_correct_code_consumes_once_and_access_token_is_hash_only_with_absolute_expiry(): void
     {
         [$challenge, $code] = $this->challenge('person@example.com');
-        $response = $this->postJson("/api/v1/public/ticket-history/challenges/{$challenge}/verify", ['code' => $code])->assertOk();
+        $response = $this->verifyCode($challenge, $code)->assertOk();
         $accessToken = $response->json('data.access_token');
         $access = PublicRequestHistoryAccessToken::query()->sole();
 
         $this->assertSame(hash('sha256', $accessToken), $access->token_hash);
         $this->assertStringNotContainsString($accessToken, json_encode($access->getAttributes(), JSON_THROW_ON_ERROR));
         $this->assertNotNull(PublicRequestHistoryChallenge::query()->sole()->consumed_at);
-        $this->postJson("/api/v1/public/ticket-history/challenges/{$challenge}/verify", ['code' => $code])
+        $this->verifyCode($challenge, $code)
             ->assertUnprocessable()->assertJsonPath('error.code', 'VERIFICATION_FAILED');
         $this->assertDatabaseCount('public_request_history_access_tokens', 1);
     }
@@ -110,14 +113,14 @@ class PublicRequestHistoryTest extends TestCase
         config()->set('public_history.max_attempts', 2);
         [$challenge] = $this->challenge('attempts@example.com');
         foreach (['111111', '222222', '333333'] as $code) {
-            $this->postJson("/api/v1/public/ticket-history/challenges/{$challenge}/verify", ['code' => $code])
+            $this->verifyCode($challenge, $code)
                 ->assertUnprocessable()->assertJsonPath('message', 'The verification code is invalid or no longer available.');
         }
         $this->assertSame(0, PublicRequestHistoryChallenge::query()->sole()->attempts_remaining);
 
         PublicRequestHistoryChallenge::query()->sole()->update(['expires_at' => now()->subSecond(), 'attempts_remaining' => 2]);
-        $this->postJson("/api/v1/public/ticket-history/challenges/{$challenge}/verify", ['code' => '000000'])->assertUnprocessable();
-        $this->postJson('/api/v1/public/ticket-history/challenges/'.str_repeat('A', 43).'/verify', ['code' => '000000'])->assertUnprocessable();
+        $this->verifyCode($challenge, '000000')->assertUnprocessable();
+        $this->verifyCode(str_repeat('A', 43), '000000')->assertUnprocessable();
     }
 
     public function test_history_is_exact_scoped_paginated_dto_and_empty_state_has_no_leaks(): void
@@ -159,6 +162,30 @@ class PublicRequestHistoryTest extends TestCase
         }
     }
 
+    public function test_history_access_can_be_revoked_explicitly(): void
+    {
+        $this->withoutMiddleware(ThrottleRequests::class);
+        $access = $this->accessToken('revoke@example.com');
+
+        $this->withToken($access)->postJson('/api/v1/public/ticket-history/revoke')->assertOk();
+        $this->withToken($access)->getJson('/api/v1/public/ticket-history')
+            ->assertUnauthorized()->assertJsonPath('error.code', 'INVALID_ACCESS');
+    }
+
+    public function test_history_access_token_cannot_manage_tracking(): void
+    {
+        $this->withoutMiddleware(ThrottleRequests::class);
+        $issued = $this->issueTicket('read-only@example.com', 'history-read-only');
+        $ticket = Ticket::query()->where('ticket_number', $issued->json('data.ticket_number'))->firstOrFail();
+        $access = $this->accessToken('read-only@example.com');
+
+        $this->withToken($access)
+            ->withHeader('Idempotency-Key', hash('sha256', 'history-cannot-rotate'))
+            ->postJson("/api/v1/supervisor-it/tickets/{$ticket->id}/public-tracking/rotate", [
+                'reason' => 'This session is read-only.',
+            ])->assertUnauthorized();
+    }
+
     public function test_tracking_link_requires_ownership_and_active_stage_two_token(): void
     {
         $this->withoutMiddleware(ThrottleRequests::class);
@@ -180,6 +207,32 @@ class PublicRequestHistoryTest extends TestCase
         $this->withToken($owner)->postJson("/api/v1/public/ticket-history/tickets/{$number}/tracking-link")->assertNotFound();
     }
 
+    public function test_history_returns_only_the_latest_active_link_after_rotation(): void
+    {
+        $this->withoutMiddleware(ThrottleRequests::class);
+        $issued = $this->issueTicket('rotate-owner@example.com', 'history-rotation');
+        $oldToken = $issued->json('data.tracking_token');
+        $ticket = Ticket::query()->where('ticket_number', $issued->json('data.ticket_number'))->firstOrFail();
+        $supervisor = User::factory()->create([
+            'role_id' => Role::query()->where('key', 'supervisor_it')->value('id'),
+            'division_id' => $this->division->id,
+            'branch_id' => $this->branch->id,
+            'is_active' => true,
+        ]);
+        $rotation = $this->actingAs($supervisor)
+            ->withHeader('Idempotency-Key', hash('sha256', 'history-stage-four-rotation'))
+            ->postJson("/api/v1/supervisor-it/tickets/{$ticket->id}/public-tracking/rotate", [
+                'reason' => 'Requester needs a replacement link.',
+            ])->assertOk();
+        $newPath = parse_url($rotation->json('data.tracking_url'), PHP_URL_PATH);
+        $access = $this->accessToken('rotate-owner@example.com');
+
+        $this->withToken($access)
+            ->postJson("/api/v1/public/ticket-history/tickets/{$ticket->ticket_number}/tracking-link")
+            ->assertOk()->assertJsonPath('data.tracking_path', $newPath);
+        $this->getJson('/api/v1/public/tickets/track/'.$oldToken)->assertNotFound();
+    }
+
     public function test_challenge_endpoint_has_layered_generic_rate_limiting(): void
     {
         for ($attempt = 1; $attempt <= 5; $attempt++) {
@@ -195,7 +248,7 @@ class PublicRequestHistoryTest extends TestCase
     {
         $this->withoutMiddleware(ThrottleRequests::class);
         [$challenge, $code] = $this->challenge('headers@example.com');
-        $verify = $this->postJson("/api/v1/public/ticket-history/challenges/{$challenge}/verify", ['code' => $code])->assertOk();
+        $verify = $this->verifyCode($challenge, $code)->assertOk();
         $access = $verify->json('data.access_token');
         $history = $this->withToken($access)->getJson('/api/v1/public/ticket-history')->assertOk();
         foreach ([$history, $verify] as $response) {
@@ -228,8 +281,16 @@ class PublicRequestHistoryTest extends TestCase
     {
         [$challenge, $code] = $this->challenge($email, $branchId);
 
-        return $this->postJson("/api/v1/public/ticket-history/challenges/{$challenge}/verify", ['code' => $code])
+        return $this->verifyCode($challenge, $code)
             ->assertOk()->json('data.access_token');
+    }
+
+    private function verifyCode(string $challenge, string $code)
+    {
+        return $this->postJson('/api/v1/public/ticket-history/verify', [
+            'challenge_token' => $challenge,
+            'code' => $code,
+        ]);
     }
 
     private function issueTicket(string $email, string $key)

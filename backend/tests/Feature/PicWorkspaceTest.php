@@ -8,6 +8,7 @@ use App\Models\Branch;
 use App\Models\Division;
 use App\Models\Role;
 use App\Models\Ticket;
+use App\Models\TicketAttachment;
 use App\Models\TicketCategory;
 use App\Models\TicketPriority;
 use App\Models\User;
@@ -192,7 +193,7 @@ class PicWorkspaceTest extends TestCase
 
     public function test_pic_can_upload_attachment(): void
     {
-        Storage::fake('public');
+        Storage::fake('local');
 
         $file = UploadedFile::fake()->create('proof_fix.pdf', 500, 'application/pdf');
 
@@ -201,7 +202,14 @@ class PicWorkspaceTest extends TestCase
             'visibility' => 'requester_visible',
         ]);
 
-        $res->assertStatus(201)->assertJsonPath('data.original_name', 'proof_fix.pdf');
+        $res->assertStatus(201)
+            ->assertJsonPath('data.original_name', 'proof_fix.pdf')
+            ->assertJsonPath('data.visibility', 'requester')
+            ->assertJsonMissingPath('data.path');
+        $attachment = TicketAttachment::query()->findOrFail($res->json('data.id'));
+        $this->assertSame('local', $attachment->disk);
+        $this->assertFalse(str_contains($attachment->stored_name, '.'));
+        Storage::disk('local')->assertExists($attachment->path);
     }
 
     public function test_primary_pic_can_submit_for_approval(): void
