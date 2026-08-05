@@ -38,9 +38,16 @@ return [
             'report' => false,
         ],
 
+        'ticket_attachments' => [
+            'driver' => 'local',
+            'root' => env('TICKET_ATTACHMENT_ROOT', storage_path('app/private/ticket-attachments')),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
+            'root' => env('PUBLIC_STORAGE_ROOT', storage_path('app/public')),
             'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage',
             'visibility' => 'public',
             'throw' => false,

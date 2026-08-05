@@ -13,6 +13,15 @@ class TicketNotificationRecipientResolver
         $recipients = collect();
 
         switch ($notificationType) {
+            case 'public_requester_action_completed':
+                if ($ticket->current_assignee_id) {
+                    $recipients->push(User::find($ticket->current_assignee_id));
+                }
+                $recipients = $recipients->merge(User::whereHas('role', function ($q) {
+                    $q->whereIn('key', ['supervisor_it', 'supervisor'])->orWhere('name', 'Supervisor');
+                })->with('role')->where('division_id', $ticket->division_id)->where('is_active', true)->get());
+                break;
+
             case 'ticket_submitted':
             case 'ticket_rejected':
             case 'uat_assignment_required':

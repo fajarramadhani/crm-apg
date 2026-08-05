@@ -7,18 +7,18 @@ use App\Http\Requests\Api\V1\ChecklistDecisionRequest;
 use App\Http\Requests\Api\V1\SaveReleasePlanRequest;
 use App\Http\Requests\Api\V1\SaveRollbackPlanRequest;
 use App\Http\Requests\Api\V1\UploadReleaseEvidenceRequest;
+use App\Http\Resources\Api\V1\TicketAttachmentResource;
 use App\Http\Resources\Api\V1\TicketReleaseChecklistItemResource;
 use App\Http\Resources\Api\V1\TicketReleasePlanResource;
 use App\Http\Resources\Api\V1\TicketRollbackPlanResource;
 use App\Models\Ticket;
 use App\Models\TicketReleaseChecklistItem;
+use App\Services\TicketAttachmentService;
 use App\Services\TicketReleasePreparationService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 final class PicReleaseController extends Controller
 {
@@ -53,20 +53,12 @@ final class PicReleaseController extends Controller
         return ApiResponse::success($request, 'PIC release checklist updated', (new TicketReleaseChecklistItemResource($item))->resolve($request));
     }
 
-    public function uploadEvidence(UploadReleaseEvidenceRequest $request, Ticket $ticket): JsonResponse
+    public function uploadEvidence(UploadReleaseEvidenceRequest $request, Ticket $ticket, TicketAttachmentService $attachments): JsonResponse
     {
         Gate::authorize('manageReleasePreparation', $ticket);
         $file = $request->file('file');
-        $disk = config('tickets.attachment_disk', 'local');
-        $stored = Str::uuid()->toString();
-        $path = $file->storeAs("tickets/{$ticket->id}", $stored, $disk);
-        try {
-            $attachment = $ticket->attachments()->create(['uploaded_by' => $request->user()->id, 'original_name' => $file->getClientOriginalName(), 'stored_name' => $stored, 'disk' => $disk, 'path' => $path, 'mime_type' => $file->getMimeType() ?: 'application/octet-stream', 'size' => $file->getSize(), 'category' => $request->string('category'), 'visibility' => 'internal']);
-        } catch (\Throwable $exception) {
-            Storage::disk($disk)->delete($path);
-            throw $exception;
-        }
+        $attachment = $attachments->store($ticket, $file, $request->user()->id, $request->string('category')->toString(), 'internal');
 
-        return ApiResponse::success($request, 'Release evidence uploaded', $attachment->toArray(), 201);
+        return ApiResponse::success($request, 'Release evidence uploaded', (new TicketAttachmentResource($attachment))->resolve($request), 201);
     }
 }

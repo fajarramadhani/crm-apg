@@ -16,18 +16,17 @@ use App\Http\Resources\Api\V1\TicketUatResultResource;
 use App\Http\Resources\Api\V1\TicketUatRunResource;
 use App\Http\Resources\Api\V1\TicketUatScenarioResource;
 use App\Models\Ticket;
+use App\Models\TicketAttachment;
 use App\Models\TicketUatFinding;
 use App\Models\TicketUatRun;
 use App\Models\TicketUatScenario;
+use App\Services\TicketAttachmentService;
 use App\Services\TicketUatExecutionService;
 use App\Services\TicketUatFindingService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 final class RequesterUatController extends Controller
 {
@@ -221,7 +220,7 @@ final class RequesterUatController extends Controller
         return ApiResponse::success($request, 'UAT finding reopened successfully', (new TicketUatFindingResource($finding->load('histories')))->resolve($request));
     }
 
-    public function uploadEvidence(UploadUatEvidenceRequest $request, Ticket $ticket): JsonResponse
+    public function uploadEvidence(UploadUatEvidenceRequest $request, Ticket $ticket, TicketAttachmentService $attachments): JsonResponse
     {
         $user = $request->user();
         if ($ticket->uat_assignee_id !== $user->id) {
@@ -238,24 +237,10 @@ final class RequesterUatController extends Controller
         }
 
         $file = $request->file('file');
-        $disk = config('tickets.attachment_disk', 'local');
-        $stored = Str::uuid()->toString();
-        $path = $file->storeAs("tickets/{$ticket->id}", $stored, $disk);
-        try {
-            $attachment = DB::transaction(function () use ($request, $ticket, $file, $disk, $stored, $path, $user) {
-                $a = $ticket->attachments()->create([
-                    'uploaded_by' => $user->id,
-                    'original_name' => $file->getClientOriginalName(),
-                    'stored_name' => $stored,
-                    'disk' => $disk,
-                    'path' => $path,
-                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
-                    'size' => $file->getSize(),
-                    'category' => $request->string('category'),
-                    'visibility' => 'requester',
-                    'uat_finding_id' => $request->input('uat_finding_id'),
-                ]);
-
+        $attachment = $attachments->store(
+            $ticket, $file, $user->id, $request->string('category')->toString(), 'requester',
+            ['uat_finding_id' => $request->input('uat_finding_id')],
+            afterCreate: function (TicketAttachment $a) use ($ticket, $user): void {
                 $ticket->histories()->create([
                     'from_status' => $ticket->status->value,
                     'to_status' => $ticket->status->value,
@@ -268,12 +253,8 @@ final class RequesterUatController extends Controller
                     ],
                 ]);
 
-                return $a;
-            });
-        } catch (\Throwable $e) {
-            Storage::disk($disk)->delete($path);
-            throw $e;
-        }
+            },
+        );
 
         return ApiResponse::success($request, 'UAT evidence uploaded successfully', (new TicketAttachmentResource($attachment))->resolve($request), 201);
     }

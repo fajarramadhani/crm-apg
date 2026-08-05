@@ -3,6 +3,7 @@
 namespace App\Listeners;
 
 use App\Enums\RequesterCategory;
+use App\Events\PublicRequesterActionCompleted;
 use App\Events\TicketAssigned;
 use App\Events\TicketClosed;
 use App\Events\TicketDeploymentFailed;
@@ -49,6 +50,20 @@ class TicketNotificationSubscriber
             title: 'Tiket Berhasil Diajukan',
             message: "Tiket {$ticket->ticket_number} berhasil diajukan.",
             actionUrl: "/user/tickets/{$ticket->id}"
+        );
+    }
+
+    public function handlePublicRequesterActionCompleted(PublicRequesterActionCompleted $event): void
+    {
+        $label = $event->action === 'uat' ? 'UAT' : 'requester confirmation';
+        $this->notificationService->dispatch(
+            ticket: $event->ticket,
+            type: 'public_requester_action_completed',
+            severity: $event->outcome === 'accepted' ? 'success' : 'warning',
+            title: 'Public requester response received',
+            message: "Verified public requester submitted {$label} as {$event->outcome} for ticket {$event->ticket->ticket_number}.",
+            actionUrl: "/tickets/{$event->ticket->id}",
+            deduplicationRef: "{$event->action}:{$event->outcome}:{$event->ticket->status->value}",
         );
     }
 
@@ -226,6 +241,7 @@ class TicketNotificationSubscriber
     public function subscribe(Dispatcher $events): array
     {
         return [
+            PublicRequesterActionCompleted::class => 'handlePublicRequesterActionCompleted',
             TicketSubmitted::class => 'handleTicketSubmitted',
             TicketValidated::class => 'handleTicketValidated',
             TicketAssigned::class => 'handleTicketAssigned',

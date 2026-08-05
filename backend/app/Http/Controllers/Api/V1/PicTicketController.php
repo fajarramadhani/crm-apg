@@ -9,14 +9,15 @@ use App\Http\Requests\Api\V1\SaveTicketAnalysisRequest;
 use App\Http\Requests\Api\V1\SaveTicketSolutionPlanRequest;
 use App\Http\Requests\Api\V1\TicketListRequest;
 use App\Http\Resources\Api\V1\TicketAnalysisResource;
+use App\Http\Resources\Api\V1\TicketAttachmentResource;
 use App\Http\Resources\Api\V1\TicketResource;
 use App\Http\Resources\Api\V1\TicketSolutionPlanResource;
 use App\Models\Ticket;
 use App\Models\TicketAnalysis;
-use App\Models\TicketAttachment;
 use App\Models\TicketComment;
 use App\Models\TicketSolutionPlan;
 use App\Services\TicketAnalysisService;
+use App\Services\TicketAttachmentService;
 use App\Services\TicketNotificationService;
 use App\Services\TicketSolutionPlanService;
 use App\Support\ApiResponse;
@@ -318,41 +319,17 @@ final class PicTicketController extends Controller
         ], 201);
     }
 
-    public function uploadAttachment(PicActionRequest $request, Ticket $ticket): JsonResponse
+    public function uploadAttachment(PicActionRequest $request, Ticket $ticket, TicketAttachmentService $attachments): JsonResponse
     {
         $user = $request->user();
         $this->ensureActiveAssignment($ticket, $user);
 
         $file = $request->file('file');
-        $originalName = $file->getClientOriginalName();
-        $storedName = time().'_'.bin2hex(random_bytes(8)).'.'.$file->getClientOriginalExtension();
-        $path = $file->storeAs("tickets/{$ticket->id}/pic", $storedName, 'public');
-
         $visibility = $request->input('visibility', 'internal');
         $category = $request->input('category', 'result');
+        $attachment = $attachments->store($ticket, $file, $user->id, $category, $visibility, directory: "tickets/{$ticket->id}/pic");
 
-        $attachment = TicketAttachment::create([
-            'ticket_id' => $ticket->id,
-            'uploaded_by' => $user->id,
-            'original_name' => $originalName,
-            'stored_name' => $storedName,
-            'disk' => 'public',
-            'path' => $path,
-            'mime_type' => $file->getClientMimeType(),
-            'size' => $file->getSize(),
-            'category' => $category,
-            'visibility' => $visibility,
-        ]);
-
-        return ApiResponse::success($request, 'Lampiran berhasil diunggah.', [
-            'id' => $attachment->id,
-            'original_name' => $attachment->original_name,
-            'mime_type' => $attachment->mime_type,
-            'size' => $attachment->size,
-            'visibility' => $attachment->visibility,
-            'path' => $attachment->path,
-            'created_at' => $attachment->created_at->toISOString(),
-        ], 201);
+        return ApiResponse::success($request, 'Lampiran berhasil diunggah.', (new TicketAttachmentResource($attachment))->resolve($request), 201);
     }
 
     public function updateProgress(PicActionRequest $request, Ticket $ticket): JsonResponse
