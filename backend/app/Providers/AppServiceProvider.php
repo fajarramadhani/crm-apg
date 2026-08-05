@@ -57,7 +57,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production')) {
+        if (app()->environment('production') && filled(config('app.key'))) {
             app(PublicTicketTrackingKeyRing::class)->validate();
             $historySecrets = collect(['identity_key', 'otp_pepper'])->map(function (string $key) {
                 $value = config("public_history.{$key}");
