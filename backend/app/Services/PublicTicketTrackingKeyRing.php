@@ -69,11 +69,12 @@ final class PublicTicketTrackingKeyRing
             return $keys;
         }
 
-        if (blank($legacy) && ! app()->environment('production')) {
+        if (blank($legacy)) {
             $legacy = config('app.key');
-            if (blank($legacy)) {
-                $legacy = 'base64:'.base64_encode(str_repeat("\0", 32));
-            }
+        }
+
+        if (blank($legacy) && (app()->runningInConsole() || ! app()->environment('production'))) {
+            $legacy = 'base64:'.base64_encode(str_repeat("\0", 32));
         }
         $value = config('public_tracking.key_version');
         if (filter_var($value, FILTER_VALIDATE_INT) === false || (int) $value < 1 || (int) $value > 65535) {
