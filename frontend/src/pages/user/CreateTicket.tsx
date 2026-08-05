@@ -363,7 +363,7 @@ export default function CreateTicket() {
 
           {/* Field 5: Lampiran Dokumen atau Screenshot */}
           <div className="space-y-2">
-            <label className="block text-sm font-semibold text-gray-800">
+            <label htmlFor="ticket-attachments" className="block text-sm font-semibold text-gray-800">
               Lampiran Dokumen atau Screenshot <span className="text-red-500">*</span>
             </label>
 
@@ -374,15 +374,21 @@ export default function CreateTicket() {
                 Format yang didukung: JPG, PNG, WEBP, PDF, DOC, DOCX, XLS, XLSX (Maks 10MB per file)
               </p>
               <input
+                id="ticket-attachments"
                 type="file"
                 multiple
                 accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx"
                 onChange={handleFileChange}
                 disabled={submitting}
+                aria-describedby={fieldErrors.attachments ? 'ticket-attachments-error' : undefined}
                 className="mt-4 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 cursor-pointer"
               />
             </div>
-            {fieldErrors.attachments && <p className="text-xs text-red-600 mt-1">{fieldErrors.attachments}</p>}
+            {fieldErrors.attachments && (
+              <p id="ticket-attachments-error" className="text-xs text-red-600 mt-1" role="alert">
+                {fieldErrors.attachments}
+              </p>
+            )}
 
             {/* Preview files */}
             {files.length > 0 && (

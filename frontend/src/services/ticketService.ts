@@ -615,6 +615,27 @@ export interface ReleasePreparationRecord {
   rollback_plan: RollbackPlanRecord | null
 }
 
+export type PublicTrackingAccessState = 'never_issued' | 'active' | 'expired' | 'revoked'
+
+export interface PublicTrackingAccess {
+  submission_source: 'public_form'
+  state: PublicTrackingAccessState
+  created_at: string | null
+  expires_at: string | null
+  last_used_at: string | null
+  revoked_at: string | null
+  tracking_url: string | null
+  link_recoverable: boolean
+  can_issue: boolean
+  can_rotate: boolean
+  can_revoke: boolean
+}
+
+export interface PublicTrackingIssueResult {
+  tracking_url: string
+  tracking_expires_at: string | null
+}
+
 const data = async <T>(promise: Promise<ApiResponse<T>>): Promise<T> => (await promise).data
 const query = (filters: Record<string, string | number | undefined>) => {
   const params = new URLSearchParams()
@@ -1077,6 +1098,32 @@ export const ticketService = {
   },
   supervisorItTicketDetail: (id: number | string) =>
     data(apiClient.get<ApiResponse<TicketRecord>>(`/supervisor-it/tickets/${id}`)),
+  publicTrackingAccess: (id: number | string) =>
+    data(apiClient.get<ApiResponse<PublicTrackingAccess>>(`/supervisor-it/tickets/${id}/public-tracking`)),
+  issuePublicTracking: (id: number | string, reason: string, idempotencyKey: string) =>
+    data(
+      apiClient.post<ApiResponse<PublicTrackingIssueResult>>(
+        `/supervisor-it/tickets/${id}/public-tracking`,
+        { reason },
+        { headers: { 'Idempotency-Key': idempotencyKey } },
+      ),
+    ),
+  rotatePublicTracking: (id: number | string, reason: string, idempotencyKey: string) =>
+    data(
+      apiClient.post<ApiResponse<PublicTrackingIssueResult>>(
+        `/supervisor-it/tickets/${id}/public-tracking/rotate`,
+        { reason },
+        { headers: { 'Idempotency-Key': idempotencyKey } },
+      ),
+    ),
+  revokePublicTracking: (id: number | string, reason: string, idempotencyKey: string) =>
+    data(
+      apiClient.post<ApiResponse<Record<string, never>>>(
+        `/supervisor-it/tickets/${id}/public-tracking/revoke`,
+        { reason },
+        { headers: { 'Idempotency-Key': idempotencyKey } },
+      ),
+    ),
   supervisorItAssignees: (params?: { search?: string; page?: number; per_page?: number }) => {
     const query = params
       ? '?' +

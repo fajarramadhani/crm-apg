@@ -42,6 +42,7 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="relative flex-1">
           <input
+            aria-label="Cari tiket"
             type="text"
             placeholder="Cari nomor tiket, judul, deskripsi, atau requester..."
             value={filters.search}
@@ -98,6 +99,7 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Status</label>
           <select
+            aria-label="Filter status"
             value={filters.status}
             onChange={(e) => handleChange('status', e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
@@ -120,6 +122,7 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Divisi</label>
           <select
+            aria-label="Filter divisi"
             value={filters.division_id}
             onChange={(e) => handleChange('division_id', e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
@@ -136,6 +139,7 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Sistem / Aplikasi</label>
           <select
+            aria-label="Filter sistem atau aplikasi"
             value={filters.application_id}
             onChange={(e) => handleChange('application_id', e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
@@ -152,6 +156,7 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Kategori</label>
           <select
+            aria-label="Filter kategori"
             value={filters.category_id}
             onChange={(e) => handleChange('category_id', e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
@@ -168,6 +173,7 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">Prioritas</label>
           <select
+            aria-label="Filter prioritas"
             value={filters.priority_id}
             onChange={(e) => handleChange('priority_id', e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
@@ -184,6 +190,7 @@ export const SupervisorTicketFilters: React.FC<SupervisorTicketFiltersProps> = (
         <div>
           <label className="block text-xs font-medium text-gray-500 mb-1">PIC Utama</label>
           <select
+            aria-label="Filter PIC utama"
             value={filters.pic_id}
             onChange={(e) => handleChange('pic_id', e.target.value)}
             className="w-full rounded-lg border border-gray-300 px-2.5 py-1.5 text-xs focus:border-blue-500 focus:outline-none"

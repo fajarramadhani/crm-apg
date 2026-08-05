@@ -60,6 +60,7 @@ export default function TicketHistory() {
       />
       <FilterBar>
         <Input
+          aria-label="Cari tiket"
           placeholder="Cari nomor atau judul..."
           value={search}
           onChange={(event) => {
@@ -69,6 +70,7 @@ export default function TicketHistory() {
           className="w-full sm:w-56"
         />
         <Select
+          aria-label="Filter status tiket"
           value={status}
           onChange={(event) => {
             setStatus(event.target.value)

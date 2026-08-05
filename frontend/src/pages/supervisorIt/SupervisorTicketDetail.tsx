@@ -8,11 +8,12 @@ import { TicketAssignmentPanel } from '../../components/supervisor/TicketAssignm
 import { TicketApprovalPanel } from '../../components/supervisor/TicketApprovalPanel'
 import { LegacyTicketActions } from '../../components/supervisor/LegacyTicketActions'
 import { TicketAuditTimeline } from '../../components/supervisor/TicketAuditTimeline'
+import { PublicTrackingAccessPanel } from '../../components/supervisor/PublicTrackingAccessPanel'
 import type { EligibleAssignee, AuditTimelineItem } from '../../types'
 
 export default function SupervisorTicketDetail() {
   const { id } = useParams<{ id: string }>()
-  const { user } = useAuth()
+  const { user, hasPermission } = useAuth()
 
   const [loading, setLoading] = useState<boolean>(true)
   const [actionLoading, setActionLoading] = useState<boolean>(false)
@@ -243,6 +244,10 @@ export default function SupervisorTicketDetail() {
       <LegacyTicketActions ticket={ticket} />
 
       <TicketRequesterSummary ticket={ticket} />
+
+      {ticket.submission_source === 'public_form' && hasPermission('ticket.public_tracking.manage') && (
+        <PublicTrackingAccessPanel ticketId={ticket.id} onChanged={reload} />
+      )}
 
       <TicketAnalysisPanel ticket={ticket} onSaveAnalysis={handleSaveAnalysis} loading={actionLoading} />
 

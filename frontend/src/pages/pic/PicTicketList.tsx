@@ -135,6 +135,7 @@ export const PicTicketList: React.FC = () => {
 
         <div className="flex items-center gap-2">
           <button
+            aria-label="Halaman sebelumnya"
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1 || loading}
             className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition"
@@ -147,6 +148,7 @@ export const PicTicketList: React.FC = () => {
           </span>
 
           <button
+            aria-label="Halaman berikutnya"
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages || loading}
             className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 transition"

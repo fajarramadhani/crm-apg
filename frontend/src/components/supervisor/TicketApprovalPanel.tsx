@@ -218,6 +218,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
                   : 'Catatan / Deskripsi'}
               </label>
               <textarea
+                aria-label="Catatan atau alasan tindakan"
                 rows={4}
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
@@ -235,6 +236,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
                   <span className="text-gray-400 font-normal">(Dapat dilihat Requester)</span>
                 </label>
                 <textarea
+                  aria-label="Ringkasan hasil untuk requester"
                   rows={2}
                   value={summaryText}
                   onChange={(e) => setSummaryText(e.target.value)}

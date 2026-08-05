@@ -43,6 +43,7 @@ export const PicTicketFilters: React.FC<PicTicketFiltersProps> = ({
         <div className="relative flex-1">
           <Search className="w-4 h-4 absolute left-3 top-3 text-slate-400" />
           <input
+            aria-label="Cari tiket"
             type="text"
             placeholder="Cari nomor tiket, judul, deskripsi, atau requester..."
             value={filters.keyword}
@@ -53,6 +54,7 @@ export const PicTicketFilters: React.FC<PicTicketFiltersProps> = ({
 
         {/* Peran Assignment Filter */}
         <select
+          aria-label="Filter peran PIC"
           value={filters.assignment_role}
           onChange={(e) => handleChange('assignment_role', e.target.value)}
           className="px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -65,6 +67,7 @@ export const PicTicketFilters: React.FC<PicTicketFiltersProps> = ({
 
         {/* Status Filter */}
         <select
+          aria-label="Filter status"
           value={filters.status}
           onChange={(e) => handleChange('status', e.target.value)}
           className="px-3 py-2 text-sm border border-slate-300 dark:border-slate-700 rounded-lg bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary"
@@ -92,6 +95,7 @@ export const PicTicketFilters: React.FC<PicTicketFiltersProps> = ({
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Sistem / Aplikasi</label>
           <select
+            aria-label="Filter sistem atau aplikasi"
             value={filters.application_id}
             onChange={(e) => handleChange('application_id', e.target.value)}
             className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
@@ -108,6 +112,7 @@ export const PicTicketFilters: React.FC<PicTicketFiltersProps> = ({
         <div>
           <label className="block text-xs font-medium text-slate-500 mb-1">Kategori Masalah</label>
           <select
+            aria-label="Filter kategori masalah"
             value={filters.ticket_category_id}
             onChange={(e) => handleChange('ticket_category_id', e.target.value)}
             className="w-full px-2.5 py-1.5 text-xs border border-slate-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"

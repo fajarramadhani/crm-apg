@@ -115,6 +115,18 @@ export default function PublicRequestHistory() {
     setPhase('expired')
   }
 
+  const endSession = async () => {
+    const token = accessToken
+    if (token) {
+      try {
+        await publicTicketService.revokeHistoryAccess(token)
+      } catch {
+        // Local credentials are still cleared; absolute server expiry remains the fallback.
+      }
+    }
+    expireSession()
+  }
+
   const loadHistory = async (token: string, page = 1) => {
     setPhase('loading')
     setError('')
@@ -425,7 +437,7 @@ export default function PublicRequestHistory() {
                 </div>
                 <button
                   type="button"
-                  onClick={expireSession}
+                  onClick={() => void endSession()}
                   className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50"
                 >
                   Akhiri Sesi

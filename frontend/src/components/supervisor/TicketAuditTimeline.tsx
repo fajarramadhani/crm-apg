@@ -27,6 +27,12 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({ items 
     }
   }
 
+  const publicTrackingLabels: Record<string, string> = {
+    public_tracking_created: 'Link tracking publik dibuat',
+    public_tracking_rotated: 'Link tracking publik dirotasi',
+    public_tracking_revoked: 'Link tracking publik dicabut',
+  }
+
   return (
     <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm space-y-4">
       <h2 className="text-base font-bold text-gray-900 flex items-center gap-2">
@@ -43,7 +49,10 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({ items 
 
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
               <div className="flex items-center gap-2 font-semibold text-gray-800">
-                <span>{item.actor?.name || 'Sistem'}</span>
+                <span>
+                  {item.actor?.name ||
+                    (item.actor_role === 'public_requester' ? 'Requester Publik Terverifikasi' : 'Sistem')}
+                </span>
                 {item.actor_role && (
                   <span className="rounded bg-gray-100 px-1.5 py-0.5 text-[10px] uppercase font-bold text-gray-600">
                     {item.actor_role}
@@ -62,7 +71,11 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({ items 
             </div>
 
             <div className="mt-1.5 text-xs text-gray-700 space-y-1">
-              {item.type === 'status_change' && (
+              {item.type === 'status_change' && publicTrackingLabels[item.action] && (
+                <p className="font-semibold text-blue-800">{publicTrackingLabels[item.action]}</p>
+              )}
+
+              {item.type === 'status_change' && !publicTrackingLabels[item.action] && (
                 <p>
                   Perubahan status dari <span className="font-semibold">{item.from_status || 'Draft'}</span> menjadi{' '}
                   <span className="font-semibold text-blue-700">{item.to_status}</span>

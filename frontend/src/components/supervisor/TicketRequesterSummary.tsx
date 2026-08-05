@@ -30,6 +30,15 @@ export const TicketRequesterSummary: React.FC<TicketRequesterSummaryProps> = ({ 
               #{ticket.ticket_number}
             </span>
             <LegacyWorkflowBadge isLegacy={isLegacy} />
+            <span
+              className={`rounded-full px-2.5 py-1 text-[11px] font-bold ${
+                ticket.submission_source === 'public_form'
+                  ? 'bg-cyan-50 text-cyan-800 border border-cyan-200'
+                  : 'bg-gray-100 text-gray-600 border border-gray-200'
+              }`}
+            >
+              {ticket.submission_source === 'public_form' ? 'Pengajuan Publik' : 'Pengajuan Internal'}
+            </span>
           </div>
           <h1 className="mt-2 text-xl font-bold text-gray-900">{ticket.title}</h1>
         </div>

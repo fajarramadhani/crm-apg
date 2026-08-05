@@ -293,6 +293,48 @@ export function Modal({
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }) {
   const titleId = React.useId()
+  const dialogRef = React.useRef<HTMLDivElement>(null)
+  const onCloseRef = React.useRef(onClose)
+  onCloseRef.current = onClose
+  React.useEffect(() => {
+    if (!open) return
+    const previous = document.activeElement as HTMLElement | null
+    const dialog = dialogRef.current
+    const focusable = () =>
+      Array.from(
+        dialog?.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href]',
+        ) ?? [],
+      )
+    focusable()[0]?.focus()
+    const keydown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        onCloseRef.current()
+        return
+      }
+      if (event.key !== 'Tab') return
+      const items = focusable()
+      if (!items.length) return
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', keydown)
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', keydown)
+      document.body.style.overflow = previousOverflow
+      previous?.focus()
+    }
+  }, [open])
   if (!open) return null
   const sizes = { sm: 'max-w-sm', md: 'max-w-lg', lg: 'max-w-2xl', xl: 'max-w-4xl' }
   return (
@@ -302,8 +344,9 @@ export function Modal({
       aria-modal="true"
       aria-labelledby={titleId}
     >
-      <button className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} aria-label="Tutup dialog" />
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onMouseDown={onClose} aria-hidden="true" />
       <div
+        ref={dialogRef}
         className={`relative bg-white rounded-2xl shadow-2xl w-full ${sizes[size]} max-h-[calc(100vh-2rem)] overflow-y-auto`}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
@@ -313,7 +356,7 @@ export function Modal({
           <button
             onClick={onClose}
             aria-label="Tutup dialog"
-            className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg hover:bg-gray-100 transition-colors"
           >
             <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -346,10 +389,16 @@ export function Toast({
   return (
     <div
       className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl ${styles[type]} animate-in slide-in-from-bottom-4`}
+      role={type === 'error' ? 'alert' : 'status'}
+      aria-live={type === 'error' ? 'assertive' : 'polite'}
     >
       <span className="font-bold">{icons[type]}</span>
       <span className="text-sm font-medium">{message}</span>
-      <button onClick={onClose} className="ml-2 opacity-70 hover:opacity-100">
+      <button
+        onClick={onClose}
+        aria-label="Tutup notifikasi"
+        className="ml-2 min-h-11 min-w-11 opacity-70 hover:opacity-100"
+      >
         ✕
       </button>
     </div>

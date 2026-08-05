@@ -65,6 +65,7 @@ export const TicketAnalysisPanel: React.FC<TicketAnalysisPanelProps> = ({
             Ringkasan Analisis <span className="text-red-500">*</span>
           </label>
           <textarea
+            aria-label="Ringkasan analisis"
             rows={4}
             placeholder="Tuliskan hasil identifikasi dan kesimpulan awal Supervisor IT..."
             value={analysisSummary}
@@ -76,6 +77,7 @@ export const TicketAnalysisPanel: React.FC<TicketAnalysisPanelProps> = ({
         <div>
           <label className="block text-xs font-semibold text-gray-700 mb-1">Arahan Penanganan</label>
           <textarea
+            aria-label="Arahan penanganan"
             rows={4}
             placeholder="Tuliskan arahan teknis, perhatian khusus, atau konteks untuk PIC..."
             value={handlingNote}
@@ -89,6 +91,7 @@ export const TicketAnalysisPanel: React.FC<TicketAnalysisPanelProps> = ({
             Target Penyelesaian Supervisor <span className="text-gray-400 font-normal">(Opsional)</span>
           </label>
           <input
+            aria-label="Target penyelesaian supervisor"
             type="date"
             value={targetDate}
             onChange={(e) => setTargetDate(e.target.value)}
