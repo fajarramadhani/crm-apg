@@ -1,9 +1,17 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AdminMasterDataController;
+use App\Http\Controllers\Api\V1\AdminOfficeController;
 use App\Http\Controllers\Api\V1\AdminReleaseChecklistTemplateController;
+use App\Http\Controllers\Api\V1\AdminRoleController;
 use App\Http\Controllers\Api\V1\AdminSlaEscalationPolicyController;
+use App\Http\Controllers\Api\V1\AdminUserController;
+use App\Http\Controllers\Api\V1\AdminWorkflowApprovalController;
+use App\Http\Controllers\Api\V1\AdminWorkflowController;
+use App\Http\Controllers\Api\V1\AdminWorkflowStageController;
+use App\Http\Controllers\Api\V1\AdminWorkflowTransitionController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\DynamicWorkflowTransitionController;
 use App\Http\Controllers\Api\V1\ExecutiveAlertController;
 use App\Http\Controllers\Api\V1\ExecutiveAnalyticsController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -31,8 +39,14 @@ use App\Http\Controllers\Api\V1\PicReworkController;
 use App\Http\Controllers\Api\V1\PicTicketController;
 use App\Http\Controllers\Api\V1\PicUatReworkController;
 use App\Http\Controllers\Api\V1\ProtectedAccessController;
+use App\Http\Controllers\Api\V1\PublicRequestHistoryController;
+use App\Http\Controllers\Api\V1\PublicTicketActionController;
+use App\Http\Controllers\Api\V1\PublicTicketController;
+use App\Http\Controllers\Api\V1\PublicTicketTrackingController;
 use App\Http\Controllers\Api\V1\QaController;
+use App\Http\Controllers\Api\V1\RequesterTicketController;
 use App\Http\Controllers\Api\V1\RequesterUatController;
+use App\Http\Controllers\Api\V1\SupervisorItTicketController;
 use App\Http\Controllers\Api\V1\SupervisorReportController;
 use App\Http\Controllers\Api\V1\SupervisorTicketController;
 use App\Http\Controllers\Api\V1\TicketAttachmentController;
@@ -41,12 +55,44 @@ use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TicketDeploymentController;
 use App\Http\Controllers\Api\V1\TicketKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\TicketMonitoringController;
+use App\Http\Controllers\Api\V1\WhatsAppManagementController;
+use App\Http\Controllers\Api\WhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->middleware('throttle:60,1')->name('api.health');
+Route::post('/webhooks/fonnte/message-status', [WhatsAppWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')->name('api.webhooks.fonnte.message-status');
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->middleware('throttle:60,1')->name('api.v1.health');
+
+    Route::post('/webhooks/fonnte/message-status', [WhatsAppWebhookController::class, 'handle'])
+        ->middleware('throttle:60,1')->name('api.v1.webhooks.fonnte.message-status');
+
+    Route::get('/public/ticket-form-options', [PublicTicketController::class, 'options'])
+        ->middleware('throttle:60,1')->name('api.v1.public.ticket-form-options');
+    Route::post('/public/tickets', [PublicTicketController::class, 'store'])
+        ->middleware(['public_tracking_headers', 'throttle:public-ticket-submissions'])->name('api.v1.public.tickets.store');
+    Route::get('/public/tickets/track/{token}', [PublicTicketTrackingController::class, 'show'])
+        ->middleware(['public_tracking_headers', 'throttle:public-ticket-tracking'])->name('api.v1.public.tickets.track');
+    Route::prefix('/public/tickets/track/{token}')->middleware('public_tracking_headers')->group(function (): void {
+        Route::get('/actions', [PublicTicketActionController::class, 'available'])->middleware('throttle:public-ticket-actions');
+        Route::post('/actions/challenge', [PublicTicketActionController::class, 'challenge'])->middleware('throttle:public-ticket-action-challenge');
+        Route::post('/actions/verify', [PublicTicketActionController::class, 'verify'])->middleware('throttle:public-ticket-action-verify');
+        Route::post('/actions/revoke', [PublicTicketActionController::class, 'revoke'])->middleware('throttle:public-ticket-actions');
+        Route::post('/uat', [PublicTicketActionController::class, 'uat'])->middleware('throttle:public-ticket-actions');
+        Route::post('/confirmation', [PublicTicketActionController::class, 'confirmation'])->middleware('throttle:public-ticket-actions');
+    });
+    Route::post('/public/ticket-history/challenges', [PublicRequestHistoryController::class, 'challenge'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-challenge'])->name('api.v1.public.ticket-history.challenge');
+    Route::post('/public/ticket-history/verify', [PublicRequestHistoryController::class, 'verify'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-verify'])->name('api.v1.public.ticket-history.verify');
+    Route::get('/public/ticket-history', [PublicRequestHistoryController::class, 'index'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-access'])->name('api.v1.public.ticket-history.index');
+    Route::post('/public/ticket-history/revoke', [PublicRequestHistoryController::class, 'revoke'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-access'])->name('api.v1.public.ticket-history.revoke');
+    Route::post('/public/ticket-history/tickets/{ticketNumber}/tracking-link', [PublicRequestHistoryController::class, 'trackingLink'])
+        ->middleware(['public_tracking_headers', 'throttle:public-history-access'])->name('api.v1.public.ticket-history.tracking-link');
 
     Route::prefix('auth')->name('api.v1.auth.')->group(function (): void {
         Route::post('/login', [AuthController::class, 'login'])
@@ -60,6 +106,8 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::middleware(['auth:sanctum', 'active'])->group(function (): void {
+        Route::post('/requester/tickets', [RequesterTicketController::class, 'store'])->name('api.v1.requester.tickets.store');
+
         Route::prefix('tickets')->name('api.v1.tickets.')->group(function (): void {
             Route::get('/', [TicketController::class, 'index'])->name('index');
             Route::post('/', [TicketController::class, 'store'])->middleware('permission:ticket.create')->name('store');
@@ -91,6 +139,10 @@ Route::prefix('v1')->group(function (): void {
             // Phase 12: Confirmation & Closure
             Route::post('/{ticket}/confirmation', [TicketClosureController::class, 'respondToConfirmation'])->middleware('permission:ticket.requester_confirmation.respond');
             Route::post('/{ticket}/close', [TicketClosureController::class, 'close'])->middleware('permission:ticket.closure.confirm');
+
+            // Tahap 7: Dynamic Workflow Runtime
+            Route::get('/{ticket}/workflow-status', [DynamicWorkflowTransitionController::class, 'status'])->name('workflow.status');
+            Route::post('/{ticket}/workflow-transition', [DynamicWorkflowTransitionController::class, 'transition'])->name('workflow.transition')->middleware('throttle:mutation');
         });
 
         // Phase 14: Notifications
@@ -153,6 +205,34 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/tickets/{ticket}/transfer', [SupervisorTicketController::class, 'transfer'])->middleware('permission:ticket.transfer');
         });
 
+        Route::prefix('supervisor-it')->name('api.v1.supervisor_it.')->group(function (): void {
+            Route::get('/dashboard', [SupervisorItTicketController::class, 'dashboard']);
+            Route::get('/tickets', [SupervisorItTicketController::class, 'index']);
+            Route::get('/tickets/{ticket}', [SupervisorItTicketController::class, 'show']);
+            Route::get('/assignees', [SupervisorItTicketController::class, 'assignees']);
+
+            Route::post('/tickets/{ticket}/analyze', [SupervisorItTicketController::class, 'analyze']);
+            Route::post('/tickets/{ticket}/request-info', [SupervisorItTicketController::class, 'requestInfo']);
+            Route::post('/tickets/{ticket}/assign-primary', [SupervisorItTicketController::class, 'assignPrimary']);
+            Route::post('/tickets/{ticket}/secondary-assignees', [SupervisorItTicketController::class, 'addSecondary']);
+            Route::delete('/tickets/{ticket}/secondary-assignees/{user}', [SupervisorItTicketController::class, 'removeSecondary']);
+            Route::post('/tickets/{ticket}/reassign', [SupervisorItTicketController::class, 'reassign']);
+            Route::post('/tickets/{ticket}/takeover', [SupervisorItTicketController::class, 'takeover']);
+
+            Route::post('/tickets/{ticket}/request-revision', [SupervisorItTicketController::class, 'requestRevision']);
+            Route::post('/tickets/{ticket}/approve', [SupervisorItTicketController::class, 'approve']);
+            Route::post('/tickets/{ticket}/reject', [SupervisorItTicketController::class, 'reject']);
+            Route::post('/tickets/{ticket}/cancel', [SupervisorItTicketController::class, 'cancel']);
+            Route::post('/tickets/{ticket}/reopen', [SupervisorItTicketController::class, 'reopen']);
+            Route::post('/tickets/{ticket}/close', [SupervisorItTicketController::class, 'close']);
+            Route::middleware(['public_tracking_headers', 'permission:ticket.public_tracking.manage'])->group(function (): void {
+                Route::get('/tickets/{ticket}/public-tracking', [PublicTicketTrackingController::class, 'access']);
+                Route::post('/tickets/{ticket}/public-tracking', [PublicTicketTrackingController::class, 'issue'])->middleware('throttle:mutation');
+                Route::post('/tickets/{ticket}/public-tracking/rotate', [PublicTicketTrackingController::class, 'rotate'])->middleware('throttle:mutation');
+                Route::post('/tickets/{ticket}/public-tracking/revoke', [PublicTicketTrackingController::class, 'revoke'])->middleware('throttle:mutation');
+            });
+        });
+
         Route::prefix('it-lead')->name('api.v1.it-lead.')->group(function (): void {
             Route::get('/alerts', [ItLeadAlertController::class, 'index']);
             Route::get('/alerts/sla', [ItLeadAlertController::class, 'sla']);
@@ -203,8 +283,22 @@ Route::prefix('v1')->group(function (): void {
         });
 
         Route::prefix('pic')->middleware('permission:ticket.assigned.view')->name('api.v1.pic.')->group(function (): void {
+            Route::get('/dashboard', [PicTicketController::class, 'dashboard']);
+            Route::get('/tickets', [PicTicketController::class, 'tickets']);
             Route::get('/assignments', [PicTicketController::class, 'index']);
             Route::get('/tickets/{ticket}', [PicTicketController::class, 'show']);
+            Route::post('/tickets/{ticket}/start', [PicTicketController::class, 'start']);
+            Route::post('/tickets/{ticket}/work-notes', [PicTicketController::class, 'addWorkNote']);
+            Route::post('/tickets/{ticket}/attachments', [PicTicketController::class, 'uploadAttachment']);
+            Route::post('/tickets/{ticket}/progress', [PicTicketController::class, 'updateProgress']);
+            Route::post('/tickets/{ticket}/request-info', [PicTicketController::class, 'requestInfo']);
+            Route::post('/tickets/{ticket}/waiting-external', [PicTicketController::class, 'markWaitingExternal']);
+            Route::post('/tickets/{ticket}/resume', [PicTicketController::class, 'resume']);
+            Route::post('/tickets/{ticket}/internal-check', [PicTicketController::class, 'internalCheck']);
+            Route::post('/tickets/{ticket}/submit-for-approval', [PicTicketController::class, 'submitForApproval']);
+            Route::post('/tickets/{ticket}/request-assistance', [PicTicketController::class, 'requestAssistance']);
+            Route::post('/tickets/{ticket}/request-transfer', [PicTicketController::class, 'requestTransfer']);
+
             Route::post('/tickets/{ticket}/start-analysis', [PicTicketController::class, 'startAnalysis'])->middleware('permission:ticket.analysis.start');
             Route::get('/tickets/{ticket}/analysis', [PicTicketController::class, 'analysis'])->middleware('permission:ticket.analysis.view');
             Route::post('/tickets/{ticket}/analysis', [PicTicketController::class, 'storeAnalysis'])->middleware('permission:ticket.analysis.manage');
@@ -318,6 +412,27 @@ Route::prefix('v1')->group(function (): void {
             Route::get('holidays', [MasterDataController::class, 'holidays'])->name('holidays');
         });
 
+        Route::prefix('admin/users')->middleware(['permission:users.manage', 'throttle:admin-mutation'])->name('api.v1.admin.users.')->group(function (): void {
+            Route::get('/options', [AdminUserController::class, 'options'])->name('options');
+            Route::get('/', [AdminUserController::class, 'index'])->name('index');
+            Route::post('/requester', [AdminUserController::class, 'storeRequester'])->name('store-requester');
+            Route::post('/it', [AdminUserController::class, 'storeIt'])->name('store-it');
+            Route::put('/{user}', [AdminUserController::class, 'update'])->name('update');
+            Route::delete('/{user}', [AdminUserController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::delete('admin/roles/{role}', [AdminRoleController::class, 'destroy'])
+            ->middleware(['permission:users.manage', 'throttle:admin-mutation'])
+            ->name('api.v1.admin.roles.destroy');
+
+        Route::prefix('admin/offices')->middleware(['permission:master_data.manage', 'throttle:admin-mutation'])->name('api.v1.admin.offices.')->group(function (): void {
+            Route::get('/', [AdminOfficeController::class, 'index'])->name('index');
+            Route::post('/', [AdminOfficeController::class, 'store'])->name('store');
+            Route::get('/{office}', [AdminOfficeController::class, 'show'])->name('show');
+            Route::put('/{office}', [AdminOfficeController::class, 'update'])->name('update');
+            Route::delete('/{office}', [AdminOfficeController::class, 'destroy'])->name('destroy');
+        });
+
         Route::prefix('admin')->middleware(['permission:master_data.manage', 'throttle:admin-mutation'])->name('api.v1.admin.')->group(function (): void {
             Route::get('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'index']);
             Route::post('/sla-escalation-policies', [AdminSlaEscalationPolicyController::class, 'store']);
@@ -367,7 +482,55 @@ Route::prefix('v1')->group(function (): void {
             Route::post('working-calendars/{calendar}/holidays', [AdminMasterDataController::class, 'storeHoliday']);
             Route::put('holidays/{holiday}', [AdminMasterDataController::class, 'updateHoliday']);
             Route::delete('holidays/{holiday}', [AdminMasterDataController::class, 'deleteHoliday']);
+
+            // Tahap 7: Admin Workflow Management
+            Route::prefix('workflows')->name('api.v1.admin.workflows.')->group(function (): void {
+                Route::get('/', [AdminWorkflowController::class, 'index'])->name('index');
+                Route::post('/', [AdminWorkflowController::class, 'store'])->name('store');
+                Route::get('/{workflow}', [AdminWorkflowController::class, 'show'])->name('show');
+                Route::put('/{workflow}', [AdminWorkflowController::class, 'update'])->name('update');
+                Route::delete('/{workflow}', [AdminWorkflowController::class, 'destroy'])->name('destroy');
+
+                // Lifecycle actions
+                Route::post('/{workflow}/validate', [AdminWorkflowController::class, 'validateWorkflow'])->name('validate');
+                Route::post('/{workflow}/publish', [AdminWorkflowController::class, 'publish'])->name('publish');
+                Route::post('/{workflow}/activate', [AdminWorkflowController::class, 'activate'])->name('activate');
+                Route::post('/{workflow}/deactivate', [AdminWorkflowController::class, 'deactivate'])->name('deactivate');
+                Route::post('/{workflow}/create-version', [AdminWorkflowController::class, 'createVersion'])->name('create-version');
+                Route::get('/{workflow}/preview', [AdminWorkflowController::class, 'preview'])->name('preview');
+
+                // Single-step Supervisor IT approval configuration
+                Route::get('/{workflow}/approval', [AdminWorkflowApprovalController::class, 'show'])->middleware('permission:workflow.approval.manage')->name('approval.show');
+                Route::put('/{workflow}/approval', [AdminWorkflowApprovalController::class, 'update'])->middleware('permission:workflow.approval.manage')->name('approval.update');
+
+                // Stages
+                Route::post('/{workflow}/stages', [AdminWorkflowStageController::class, 'store'])->name('stages.store');
+                Route::put('/{workflow}/stages/{stage}', [AdminWorkflowStageController::class, 'update'])->name('stages.update');
+                Route::delete('/{workflow}/stages/{stage}', [AdminWorkflowStageController::class, 'destroy'])->name('stages.destroy');
+
+                // Stage Fields
+                Route::post('/{workflow}/stages/{stage}/fields', [AdminWorkflowStageController::class, 'storeField'])->name('stages.fields.store');
+                Route::delete('/{workflow}/stages/{stage}/fields/{field}', [AdminWorkflowStageController::class, 'destroyField'])->name('stages.fields.destroy');
+
+                // Transitions
+                Route::post('/{workflow}/transitions', [AdminWorkflowTransitionController::class, 'store'])->name('transitions.store');
+                Route::put('/{workflow}/transitions/{transition}', [AdminWorkflowTransitionController::class, 'update'])->name('transitions.update');
+                Route::delete('/{workflow}/transitions/{transition}', [AdminWorkflowTransitionController::class, 'destroy'])->name('transitions.destroy');
+            });
+
         });
+
+        Route::prefix('admin/whatsapp')
+            ->middleware(['permission:notification.whatsapp.manage', 'throttle:admin-mutation'])
+            ->name('api.v1.admin.whatsapp.')
+            ->group(function (): void {
+                Route::get('/settings', [WhatsAppManagementController::class, 'settings'])->name('settings');
+                Route::patch('/settings', [WhatsAppManagementController::class, 'updateSettings'])->name('settings.update');
+                Route::get('/device-profile', [WhatsAppManagementController::class, 'deviceProfile'])->name('device-profile');
+                Route::get('/history', [WhatsAppManagementController::class, 'history'])->name('history');
+                Route::post('/history/{notification}/retry', [WhatsAppManagementController::class, 'retry'])->name('retry');
+                Route::post('/test-message', [WhatsAppManagementController::class, 'sendTestMessage'])->middleware('throttle:6,1')->name('test-message');
+            });
 
         // Phase 13: Reports
         Route::prefix('reports')->name('api.v1.reports.')->group(function (): void {
@@ -414,7 +577,7 @@ Route::prefix('v1')->group(function (): void {
 
     if (app()->environment(['local', 'testing'])) {
         Route::prefix('protected')->middleware(['auth:sanctum', 'active'])->group(function (): void {
-            Route::get('/admin', [ProtectedAccessController::class, 'admin'])->middleware('role:admin');
+            Route::get('/admin', [ProtectedAccessController::class, 'admin'])->middleware('role:superadmin');
             Route::get('/executive', [ProtectedAccessController::class, 'executive'])
                 ->middleware('permission:executive.aggregate.view');
             Route::get('/technical-ticket-details', [ProtectedAccessController::class, 'technicalTicketDetails'])

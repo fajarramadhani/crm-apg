@@ -1,7 +1,10 @@
-const defaultApiBaseUrl = 'http://localhost:8000/api/v1'
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, '') || defaultApiBaseUrl
+const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL?.trim() || '/api/v1').replace(/\/$/, '')
+const backendBaseUrl = (import.meta.env.VITE_BACKEND_URL?.trim() || apiBaseUrl.replace(/\/api\/v1$/, '')).replace(
+  /\/$/,
+  '',
+)
 
 export const env = {
   apiBaseUrl,
-  backendBaseUrl: import.meta.env.VITE_BACKEND_URL?.replace(/\/$/, '') || apiBaseUrl.replace(/\/api\/v1$/, ''),
+  backendBaseUrl,
 } as const

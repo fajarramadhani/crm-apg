@@ -8,7 +8,10 @@ export const ROLE_LABELS: Record<Role, string> = {
   qa: 'Quality Assurance',
   manager: 'IT Manager',
   executive: 'Executive',
-  admin: 'Admin',
+  superadmin: 'Super Admin',
+  supervisor_it: 'Supervisor IT',
+  pic_it_support: 'PIC IT Support',
+  pic_it_develop: 'PIC IT Develop',
 }
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -48,6 +51,56 @@ export const STATUS_LABELS: Record<string, string> = {
   done: 'Selesai',
   closed: 'Closed',
   over_sla: 'Over SLA',
+}
+
+export const PUBLIC_STATUS_LABELS: Record<string, string> = {
+  draft: 'Diajukan',
+  pending_validation: 'Diajukan',
+  submitted: 'Diajukan',
+  under_analysis: 'Sedang Dianalisis',
+  validated: 'Sedang Dianalisis',
+  triage: 'Sedang Dianalisis',
+  assigned: 'Sedang Dianalisis',
+  analysis: 'Sedang Dianalisis',
+  solution_planning: 'Sedang Dianalisis',
+  plan_review: 'Sedang Dianalisis',
+  ready_for_development: 'Sedang Ditangani',
+  development_in_progress: 'Sedang Ditangani',
+  internal_testing: 'Sedang Ditangani',
+  need_revision: 'Memerlukan Informasi',
+  need_info: 'Memerlukan Informasi',
+  waiting_external: 'Menunggu Pihak Eksternal',
+  on_hold: 'Ditunda Sementara',
+  revision: 'Memerlukan Informasi',
+  ready_for_qa: 'Dalam Pemeriksaan Akhir',
+  qa_assignment: 'Dalam Pemeriksaan Akhir',
+  qa_in_progress: 'Dalam Pemeriksaan Akhir',
+  qa_failed: 'Dalam Pemeriksaan Akhir',
+  qa_retest: 'Dalam Pemeriksaan Akhir',
+  ready_for_uat: 'Dalam Pemeriksaan Akhir',
+  uat_assignment: 'Dalam Pemeriksaan Akhir',
+  uat_in_progress: 'Dalam Pemeriksaan Akhir',
+  uat_failed: 'Dalam Pemeriksaan Akhir',
+  uat_retest: 'Dalam Pemeriksaan Akhir',
+  uat_approved: 'Dalam Pemeriksaan Akhir',
+  approval_pending: 'Dalam Pemeriksaan Akhir',
+  approval_revision: 'Dalam Pemeriksaan Akhir',
+  release_preparation: 'Dalam Pemeriksaan Akhir',
+  release_ready: 'Dalam Pemeriksaan Akhir',
+  deployment_scheduled: 'Dalam Pemeriksaan Akhir',
+  deployment_in_progress: 'Dalam Pemeriksaan Akhir',
+  deployed: 'Dalam Pemeriksaan Akhir',
+  monitoring: 'Dalam Pemeriksaan Akhir',
+  awaiting_requester_confirmation: 'Dalam Pemeriksaan Akhir',
+  done: 'Selesai',
+  closed: 'Selesai',
+  rejected: 'Ditolak',
+  cancelled: 'Dibatalkan',
+  reopened: 'Dibuka Kembali',
+}
+
+export function getPublicStatusLabel(status: string): string {
+  return PUBLIC_STATUS_LABELS[status] || STATUS_LABELS[status] || 'Diajukan'
 }
 
 export const PRIORITY_LABELS: Record<string, string> = {

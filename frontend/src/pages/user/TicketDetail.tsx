@@ -16,6 +16,8 @@ import {
 import { ticketService, type TicketPayload, type TicketRecord } from '../../services/ticketService'
 import type { Priority, TicketStatus } from '../../types'
 import { TicketKnowledgePanel } from '../../components/knowledgeBase/TicketKnowledgePanel'
+import { TicketDescriptionEditor, ticketDescriptionText } from '../../components/TicketDescriptionEditor'
+import { TicketDescriptionContent } from '../../components/TicketDescriptionContent'
 
 export default function TicketDetail() {
   const navigate = useNavigate()
@@ -27,6 +29,7 @@ export default function TicketDetail() {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
+  const [descriptionError, setDescriptionError] = useState('')
   const [businessImpact, setBusinessImpact] = useState('')
   const [action, setAction] = useState<'resubmit' | 'cancel' | null>(null)
   const [notes, setNotes] = useState('')
@@ -48,24 +51,36 @@ export default function TicketDetail() {
   }
   useEffect(load, [id])
 
-  const payload = (): TicketPayload => ({
-    ticket_category_id: ticket!.category.id,
-    ...(ticket!.application && { application_id: ticket!.application.id }),
-    ...(ticket!.application_module && { application_module_id: ticket!.application_module.id }),
-    ...(ticket!.requested_priority && { requested_priority_id: ticket!.requested_priority.id }),
-    title,
-    description,
-    business_impact: businessImpact || undefined,
-    urgency: ticket!.urgency || undefined,
-    expected_result: ticket!.expected_result || undefined,
-    actual_result: ticket!.actual_result || undefined,
-    reproduction_steps: ticket!.reproduction_steps || undefined,
-    request_purpose: ticket!.request_purpose || undefined,
-    change_reason: ticket!.change_reason || undefined,
-    expected_impact: ticket!.expected_impact || undefined,
-    recurring_indication: ticket!.recurring_indication || undefined,
-  })
+  const payload = (): TicketPayload => {
+    if (!ticket?.category) throw new Error('Kategori tiket belum ditentukan oleh tim IT.')
+
+    return {
+      ticket_category_id: ticket.category.id,
+      ...(ticket!.application && { application_id: ticket!.application.id }),
+      ...(ticket!.application_module && { application_module_id: ticket!.application_module.id }),
+      ...(ticket!.requested_priority && { requested_priority_id: ticket!.requested_priority.id }),
+      title,
+      description,
+      business_impact: businessImpact || undefined,
+      urgency: ticket!.urgency || undefined,
+      expected_result: ticket!.expected_result || undefined,
+      actual_result: ticket!.actual_result || undefined,
+      reproduction_steps: ticket!.reproduction_steps || undefined,
+      request_purpose: ticket!.request_purpose || undefined,
+      change_reason: ticket!.change_reason || undefined,
+      expected_impact: ticket!.expected_impact || undefined,
+      recurring_indication: ticket!.recurring_indication || undefined,
+    }
+  }
   const save = async () => {
+    if (!ticketDescriptionText(description)) {
+      setDescriptionError('Deskripsi pengajuan tiket wajib diisi.')
+      return
+    }
+    if (description.length > 10000) {
+      setDescriptionError('Deskripsi maksimal 10.000 karakter.')
+      return
+    }
     setBusy(true)
     setError('')
     try {
@@ -160,7 +175,7 @@ export default function TicketDetail() {
                   UAT Workspace
                 </Button>
               )}
-            {ticket.allowed_actions.includes('update') && (
+            {ticket.category && ticket.allowed_actions.includes('update') && (
               <Button variant="secondary" onClick={() => setEditing((value) => !value)}>
                 {editing ? 'Batal Edit' : 'Edit Tiket'}
               </Button>
@@ -205,16 +220,21 @@ export default function TicketDetail() {
               {(ticket.final_priority || ticket.requested_priority) && (
                 <PriorityBadge priority={(ticket.final_priority?.key || ticket.requested_priority?.key) as Priority} />
               )}
-              <span className="text-xs rounded-full bg-gray-100 px-3 py-1">{ticket.category.name}</span>
+              <span className="text-xs rounded-full bg-gray-100 px-3 py-1">
+                {ticket.request_category?.label || 'Kategori belum tersedia'}
+              </span>
             </div>
             {editing ? (
               <div className="space-y-4">
                 <Input label="Judul *" value={title} onChange={(event) => setTitle(event.target.value)} />
-                <Textarea
-                  label="Deskripsi *"
-                  rows={6}
+                <TicketDescriptionEditor
                   value={description}
-                  onChange={(event) => setDescription(event.target.value)}
+                  onChange={(value) => {
+                    setDescription(value)
+                    setDescriptionError('')
+                  }}
+                  disabled={busy}
+                  error={descriptionError}
                 />
                 <Textarea
                   label="Dampak Bisnis"
@@ -223,11 +243,7 @@ export default function TicketDetail() {
                   onChange={(event) => setBusinessImpact(event.target.value)}
                 />
                 <div className="flex justify-end">
-                  <Button
-                    variant="primary"
-                    disabled={busy || !title.trim() || !description.trim()}
-                    onClick={() => void save()}
-                  >
+                  <Button variant="primary" disabled={busy || !title.trim()} onClick={() => void save()}>
                     {busy ? 'Menyimpan...' : 'Simpan Perubahan'}
                   </Button>
                 </div>
@@ -236,7 +252,7 @@ export default function TicketDetail() {
               <div className="space-y-4 text-sm">
                 <div>
                   <p className="text-xs text-gray-500 mb-1">Deskripsi</p>
-                  <p className="whitespace-pre-wrap leading-relaxed">{ticket.description}</p>
+                  <TicketDescriptionContent html={ticket.description} />
                 </div>
                 {ticket.business_impact && (
                   <div>
@@ -246,8 +262,32 @@ export default function TicketDetail() {
                 )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4">
                   <Info label="Requester" value={ticket.requester.name} />
-                  <Info label="Divisi" value={ticket.division.name} />
-                  <Info label="Divisi Penanganan" value={ticket.current_division.name} />
+                  <Info
+                    label="Kategori Pengajuan"
+                    value={ticket.request_category?.label || 'Kategori belum tersedia'}
+                  />
+                  <Info label="Nama Sistem" value={ticket.application?.name || 'Sistem belum tersedia'} />
+                  <Info label="Status Urgent" value={ticket.urgency?.toUpperCase() || 'Urgency belum tersedia'} />
+                  <Info label="Lokasi Kantor" value={ticket.office?.name || ticket.division?.name || '—'} />
+                  <Info
+                    label="Link Error"
+                    value={
+                      ticket.affected_url ? (
+                        <a
+                          href={ticket.affected_url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-blue-600 hover:underline break-all"
+                        >
+                          {ticket.affected_url}
+                        </a>
+                      ) : (
+                        '—'
+                      )
+                    }
+                  />
+                  <Info label="Referensi" value={ticket.reference || '—'} />
+                  <Info label="Divisi Penanganan" value={ticket.current_division?.name || 'Belum ditentukan'} />
                   <Info label="Aplikasi" value={ticket.application?.name || '—'} />
                   <Info label="PIC" value={ticket.assignee?.name || '—'} />
                   <Info
@@ -262,6 +302,16 @@ export default function TicketDetail() {
                 </div>
               </div>
             )}
+          </SectionCard>
+          <SectionCard title="Informasi Penanganan">
+            <div role="status" className="rounded-xl border border-blue-100 bg-blue-50 p-4">
+              <p className="text-sm font-semibold text-blue-900">{ticket.handling.message}</p>
+              {ticket.handling.secondary_pics.length > 0 && (
+                <p className="mt-2 text-xs text-blue-800">
+                  PIC Pendamping: {ticket.handling.secondary_pics.map((pic) => pic.name).join(', ')}
+                </p>
+              )}
+            </div>
           </SectionCard>
           <SectionCard title="Riwayat Status">
             <div className="space-y-4">
@@ -359,11 +409,11 @@ export default function TicketDetail() {
   )
 }
 
-function Info({ label, value }: { label: string; value: string }) {
+function Info({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div>
       <p className="text-xs text-gray-500">{label}</p>
-      <p className="font-medium text-gray-900">{value}</p>
+      <div className="font-medium text-gray-900">{value}</div>
     </div>
   )
 }

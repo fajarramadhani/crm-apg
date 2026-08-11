@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { MessageCircle } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import type { AuthenticatedUser, Role } from '../types'
 import { ROLE_LABELS } from '../presentation'
 import { Avatar } from './ui'
 import { NotificationBell } from './notifications/NotificationBell'
 
-const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> = {
+const NAV_ITEMS: Record<Role, { path: string; label: string; icon: React.ReactNode }[]> = {
   requester: [
     { path: '/user/create-ticket', label: 'Buat Request / Tiket', icon: '➕' },
     { path: '/user/tickets', label: 'Riwayat Tiket', icon: '📋' },
@@ -13,11 +14,21 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   supervisor: [
-    { path: '/supervisor/validation-queue', label: 'Antrean Validasi', icon: '✅' },
+    { path: '/supervisor-it/dashboard', label: 'Supervisor Control Center', icon: '🎛️' },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: '📋' },
+    { path: '/supervisor/validation-queue', label: 'Antrean Validasi (Legacy)', icon: '✅' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+  ],
+  supervisor_it: [
+    { path: '/supervisor-it/dashboard', label: 'Dashboard Control Center', icon: '🎛️' },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket Supervisor', icon: '📋' },
+    { path: '/pic/dashboard', label: 'PIC Workspace', icon: '💻' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   it_lead: [
-    { path: '/user/tickets', label: 'Daftar Tiket', icon: '📋' },
+    { path: '/supervisor-it/dashboard', label: 'Supervisor Control Center', icon: '🎛️' },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: '📋' },
+    { path: '/pic/dashboard', label: 'PIC Workspace', icon: '💻' },
     { path: '/itlead/triage', label: 'Antrean Triage', icon: '🎯' },
     { path: '/itlead/plan-review', label: 'Plan Review', icon: '✓' },
     { path: '/itlead/development', label: 'Development', icon: '⚙' },
@@ -29,10 +40,21 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   pic: [
-    { path: '/pic/dashboard', label: 'Dashboard', icon: '🏠' },
-    { path: '/pic/workspace', label: 'Workspace Tiket', icon: '💻' },
-    { path: '/pic/rca', label: 'Root Cause Analysis', icon: '🔍' },
-    { path: '/pic/release-preparation', label: 'Persiapan Release', icon: '🚦' },
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+  ],
+  pic_it_support: [
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
+    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+  ],
+  pic_it_develop: [
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
   qa: [
@@ -50,9 +72,12 @@ const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> =
     { path: '/executive/reports', label: 'Executive Dashboard', icon: '📊' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
-  admin: [
+  superadmin: [
+    { path: '/admin/users', label: 'Akun & Role', icon: '👥' },
+    { path: '/admin/offices', label: 'Management Cabang', icon: '🏬' },
     { path: '/admin/divisions', label: 'Divisi & Aplikasi', icon: '🏢' },
     { path: '/admin/sla-rules', label: 'Aturan SLA', icon: '📏' },
+    { path: '/admin/workflows', label: 'Workflow', icon: '⚙' },
     { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
   ],
 }
@@ -72,6 +97,9 @@ export function Layout({
   const navigate = useNavigate()
   const navItems = [
     ...(NAV_ITEMS[role] || []),
+    ...(user.permissions.includes('notification.whatsapp.manage')
+      ? [{ path: '/admin/whatsapp', label: 'WhatsApp Fonnte', icon: <MessageCircle className="h-4 w-4" /> }]
+      : []),
     ...(user.permissions.includes('knowledge_base.view')
       ? [{ path: '/knowledge-base', label: 'Knowledge Base', icon: '📚' }]
       : []),
@@ -134,7 +162,14 @@ export function Layout({
         {sidebarOpen && import.meta.env.DEV && (
           <div className="px-3 py-3 border-b border-white/10">
             <p className="text-blue-300 text-xs mb-1.5 px-1 font-medium uppercase tracking-wide">Authenticated Role</p>
-            <div className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white">{ROLE_LABELS[role]}</div>
+            <div className="space-y-2 rounded-xl bg-white/8 px-3 py-3">
+              <div className="rounded-lg bg-white/10 px-3 py-2 text-xs font-medium text-white">{ROLE_LABELS[role]}</div>
+              {role === 'supervisor_it' && (
+                <div className="inline-flex items-center rounded-full border border-blue-300/30 bg-blue-400/10 px-2.5 py-1 text-[11px] font-semibold text-blue-100">
+                  Supervisor sebagai PIC
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -192,11 +227,11 @@ export function Layout({
           <div className="flex items-center gap-3">
             {user.permissions.includes('notification.view_own') && <NotificationBell />}
 
-            <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-1.5 border border-gray-200">
+            <div className="flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
               <Avatar initials={initials} size="sm" />
               <div className="hidden sm:block">
-                <p className="text-xs font-semibold text-gray-800">{user.name}</p>
-                <p className="text-xs text-gray-400">{ROLE_LABELS[role]}</p>
+                <p className="text-xs font-semibold text-gray-900">{user.name}</p>
+                <p className="text-xs text-gray-500">{ROLE_LABELS[role]}</p>
               </div>
             </div>
 

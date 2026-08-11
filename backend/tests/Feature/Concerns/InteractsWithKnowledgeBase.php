@@ -17,7 +17,7 @@ trait InteractsWithKnowledgeBase
     {
         $this->seed([RoleSeeder::class, MasterDataSeeder::class]);
 
-        foreach (['requester', 'pic', 'manager', 'executive', 'it_lead', 'admin'] as $role) {
+        foreach (['requester', 'pic', 'manager', 'executive', 'it_lead', 'superadmin'] as $role) {
             $this->kbUsers[$role] = User::factory()->create([
                 'role_id' => Role::where('key', $role)->firstOrFail()->id,
                 'name' => ucfirst(str_replace('_', ' ', $role)),

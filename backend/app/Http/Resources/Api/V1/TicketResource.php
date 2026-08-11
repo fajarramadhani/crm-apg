@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\Api\V1;
 
+use App\Enums\RequesterCategory;
 use App\Enums\TicketStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -10,35 +11,56 @@ class TicketResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        $own = $request->user()?->id === $this->requester_id;
+        $own = $request->user() !== null && $request->user()->id === $this->requester_id;
         $technical = $request->user()?->hasPermission('ticket.technical.view') ?? false;
+        $canViewRequesterContact = $technical || ($request->user()?->hasPermission('ticket.validate') ?? false);
         $safeAttachments = $this->relationLoaded('attachments')
             ? ($technical ? $this->attachments : $this->attachments->filter(fn ($attachment) => $attachment->defect_id === null && $attachment->uat_finding_id === null && (! in_array($attachment->category, ['development_evidence', 'test_evidence', 'log', 'documentation', 'qa_evidence', 'defect_evidence', 'retest_evidence', 'uat_evidence', 'uat_finding_evidence', 'uat_retest_evidence', 'uat_signoff_document'], true) || ($attachment->visibility ?? 'internal') === 'requester')))
             : null;
 
-        $defectCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->count() : $this->qaDefects()->count();
-        $defectOpenCount = $this->relationLoaded('qaDefects') ? $this->qaDefects->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->count();
+        $defectCount = isset($this->defect_count) ? $this->defect_count : ($this->relationLoaded('qaDefects') ? $this->qaDefects->count() : $this->qaDefects()->count());
+        $defectOpenCount = isset($this->defect_open_count) ? $this->defect_open_count : ($this->relationLoaded('qaDefects') ? $this->qaDefects->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->count());
 
-        $uatFindingCount = $this->relationLoaded('uatFindings') ? $this->uatFindings->count() : $this->uatFindings()->count();
-        $uatFindingOpenCount = $this->relationLoaded('uatFindings') ? $this->uatFindings->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->count();
+        $uatFindingCount = isset($this->uat_finding_count) ? $this->uat_finding_count : ($this->relationLoaded('uatFindings') ? $this->uatFindings->count() : $this->uatFindings()->count());
+        $uatFindingOpenCount = isset($this->uat_finding_open_count) ? $this->uat_finding_open_count : ($this->relationLoaded('uatFindings') ? $this->uatFindings->whereIn('status', ['open', 'in_progress', 'reopened'])->count() : $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->count());
 
         return [
             'id' => $this->id, 'ticket_number' => $this->ticket_number, 'title' => $this->title, 'description' => $this->description,
-            'business_impact' => $this->business_impact, 'urgency' => $this->urgency, 'incident_occurred_at' => $this->incident_occurred_at?->toISOString(), 'affected_url' => $this->affected_url,
+            'request_category' => $this->requestCategory(),
+            'business_impact' => $this->business_impact, 'urgency' => $this->urgency, 'incident_occurred_at' => $this->incident_occurred_at?->toISOString(), 'affected_url' => $this->affected_url, 'reference' => $this->reference,
             'expected_result' => $this->expected_result, 'actual_result' => $this->actual_result, 'reproduction_steps' => $this->reproduction_steps, 'request_purpose' => $this->request_purpose,
             'target_needed_at' => $this->target_needed_at?->toISOString(), 'change_reason' => $this->change_reason, 'expected_impact' => $this->expected_impact, 'recurring_indication' => $this->recurring_indication,
             'status' => $this->status->value,
-            'requester' => $this->whenLoaded('requester', fn () => ['id' => $this->requester->id, 'name' => $this->requester->name]),
-            'division' => $this->whenLoaded('division', fn () => ['id' => $this->division->id, 'code' => $this->division->code, 'name' => $this->division->name]),
-            'current_division' => $this->whenLoaded('currentDivision', fn () => ['id' => $this->currentDivision->id, 'code' => $this->currentDivision->code, 'name' => $this->currentDivision->name]),
+            'workflow_type' => $this->workflow_mode === 'dynamic' ? 'dynamic' : 'legacy',
+            'workflow_mode' => $this->workflow_mode,
+            'workflow_version' => $this->workflow_version,
+            'current_workflow_stage' => $this->current_workflow_stage,
+            'requester' => [
+                'id' => $this->relationLoaded('requester') ? $this->requester?->id : $this->requester_id,
+                'name' => ($this->relationLoaded('requester') ? $this->requester?->name : null) ?? $this->requester_name,
+                'email' => $canViewRequesterContact ? ($this->requester_email ?? ($this->relationLoaded('requester') ? $this->requester?->email : null)) : null,
+                'phone' => $canViewRequesterContact ? ($this->requester_phone ?? ($this->relationLoaded('requester') ? $this->requester?->phone : null)) : null,
+            ],
+            'submission_source' => $this->submission_source,
+            'division' => $this->whenLoaded('division', fn () => $this->division ? ['id' => $this->division->id, 'code' => $this->division->code, 'name' => $this->division->name] : null),
+            'current_division' => $this->whenLoaded('currentDivision', fn () => $this->currentDivision ? ['id' => $this->currentDivision->id, 'code' => $this->currentDivision->code, 'name' => $this->currentDivision->name] : null),
             'branch' => $this->whenLoaded('branch', fn () => $this->branch ? ['id' => $this->branch->id, 'code' => $this->branch->code, 'name' => $this->branch->name] : null),
+            'office' => $this->whenLoaded('office', fn () => $this->office ? ['id' => $this->office->id, 'name' => $this->office->name, 'office_type' => $this->office->office_type] : null),
             'application' => $this->whenLoaded('application', fn () => $this->application ? ['id' => $this->application->id, 'code' => $this->application->code, 'name' => $this->application->name] : null),
             'application_module' => $this->whenLoaded('applicationModule', fn () => $this->applicationModule ? ['id' => $this->applicationModule->id, 'code' => $this->applicationModule->code, 'name' => $this->applicationModule->name] : null),
-            'category' => $this->whenLoaded('category', fn () => ['id' => $this->category->id, 'code' => $this->category->code, 'name' => $this->category->name, 'type' => $this->category->type]),
+            'category' => $this->whenLoaded('category', fn () => $this->category ? ['id' => $this->category->id, 'code' => $this->category->code, 'name' => $this->category->name, 'type' => $this->category->type] : null),
             'requested_priority' => $this->whenLoaded('requestedPriority', fn () => $this->requestedPriority ? ['id' => $this->requestedPriority->id, 'key' => $this->requestedPriority->key, 'name' => $this->requestedPriority->name] : null),
             'final_priority' => $this->whenLoaded('finalPriority', fn () => $this->finalPriority ? ['id' => $this->finalPriority->id, 'key' => $this->finalPriority->key, 'name' => $this->finalPriority->name] : null),
             'sla_policy' => $this->whenLoaded('slaPolicy', fn () => $this->slaPolicy ? ['id' => $this->slaPolicy->id, 'response_minutes' => $this->slaPolicy->response_minutes, 'resolution_minutes' => $this->slaPolicy->resolution_minutes] : null),
             'assignee' => $this->whenLoaded('currentAssignee', fn () => $this->currentAssignee ? ['id' => $this->currentAssignee->id, 'name' => $this->currentAssignee->name] : null),
+            'handling' => $this->publicHandling(),
+            'assignments' => $this->when($technical && $this->relationLoaded('assignments'), fn () => $this->assignments->map(fn ($assignment) => [
+                'id' => $assignment->id,
+                'assigned_to' => $assignment->assigned_to,
+                'assignment_type' => $assignment->assignment_type,
+                'is_current' => (bool) $assignment->is_current,
+                'assignee' => $assignment->relationLoaded('assignee') && $assignment->assignee ? ['id' => $assignment->assignee->id, 'name' => $assignment->assignee->name] : null,
+            ])->values()->all()),
             'response_due_at' => $this->response_due_at?->toISOString(), 'resolution_due_at' => $this->resolution_due_at?->toISOString(), 'sla_timezone' => $this->sla_timezone,
             'triage_started_at' => $this->triage_started_at?->toISOString(), 'assigned_at' => $this->assigned_at?->toISOString(),
             'analysis_started_at' => $this->analysis_started_at?->toISOString(), 'analysis_completed_at' => $this->analysis_completed_at?->toISOString(), 'plan_submitted_at' => $this->plan_submitted_at?->toISOString(), 'plan_approved_at' => $this->plan_approved_at?->toISOString(),
@@ -100,7 +122,7 @@ class TicketResource extends JsonResource
                     'technical_details_available' => $technical,
                 ];
             }),
-            'release_owner' => $this->whenLoaded('releaseOwner', fn () => ['id' => $this->releaseOwner->id, 'name' => $this->releaseOwner->name]),
+            'release_owner' => $this->whenLoaded('releaseOwner', fn () => $this->releaseOwner ? ['id' => $this->releaseOwner->id, 'name' => $this->releaseOwner->name] : null),
             'release_preparation' => $this->when($technical && $this->relationLoaded('releasePlans'), function (): array {
                 $plan = $this->releasePlans->sortByDesc('version')->first();
                 $items = $plan?->relationLoaded('checklistItems') ? $plan->checklistItems : collect();
@@ -172,6 +194,60 @@ class TicketResource extends JsonResource
                 ];
             }),
         ];
+    }
+
+    private function requestCategory(): ?array
+    {
+        $category = RequesterCategory::tryFrom((string) $this->request_category);
+
+        return $category ? ['value' => $category->value, 'label' => $category->label()] : null;
+    }
+
+    private function publicHandling(): array
+    {
+        $assignments = $this->relationLoaded('publicHandlingAssignments')
+            ? $this->publicHandlingAssignments->filter(fn ($assignment) => $assignment->assignee?->is_active)
+            : collect();
+        $primary = $assignments->firstWhere('assignment_type', 'primary');
+        $secondary = $assignments->where('assignment_type', 'secondary')
+            ->map(fn ($assignment) => $this->publicPic($assignment->assignee))
+            ->filter()
+            ->values()
+            ->all();
+
+        if (in_array($this->status, [TicketStatus::Cancelled, TicketStatus::Rejected], true)) {
+            return ['state' => 'ended', 'message' => $this->status === TicketStatus::Cancelled ? 'Tiket telah dibatalkan.' : 'Tiket telah ditolak.', 'primary_pic' => null, 'secondary_pics' => []];
+        }
+
+        if (in_array($this->status, [TicketStatus::Done, TicketStatus::Closed], true)) {
+            $pic = $primary ? $this->publicPic($primary->assignee) : null;
+
+            return ['state' => 'completed', 'message' => $pic ? "Penanganan diselesaikan oleh {$pic['name']}." : 'Penanganan tiket telah selesai.', 'primary_pic' => $pic, 'secondary_pics' => $secondary];
+        }
+
+        if (! $primary) {
+            return ['state' => 'supervisor_review', 'message' => 'Sedang dalam proses penanganan oleh Supervisor IT.', 'primary_pic' => null, 'secondary_pics' => []];
+        }
+
+        $pic = $this->publicPic($primary->assignee);
+
+        return ['state' => 'assigned', 'message' => "Ditangani oleh {$pic['name']} — {$pic['role']}.", 'primary_pic' => $pic, 'secondary_pics' => $secondary];
+    }
+
+    private function publicPic($user): ?array
+    {
+        if (! $user) {
+            return null;
+        }
+
+        $role = match ($user->role?->key) {
+            'pic_it_support' => 'IT Support',
+            'pic_it_develop' => 'IT Developer',
+            'supervisor_it' => 'Supervisor IT',
+            default => 'Tim IT',
+        };
+
+        return ['id' => $user->id, 'name' => $user->name, 'role' => $role];
     }
 
     private function allowedActions(Request $request, bool $own): array

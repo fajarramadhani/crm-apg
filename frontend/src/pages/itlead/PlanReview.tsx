@@ -13,6 +13,7 @@ import {
   Toast,
 } from '../../components/ui'
 import { ticketService, type PlanReviewDetail, type TicketRecord } from '../../services/ticketService'
+import { TicketDescriptionContent } from '../../components/TicketDescriptionContent'
 
 export default function PlanReview() {
   const [tickets, setTickets] = useState<TicketRecord[]>([])
@@ -170,7 +171,7 @@ export default function PlanReview() {
                   {detail.ticket.final_priority && <PriorityBadge priority={detail.ticket.final_priority.key} />}
                 </div>
                 <h2 className="text-lg font-bold">{detail.ticket.title}</h2>
-                <p className="text-sm text-gray-600 mt-2 whitespace-pre-wrap">{detail.ticket.description}</p>
+                <TicketDescriptionContent html={detail.ticket.description} className="mt-2 text-gray-600" />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-gray-50 rounded-lg p-4 mt-4">
                   <Info label="Requester" value={detail.ticket.requester.name} />
                   <Info label="PIC" value={detail.ticket.assignee?.name || '—'} />

@@ -10,5 +10,5 @@ final class TicketRequesterConfirmed
 {
     use Dispatchable;
 
-    public function __construct(public Ticket $ticket, public User $actor) {}
+    public function __construct(public Ticket $ticket, public ?User $actor) {}
 }

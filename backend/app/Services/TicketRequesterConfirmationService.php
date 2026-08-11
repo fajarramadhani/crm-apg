@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class TicketRequesterConfirmationService
 {
-    public function respondToConfirmation(Ticket $ticket, User $actor, array $data): TicketRequesterConfirmation
+    public function respondToConfirmation(Ticket $ticket, ?User $actor, array $data, bool $dispatchEvent = true): TicketRequesterConfirmation
     {
         if ($ticket->status !== TicketStatus::AwaitingRequesterConfirmation) {
             throw new InvalidArgumentException('Ticket is not awaiting confirmation.');
@@ -36,12 +36,17 @@ class TicketRequesterConfirmationService
             throw new InvalidArgumentException('A rejection reason is required when rejecting a confirmation.');
         }
 
-        return DB::transaction(function () use ($ticket, $actor, $data, $isConfirmed) {
+        $requestedBy = $ticket->release_owner_id ?? $ticket->currentDeployment?->release_owner_id;
+        if (! $requestedBy) {
+            throw new InvalidArgumentException('The confirmation requester is not available.');
+        }
+
+        return DB::transaction(function () use ($ticket, $actor, $data, $isConfirmed, $requestedBy, $dispatchEvent) {
             $confirmation = TicketRequesterConfirmation::create([
                 'ticket_id' => $ticket->id,
                 'deployment_id' => $ticket->current_deployment_id,
                 'requester_id' => $ticket->requester_id,
-                'requested_by' => $ticket->release_owner_id ?? 1, // Fallback
+                'requested_by' => $requestedBy,
                 'requested_at' => $ticket->requester_confirmation_requested_at ?? now(),
                 'responded_at' => now(),
                 'status' => $data['status'],
@@ -60,12 +65,14 @@ class TicketRequesterConfirmationService
                     'from_status' => TicketStatus::AwaitingRequesterConfirmation->value,
                     'to_status' => TicketStatus::AwaitingRequesterConfirmation->value,
                     'action' => 'requester_confirmed',
-                    'actor_id' => $actor->id,
-                    'actor_role' => $actor->role_id ?? 'requester',
+                    'actor_id' => $actor?->id,
+                    'actor_role' => $actor?->role?->key ?? ($actor ? 'requester' : 'public_requester'),
                     'notes' => 'Requester accepted the deployment. Ticket is ready for closure.',
                 ]);
 
-                event(new TicketRequesterConfirmed($ticket, $actor));
+                if ($dispatchEvent) {
+                    event(new TicketRequesterConfirmed($ticket, $actor));
+                }
             } else {
                 // Rejected. Move to reopened then development_in_progress
                 $ticket->status = TicketStatus::Reopened;
@@ -75,8 +82,8 @@ class TicketRequesterConfirmationService
                     'from_status' => TicketStatus::AwaitingRequesterConfirmation->value,
                     'to_status' => TicketStatus::Reopened->value,
                     'action' => 'requester_rejected',
-                    'actor_id' => $actor->id,
-                    'actor_role' => $actor->role_id ?? 'requester',
+                    'actor_id' => $actor?->id,
+                    'actor_role' => $actor?->role?->key ?? ($actor ? 'requester' : 'public_requester'),
                     'notes' => 'Requester rejected the resolution: '.($data['rejection_reason'] ?? ''),
                 ]);
 
@@ -87,8 +94,8 @@ class TicketRequesterConfirmationService
                     'from_status' => TicketStatus::Reopened->value,
                     'to_status' => TicketStatus::DevelopmentInProgress->value,
                     'action' => 'development_started',
-                    'actor_id' => $actor->id,
-                    'actor_role' => $actor->role_id ?? 'system',
+                    'actor_id' => $actor?->id,
+                    'actor_role' => $actor?->role?->key ?? ($actor ? 'system' : 'public_requester'),
                     'notes' => 'Ticket moved back to development after requester rejection.',
                 ]);
             }

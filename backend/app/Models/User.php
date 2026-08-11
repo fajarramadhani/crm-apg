@@ -11,15 +11,16 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['role_id', 'division_id', 'branch_id', 'name', 'email', 'password', 'is_active', 'last_login_at'])]
+#[Fillable(['role_id', 'division_id', 'branch_id', 'office_id', 'name', 'email', 'phone', 'password', 'is_active', 'last_login_at'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     public function role(): BelongsTo
     {
@@ -36,6 +37,11 @@ class User extends Authenticatable
         return $this->belongsTo(Branch::class);
     }
 
+    public function office(): BelongsTo
+    {
+        return $this->belongsTo(Office::class);
+    }
+
     public function tickets(): HasMany
     {
         return $this->hasMany(Ticket::class, 'requester_id');
@@ -44,6 +50,11 @@ class User extends Authenticatable
     public function ticketAssignments(): HasMany
     {
         return $this->hasMany(TicketAssignment::class, 'assigned_to');
+    }
+
+    public function assignedTickets(): HasMany
+    {
+        return $this->hasMany(Ticket::class, 'current_assignee_id');
     }
 
     public function qaAssignments(): HasMany
@@ -104,6 +115,39 @@ class User extends Authenticatable
     public function hasRole(string|array $roles): bool
     {
         return in_array($this->role?->key, (array) $roles, true);
+    }
+
+    public function isSupervisorIt(): bool
+    {
+        return $this->hasRole('supervisor_it');
+    }
+
+    public function isPicSupport(): bool
+    {
+        return $this->hasRole('pic_it_support');
+    }
+
+    public function isPicDevelop(): bool
+    {
+        return $this->hasRole('pic_it_develop');
+    }
+
+    public function isPic(): bool
+    {
+        return $this->hasRole(['pic', 'pic_it_support', 'pic_it_develop']);
+    }
+
+    public function isEligibleTicketAssignee(): bool
+    {
+        return $this->is_active && $this->hasRole(['supervisor_it', 'pic_it_support', 'pic_it_develop']);
+    }
+
+    public function scopeEligibleTicketAssignees($query)
+    {
+        return $query->where('is_active', true)
+            ->whereHas('role', function ($q): void {
+                $q->whereIn('key', ['supervisor_it', 'pic_it_support', 'pic_it_develop']);
+            });
     }
 
     public function hasPermission(string $permission): bool

@@ -15,7 +15,7 @@ Staging and production use separate databases, storage namespaces, secrets, and 
 
 ## Build and runtime
 
-Use the approved Node/pnpm versions to build `frontend/dist`; Node is not required to serve static assets. Install backend dependencies from `composer.lock` with PHP 8.3+ and required PDO extensions. The reverse proxy must set trusted HTTPS forwarding correctly, limit request body size, deny access outside `public`, and apply HSTS only after HTTPS validation.
+Use the approved Node/pnpm versions to build `frontend/dist`; Node is not required to serve static assets. Install backend dependencies from `composer.lock` with PHP 8.3+ and required PDO extensions. The reverse proxy must set trusted HTTPS forwarding correctly, limit request body size, deny access outside `public`, and apply HSTS only after HTTPS validation. If the frontend uses the default relative API URL, the production origin must proxy both `/api` and `/sanctum` to Laravel; otherwise set absolute `VITE_API_BASE_URL` and `VITE_BACKEND_URL` values at build time.
 
 ## Storage and rollback
 

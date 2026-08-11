@@ -98,6 +98,38 @@ class AuthenticationAndAuthorizationTest extends TestCase
             ->assertJsonPath('data.user.permissions.1', 'executive.aggregate.view');
     }
 
+    public function test_supervisor_session_persists_across_requests_and_opens_dashboard(): void
+    {
+        $user = $this->createUser('supervisor_it');
+
+        $login = $this->spaPost('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertOk();
+        $login->assertCookie(config('session.cookie'));
+
+        $this->app['auth']->forgetGuards();
+
+        $this->withHeaders([
+            'Origin' => 'http://localhost:5173',
+            'Referer' => 'http://localhost:5173/supervisor-it/dashboard',
+        ])->getJson('/api/v1/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.user.role.key', 'supervisor_it');
+
+        $this->withHeaders([
+            'Origin' => 'http://localhost:5173',
+            'Referer' => 'http://localhost:5173/supervisor-it/dashboard',
+        ])->getJson('/api/v1/supervisor-it/dashboard')->assertOk();
+    }
+
+    public function test_protected_dashboard_without_session_returns_json_401_even_without_accept_header(): void
+    {
+        $this->get('/api/v1/supervisor-it/dashboard')
+            ->assertUnauthorized()
+            ->assertJsonPath('error.code', 'UNAUTHENTICATED');
+    }
+
     public function test_logout_invalidates_the_session(): void
     {
         $user = $this->createUser('requester');
@@ -121,7 +153,7 @@ class AuthenticationAndAuthorizationTest extends TestCase
 
     public function test_admin_endpoint_enforces_role(): void
     {
-        $admin = $this->createUser('admin');
+        $admin = $this->createUser('superadmin');
         $requester = $this->createUser('requester');
 
         $this->actingAs($admin)->getJson('/api/v1/protected/admin')->assertOk();
@@ -167,10 +199,14 @@ class AuthenticationAndAuthorizationTest extends TestCase
         foreach (config('permissions.roles') as $roleKey => $expectedPermissions) {
             $user = $this->createUser($roleKey);
 
+            if ($roleKey === 'superadmin') {
+                $expectedPermissions = array_values(array_unique(array_merge(...array_values(config('permissions.roles')))));
+            }
+
             $this->assertSame($expectedPermissions, $user->permissions(), "Permission mismatch for {$roleKey}");
         }
 
-        $this->assertCount(8, config('permissions.roles'));
+        $this->assertCount(11, config('permissions.roles'));
     }
 
     public function test_testing_user_command_provisions_one_named_account_without_overwriting_it(): void
@@ -182,12 +218,12 @@ class AuthenticationAndAuthorizationTest extends TestCase
             $this->artisan('users:provision-testing', [
                 '--name' => 'Testing Operator',
                 '--email' => 'operator@testing.invalid',
-                '--role' => 'admin',
+                '--role' => 'superadmin',
             ])->assertSuccessful();
 
             $user = User::query()->where('email', 'operator@testing.invalid')->firstOrFail();
             $this->assertSame('Testing Operator', $user->name);
-            $this->assertSame('admin', $user->role->key);
+            $this->assertSame('superadmin', $user->role->key);
             $this->assertTrue(Hash::check($password, $user->password));
 
             $this->artisan('users:provision-testing', [
@@ -196,7 +232,7 @@ class AuthenticationAndAuthorizationTest extends TestCase
                 '--role' => 'requester',
             ])->assertFailed();
 
-            $this->assertSame('admin', $user->fresh()->role->key);
+            $this->assertSame('superadmin', $user->fresh()->role->key);
         } finally {
             putenv('TIC_HUB_BOOTSTRAP_PASSWORD');
         }

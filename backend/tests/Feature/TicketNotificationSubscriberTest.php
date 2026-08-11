@@ -29,9 +29,8 @@ class TicketNotificationSubscriberTest extends TestCase
         $supervisorRole = Role::firstOrCreate(['key' => 'supervisor', 'name' => 'Supervisor']);
 
         $requester = User::factory()->create(['role_id' => $requesterRole->id]); // Requester
-        $supervisor = User::factory()->create(['role_id' => $supervisorRole->id, 'division_id' => $requester->division_id]); // Supervisor
-
         $ticket = Ticket::factory()->create(['requester_id' => $requester->id]);
+        $supervisor = User::factory()->create(['role_id' => $supervisorRole->id, 'division_id' => $ticket->division_id]); // Supervisor
 
         // Manually dispatch the event
         event(new TicketSubmitted($ticket));

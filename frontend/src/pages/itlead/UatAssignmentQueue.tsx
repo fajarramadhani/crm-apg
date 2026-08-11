@@ -35,7 +35,7 @@ export default function UatAssignmentQueue() {
   useEffect(load, [search, status])
 
   const assign = () => {
-    if (!selected) return
+    if (!selected || selected.requester.id === null) return
     setBusy(true)
     ticketService
       .assignUat(selected.id, { requester_user_id: selected.requester.id, notes: notes || undefined })
@@ -107,10 +107,14 @@ export default function UatAssignmentQueue() {
                   <td className="px-4 py-3">
                     <button
                       className="rounded-lg bg-blue-700 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-800 disabled:opacity-50"
-                      disabled={ticket.status === 'uat_assignment'}
+                      disabled={ticket.status === 'uat_assignment' || ticket.requester.id === null}
                       onClick={() => setSelected(ticket)}
                     >
-                      {ticket.status === 'uat_assignment' ? 'Sudah Ditugaskan' : 'Tugaskan UAT'}
+                      {ticket.status === 'uat_assignment'
+                        ? 'Sudah Ditugaskan'
+                        : ticket.requester.id === null
+                          ? 'Requester tanpa akun'
+                          : 'Tugaskan UAT'}
                     </button>
                   </td>
                 </tr>

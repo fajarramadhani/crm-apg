@@ -4,6 +4,7 @@ import type { ApiError } from './types'
 export interface ApiClient {
   get<T>(path: string, init?: RequestInit): Promise<T>
   post<T>(path: string, body?: unknown, init?: RequestInit): Promise<T>
+  patch<T>(path: string, body?: unknown, init?: RequestInit): Promise<T>
   put<T>(path: string, body?: unknown, init?: RequestInit): Promise<T>
   delete<T>(path: string, init?: RequestInit): Promise<T>
   postForm<T>(path: string, body: FormData, init?: RequestInit): Promise<T>
@@ -23,6 +24,11 @@ export class ApiRequestError extends Error {
 }
 
 export const SESSION_EXPIRED_EVENT = 'tic-hub:session-expired'
+
+export interface SessionExpiredDetail {
+  path: string
+  requestId?: string
+}
 
 function cookie(name: string): string | undefined {
   return document.cookie
@@ -44,17 +50,26 @@ async function fetchCsrfCookie(): Promise<void> {
 
 async function request<T>(path: string, init: RequestInit = {}, retriedCsrf = false): Promise<T> {
   const method = init.method?.toUpperCase() || 'GET'
-  const xsrfToken = cookie('XSRF-TOKEN')
   const headers = new Headers(init.headers)
   headers.set('Accept', 'application/json')
 
   if (init.body && !(init.body instanceof FormData)) headers.set('Content-Type', 'application/json')
-  if (method !== 'GET' && method !== 'HEAD' && xsrfToken) {
-    try {
-      headers.set('X-XSRF-TOKEN', decodeURIComponent(xsrfToken))
-    } catch {
+  if (method !== 'GET' && method !== 'HEAD') {
+    let xsrfToken = cookie('XSRF-TOKEN')
+    if (!xsrfToken) {
       await fetchCsrfCookie()
-      return request<T>(path, init, true)
+      xsrfToken = cookie('XSRF-TOKEN')
+    }
+    if (xsrfToken) {
+      try {
+        headers.set('X-XSRF-TOKEN', decodeURIComponent(xsrfToken))
+      } catch {
+        await fetchCsrfCookie()
+        xsrfToken = cookie('XSRF-TOKEN')
+        if (xsrfToken) {
+          headers.set('X-XSRF-TOKEN', decodeURIComponent(xsrfToken))
+        }
+      }
     }
   }
 
@@ -72,7 +87,16 @@ async function request<T>(path: string, init: RequestInit = {}, retriedCsrf = fa
 
   if (!response.ok) {
     const error = payload as ApiError | null
-    if (response.status === 401 && path !== '/auth/login') window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT))
+    if (response.status === 401 && !['/auth/login', '/auth/me'].includes(path) && !path.startsWith('/public/')) {
+      window.dispatchEvent(
+        new CustomEvent<SessionExpiredDetail>(SESSION_EXPIRED_EVENT, {
+          detail: {
+            path,
+            requestId: error?.meta?.request_id || response.headers.get('X-Request-ID') || undefined,
+          },
+        }),
+      )
+    }
     throw new ApiRequestError(
       error?.message || 'Permintaan tidak dapat diproses.',
       response.status,
@@ -91,6 +115,12 @@ export const apiClient: ApiClient = {
     request<T>(path, {
       ...init,
       method: 'POST',
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+  patch: <T>(path: string, body?: unknown, init?: RequestInit) =>
+    request<T>(path, {
+      ...init,
+      method: 'PATCH',
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
   put: <T>(path: string, body?: unknown, init?: RequestInit) =>

@@ -42,9 +42,13 @@ class TicketCreationValidationTest extends TestCase
     public function test_requester_creates_submitted_ticket_with_session_identity_unique_number_history_and_event(): void
     {
         Event::fake([TicketSubmitted::class]);
-        $first = $this->actingAs($this->requester)->postJson('/api/v1/tickets', $this->payload())->assertCreated()->assertJsonPath('data.status', 'pending_validation')->assertJsonPath('data.requester.id', $this->requester->id)->assertJsonStructure(['data' => ['ticket_number', 'allowed_actions'], 'meta' => ['request_id']]);
+        $first = $this->actingAs($this->requester)->postJson('/api/v1/requester/tickets', [
+            'request_category' => 'error_bug', 'application_id' => Application::firstOrFail()->id, 'title' => 'First ticket', 'description' => 'First ticket description', 'affected_url' => 'https://example.test/error', 'attachments' => [UploadedFile::fake()->create('first.png', 10, 'image/png')], 'urgency' => 'medium',
+        ])->assertCreated()->assertJsonPath('data.status', 'pending_validation')->assertJsonPath('data.requester.id', $this->requester->id)->assertJsonStructure(['data' => ['ticket_number', 'allowed_actions'], 'meta' => ['request_id']]);
         $other = $this->user('requester', $this->division);
-        $second = $this->actingAs($other)->postJson('/api/v1/tickets', [...$this->payload(), 'requester_id' => $this->requester->id, 'title' => 'Second ticket'])->assertCreated();
+        $second = $this->actingAs($other)->postJson('/api/v1/requester/tickets', [
+            'request_category' => 'request', 'application_id' => Application::firstOrFail()->id, 'title' => 'Second ticket', 'description' => 'Second ticket description', 'attachments' => [UploadedFile::fake()->create('second.png', 10, 'image/png')], 'urgency' => 'low',
+        ])->assertCreated();
         $this->assertNotSame($first->json('data.ticket_number'), $second->json('data.ticket_number'));
         $this->assertMatchesRegularExpression('/^TIC-\d{6}-\d{6}$/', $first->json('data.ticket_number'));
         $this->assertDatabaseHas('tickets', ['id' => $second->json('data.id'), 'requester_id' => $other->id, 'final_priority_id' => null]);
@@ -56,13 +60,14 @@ class TicketCreationValidationTest extends TestCase
 
     public function test_dynamic_validation_rejects_inactive_master_wrong_module_and_missing_type_field(): void
     {
+        $superadmin = $this->user('superadmin', $this->division);
         $application = Application::firstOrFail();
         $other = Application::whereKeyNot($application->id)->firstOrFail();
         $module = $other->modules()->create(['code' => 'WRONG', 'name' => 'Wrong', 'is_active' => true]);
         $request = TicketCategory::where('type', 'request')->firstOrFail();
-        $this->actingAs($this->requester)->postJson('/api/v1/tickets', [...$this->payload(), 'ticket_category_id' => $request->id, 'application_id' => $application->id, 'application_module_id' => $module->id])->assertUnprocessable()->assertJsonValidationErrors(['application_module_id', 'request_purpose'])->assertJsonStructure(['meta' => ['request_id']]);
+        $this->actingAs($superadmin)->postJson('/api/v1/tickets', [...$this->payload(), 'ticket_category_id' => $request->id, 'application_id' => $application->id, 'application_module_id' => $module->id])->assertUnprocessable()->assertJsonValidationErrors(['application_module_id', 'request_purpose'])->assertJsonStructure(['meta' => ['request_id']]);
         $request->update(['is_active' => false]);
-        $this->actingAs($this->requester)->postJson('/api/v1/tickets', [...$this->payload(), 'ticket_category_id' => $request->id])->assertUnprocessable()->assertJsonValidationErrors('ticket_category_id');
+        $this->actingAs($superadmin)->postJson('/api/v1/tickets', [...$this->payload(), 'ticket_category_id' => $request->id])->assertUnprocessable()->assertJsonValidationErrors('ticket_category_id');
     }
 
     public function test_requester_list_filters_paginates_and_never_exposes_other_users_ticket(): void
@@ -78,8 +83,9 @@ class TicketCreationValidationTest extends TestCase
     {
         $ticket = $this->createTicket($this->requester);
         $this->actingAs($this->supervisor)->postJson("/api/v1/supervisor/tickets/{$ticket->id}/request-revision", ['notes' => 'Please add business impact'])->assertOk();
-        $payload = [...$this->payload(), 'title' => 'Revised title', 'status' => 'validated'];
-        $this->actingAs($this->requester)->putJson("/api/v1/tickets/{$ticket->id}", $payload)->assertOk()->assertJsonPath('data.title', 'Revised title')->assertJsonPath('data.status', 'need_revision');
+        $payload = ['title' => 'Revised title', 'description' => '<p><strong>Updated</strong> detail<script>alert(1)</script></p>', 'business_impact' => 'Updated impact'];
+        $this->actingAs($this->requester)->putJson("/api/v1/tickets/{$ticket->id}", $payload)->assertOk()->assertJsonPath('data.title', 'Revised title')->assertJsonPath('data.description', '<p><strong>Updated</strong> detail</p>')->assertJsonPath('data.status', 'need_revision');
+        $this->actingAs($this->requester)->putJson("/api/v1/tickets/{$ticket->id}", [...$payload, 'description' => '<p>&nbsp;</p>'])->assertUnprocessable()->assertJsonValidationErrors('description');
         $this->actingAs($this->requester)->postJson("/api/v1/tickets/{$ticket->id}/resubmit", ['notes' => 'Details added'])->assertOk()->assertJsonPath('data.status', 'pending_validation');
         $this->actingAs($this->supervisor)->postJson("/api/v1/supervisor/tickets/{$ticket->id}/validate", [])->assertOk();
         $this->actingAs($this->requester)->putJson("/api/v1/tickets/{$ticket->id}", $payload)->assertForbidden();
@@ -165,7 +171,15 @@ class TicketCreationValidationTest extends TestCase
 
     private function createTicket(User $user, array $overrides = []): Ticket
     {
-        $id = $this->actingAs($user)->postJson('/api/v1/tickets', $this->payload($overrides))->assertCreated()->json('data.id');
+        $id = $this->actingAs($user)->postJson('/api/v1/requester/tickets', [
+            'request_category' => 'error_bug',
+            'application_id' => Application::firstOrFail()->id,
+            'title' => $overrides['title'] ?? 'Cannot generate policy PDF',
+            'description' => 'The operation consistently fails for a valid policy.',
+            'affected_url' => 'https://example.test/error',
+            'attachments' => [UploadedFile::fake()->create('proof.png', 10, 'image/png')],
+            'urgency' => 'medium',
+        ])->assertCreated()->json('data.id');
 
         return Ticket::findOrFail($id);
     }

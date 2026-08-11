@@ -9,5 +9,13 @@ export interface ApiResponse<T> {
   success: true
   message: string
   data: T
-  meta: { request_id: string }
+  meta: {
+    request_id: string
+    pagination?: {
+      current_page: number
+      per_page: number
+      total: number
+      last_page: number
+    }
+  }
 }

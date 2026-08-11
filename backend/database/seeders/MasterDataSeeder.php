@@ -31,18 +31,37 @@ class MasterDataSeeder extends Seeder
         }
 
         $it = Division::where('code', 'IT')->firstOrFail();
-        foreach ([['TIC_HUB', 'Tic Hub'], ['CMS_MULTI', 'CMS Multi Company'], ['APG_PROFILE', 'Company Profile APG'], ['BPR_BONDING', 'BPR Bonding'], ['DWP_INSURANCE', 'DWP Insurance']] as [$code,$name]) {
+        foreach ([['TIC_HUB', 'Sistem Internal'], ['EXTERNAL_SYSTEM', 'Sistem Asuransi atau Eksternal']] as [$code,$name]) {
             Application::updateOrCreate(['code' => $code], ['name' => $name, 'description' => 'Automated test fixture', 'owner_division_id' => $it->id, 'is_active' => true]);
         }
 
-        foreach ([['INCIDENT', 'Incident', 'incident'], ['REQUEST', 'Request', 'request'], ['CHANGE', 'Change', 'change'], ['PROBLEM', 'Problem', 'problem']] as [$code,$name,$type]) {
-            TicketCategory::updateOrCreate(['code' => $code], ['name' => $name, 'type' => $type, 'description' => 'Automated test fixture', 'is_active' => true]);
+        foreach ([
+            ['INCIDENT', 'Bug Sistem Internal', 'incident'],
+            ['EXTERNAL_INCIDENT', 'Bug Sistem dari Asuransi', 'incident'],
+            ['REQUEST', 'Request', 'request'],
+            ['CHANGE', 'Change', 'change'],
+            ['PROBLEM', 'Problem', 'problem'],
+        ] as [$code, $name, $type]) {
+            TicketCategory::query()->firstOrCreate(
+                ['code' => $code],
+                ['name' => $name, 'type' => $type, 'description' => 'Automated test fixture', 'is_active' => true],
+            );
         }
 
-        $calendar = WorkingCalendar::updateOrCreate(['code' => 'JKT_WEEKDAY'], ['name' => 'Senin–Jumat 08:00–17:00', 'timezone' => 'Asia/Jakarta', 'workday_start' => '08:00', 'workday_end' => '17:00', 'working_days' => [1, 2, 3, 4, 5], 'is_active' => true]);
-        foreach ([['critical', 'Critical', 1, 240], ['high', 'High', 2, 480], ['medium', 'Medium', 3, 960], ['low', 'Low', 4, 2400]] as [$key,$name,$level,$minutes]) {
-            $priority = TicketPriority::updateOrCreate(['key' => $key], ['name' => $name, 'level' => $level, 'description' => 'Automated test fixture', 'is_active' => true]);
-            SlaPolicy::updateOrCreate(['priority_id' => $priority->id, 'working_calendar_id' => $calendar->id, 'is_active' => true], ['response_minutes' => null, 'resolution_minutes' => $minutes]);
+        $calendar = WorkingCalendar::query()->firstOrCreate(
+            ['code' => 'JKT_WEEKDAY'],
+            ['name' => 'Senin–Jumat 08:00–17:00', 'timezone' => 'Asia/Jakarta', 'workday_start' => '08:00', 'workday_end' => '17:00', 'working_days' => [1, 2, 3, 4, 5], 'is_active' => true],
+        );
+        foreach ([['critical', 'Critical', 1, 240], ['high', 'High', 2, 480], ['medium', 'Medium', 3, 960], ['low', 'Low', 4, 2400]] as [$key, $name, $level, $minutes]) {
+            $priority = TicketPriority::query()->firstOrCreate(
+                ['key' => $key],
+                ['name' => $name, 'level' => $level, 'description' => 'Automated test fixture', 'is_active' => true],
+            );
+
+            SlaPolicy::query()->firstOrCreate(
+                ['priority_id' => $priority->id, 'working_calendar_id' => $calendar->id],
+                ['response_minutes' => null, 'resolution_minutes' => $minutes, 'is_active' => true],
+            );
         }
     }
 }

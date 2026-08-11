@@ -83,7 +83,7 @@ return new class extends Migration
             $table->foreignId('linked_by')->constrained('users')->cascadeOnDelete();
             $table->timestamp('created_at')->useCurrent();
 
-            $table->unique(['article_id', 'ticket_id', 'relation_type']);
+            $table->unique(['article_id', 'ticket_id', 'relation_type'], 'kb_article_ticket_relation_unique');
         });
 
         Schema::create('knowledge_base_feedback', function (Blueprint $table) {

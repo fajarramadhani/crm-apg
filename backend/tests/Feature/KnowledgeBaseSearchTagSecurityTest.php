@@ -86,18 +86,18 @@ class KnowledgeBaseSearchTagSecurityTest extends TestCase
 
     public function test_admin_manages_tags_and_deactivation_hides_them_without_deleting_relations(): void
     {
-        $created = $this->actingAs($this->kbUser('admin'))->postJson('/api/v1/knowledge-base-tags', ['name' => 'Remote Access'])
+        $created = $this->actingAs($this->kbUser('superadmin'))->postJson('/api/v1/knowledge-base-tags', ['name' => 'Remote Access'])
             ->assertCreated()->assertJsonPath('data.slug', 'remote-access')->json('data');
-        $this->actingAs($this->kbUser('admin'))->postJson('/api/v1/knowledge-base-tags', ['name' => 'Remote Access'])
+        $this->actingAs($this->kbUser('superadmin'))->postJson('/api/v1/knowledge-base-tags', ['name' => 'Remote Access'])
             ->assertUnprocessable();
         $article = $this->createKbArticle(['tags' => [$created['id']], 'status' => 'published']);
 
-        $this->actingAs($this->kbUser('admin'))->deleteJson("/api/v1/knowledge-base-tags/{$created['id']}")->assertNoContent();
+        $this->actingAs($this->kbUser('superadmin'))->deleteJson("/api/v1/knowledge-base-tags/{$created['id']}")->assertNoContent();
         $this->assertDatabaseHas('knowledge_base_tags', ['id' => $created['id'], 'is_active' => false]);
         $this->assertDatabaseHas('knowledge_base_article_tag', ['article_id' => $article->id, 'tag_id' => $created['id']]);
         $this->actingAs($this->kbUser('requester'))->getJson('/api/v1/knowledge-base-tags')
             ->assertOk()->assertJsonMissing(['id' => $created['id']]);
-        $this->actingAs($this->kbUser('admin'))->getJson('/api/v1/knowledge-base-tags')
+        $this->actingAs($this->kbUser('superadmin'))->getJson('/api/v1/knowledge-base-tags')
             ->assertOk()->assertJsonFragment(['id' => $created['id']]);
     }
 

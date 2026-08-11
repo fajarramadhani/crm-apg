@@ -13,6 +13,15 @@ class TicketNotificationRecipientResolver
         $recipients = collect();
 
         switch ($notificationType) {
+            case 'public_requester_action_completed':
+                if ($ticket->current_assignee_id) {
+                    $recipients->push(User::find($ticket->current_assignee_id));
+                }
+                $recipients = $recipients->merge(User::whereHas('role', function ($q) {
+                    $q->whereIn('key', ['supervisor_it', 'supervisor'])->orWhere('name', 'Supervisor');
+                })->with('role')->where('division_id', $ticket->division_id)->where('is_active', true)->get());
+                break;
+
             case 'ticket_submitted':
             case 'ticket_rejected':
             case 'uat_assignment_required':
@@ -24,12 +33,20 @@ class TicketNotificationRecipientResolver
                 break;
 
             case 'supervisor_validation_required':
-                // Find supervisors in the same division
+                // Find supervisors using role key (supervisor_it or supervisor) in same division
                 $supervisors = User::whereHas('role', function ($q) {
-                    $q->where('name', 'Supervisor');
-                })->where('division_id', $ticket->requester?->division_id)
+                    $q->whereIn('key', ['supervisor_it', 'supervisor'])->orWhere('name', 'Supervisor');
+                })->with('role')->where('division_id', $ticket->division_id)
                     ->where('is_active', true)
                     ->get();
+
+                if ($supervisors->isEmpty()) {
+                    // Fallback to IT Lead during transition
+                    $supervisors = User::whereHas('role', function ($q) {
+                        $q->whereIn('key', ['it_lead'])->orWhere('name', 'IT Lead');
+                    })->with('role')->where('is_active', true)->get();
+                }
+
                 $recipients = $recipients->merge($supervisors);
                 break;
 
@@ -49,7 +66,7 @@ class TicketNotificationRecipientResolver
                 // IT Leads
                 $itLeads = User::whereHas('role', function ($q) {
                     $q->where('name', 'IT Lead');
-                })->where('is_active', true)->get();
+                })->with('role')->where('is_active', true)->get();
                 $recipients = $recipients->merge($itLeads);
                 break;
 
@@ -57,7 +74,7 @@ class TicketNotificationRecipientResolver
                 // Managers scoped to division
                 $managers = User::whereHas('role', function ($q) {
                     $q->where('name', 'Manager');
-                })->where('division_id', $ticket->requester?->division_id)
+                })->with('role')->where('division_id', $ticket->division_id)
                     ->where('is_active', true)->get();
                 $recipients = $recipients->merge($managers);
                 break;
@@ -66,7 +83,7 @@ class TicketNotificationRecipientResolver
                 // IT Managers / Approvers
                 $approvers = User::whereHas('role', function ($q) {
                     $q->whereIn('name', ['Manager', 'IT Lead']);
-                })->where('is_active', true)->get();
+                })->with('role')->where('is_active', true)->get();
                 $recipients = $recipients->merge($approvers);
                 break;
 
@@ -110,7 +127,7 @@ class TicketNotificationRecipientResolver
                 }
                 $itLeads = User::whereHas('role', function ($q) {
                     $q->where('name', 'IT Lead');
-                })->where('is_active', true)->get();
+                })->with('role')->where('is_active', true)->get();
                 $recipients = $recipients->merge($itLeads);
                 break;
         }

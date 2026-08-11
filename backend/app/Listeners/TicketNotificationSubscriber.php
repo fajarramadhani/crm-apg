@@ -2,6 +2,8 @@
 
 namespace App\Listeners;
 
+use App\Enums\RequesterCategory;
+use App\Events\PublicRequesterActionCompleted;
 use App\Events\TicketAssigned;
 use App\Events\TicketClosed;
 use App\Events\TicketDeploymentFailed;
@@ -26,21 +28,42 @@ class TicketNotificationSubscriber
 
     public function handleTicketSubmitted(TicketSubmitted $event): void
     {
+        $ticket = $event->ticket->loadMissing(['requester:id,name', 'application:id,name']);
+        $category = RequesterCategory::tryFrom((string) $ticket->request_category)?->label() ?? 'Belum tersedia';
+        $system = $ticket->application?->name ?? 'Belum tersedia';
+        $urgency = $ticket->urgency ? strtoupper($ticket->urgency) : 'Belum tersedia';
+
         $this->notificationService->dispatch(
-            ticket: $event->ticket,
+            ticket: $ticket,
             type: 'supervisor_validation_required',
             severity: 'info',
-            title: 'Ticket Validation Required',
-            message: "New ticket {$event->ticket->ticket_number} requires validation.",
-            actionUrl: '/supervisor/validation-queue'
+            title: 'Pengajuan Tiket Baru',
+            message: "{$ticket->ticket_number} | {$category} | {$system} | {$urgency} | {$ticket->title} | Requester: ".($ticket->requester?->name ?? $ticket->requester_name),
+            actionUrl: $ticket->workflow_mode === 'dynamic'
+                ? "/supervisor-it/tickets/{$ticket->id}"
+                : '/supervisor/validation-queue'
         );
         $this->notificationService->dispatch(
-            ticket: $event->ticket,
+            ticket: $ticket,
             type: 'ticket_submitted',
             severity: 'success',
-            title: 'Ticket Submitted',
-            message: "Your ticket {$event->ticket->ticket_number} has been submitted successfully.",
-            actionUrl: "/tickets/{$event->ticket->id}"
+            title: 'Tiket Berhasil Diajukan',
+            message: "Tiket {$ticket->ticket_number} berhasil diajukan.",
+            actionUrl: "/user/tickets/{$ticket->id}"
+        );
+    }
+
+    public function handlePublicRequesterActionCompleted(PublicRequesterActionCompleted $event): void
+    {
+        $label = $event->action === 'uat' ? 'UAT' : 'requester confirmation';
+        $this->notificationService->dispatch(
+            ticket: $event->ticket,
+            type: 'public_requester_action_completed',
+            severity: $event->outcome === 'accepted' ? 'success' : 'warning',
+            title: 'Public requester response received',
+            message: "Verified public requester submitted {$label} as {$event->outcome} for ticket {$event->ticket->ticket_number}.",
+            actionUrl: "/tickets/{$event->ticket->id}",
+            deduplicationRef: "{$event->action}:{$event->outcome}:{$event->ticket->status->value}",
         );
     }
 
@@ -218,6 +241,7 @@ class TicketNotificationSubscriber
     public function subscribe(Dispatcher $events): array
     {
         return [
+            PublicRequesterActionCompleted::class => 'handlePublicRequesterActionCompleted',
             TicketSubmitted::class => 'handleTicketSubmitted',
             TicketValidated::class => 'handleTicketValidated',
             TicketAssigned::class => 'handleTicketAssigned',

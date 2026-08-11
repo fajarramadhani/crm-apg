@@ -74,7 +74,7 @@ class NotificationTest extends TestCase
 
     public function test_user_can_mark_notification_as_read()
     {
-        $user = User::factory()->create(['role_id' => 1]);
+        $user = User::factory()->create();
         $notification = new Notification([
             'id' => Str::uuid(),
             'type' => 'App\Notifications\TicketAlertNotification',
@@ -90,7 +90,7 @@ class NotificationTest extends TestCase
 
     public function test_user_can_archive_notification_as_soft_hide()
     {
-        $user = User::factory()->create(['role_id' => 1]);
+        $user = User::factory()->create();
         $notification = new Notification([
             'id' => Str::uuid(),
             'type' => 'App\Notifications\TicketAlertNotification',

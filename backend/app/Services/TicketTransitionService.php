@@ -30,6 +30,26 @@ use Illuminate\Support\Facades\DB;
 
 final class TicketTransitionService
 {
+    public function publicPhaseTransition(Ticket $locked, TicketStatus $from, TicketStatus $to, string $action, ?string $notes = null, ?callable $mutate = null): void
+    {
+        if ($locked->status !== $from) {
+            throw new InvalidTicketTransition($locked->status->value);
+        }
+        $locked->status = $to;
+        if ($mutate) {
+            $mutate($locked);
+        }
+        $locked->save();
+        $locked->histories()->create([
+            'from_status' => $from->value,
+            'to_status' => $to->value,
+            'action' => $action,
+            'actor_id' => null,
+            'actor_role' => 'public_requester',
+            'notes' => $notes,
+        ]);
+    }
+
     public function phaseTransition(Ticket $locked, User $actor, TicketStatus $from, TicketStatus $to, string $action, ?string $notes = null, ?array $metadata = null, ?callable $mutate = null): void
     {
         if ($locked->status !== $from) {
