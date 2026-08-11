@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Contracts\PublicHistoryOtpDelivery;
+use App\Contracts\WhatsAppGateway;
 use App\Events\TicketAnalysisCompleted;
 use App\Events\TicketAnalysisStarted;
 use App\Events\TicketDevelopmentProgressUpdated;
@@ -21,11 +22,14 @@ use App\Events\TicketTransferred;
 use App\Events\TicketValidated;
 use App\Listeners\KnowledgeBaseNotificationSubscriber;
 use App\Listeners\TicketNotificationSubscriber;
+use App\Listeners\WhatsAppNotificationSubscriber;
 use App\Services\InMemoryPublicHistoryOtpDelivery;
 use App\Services\MailPublicHistoryOtpDelivery;
 use App\Services\PublicRequestHistoryService;
 use App\Services\PublicTicketActionService;
 use App\Services\PublicTicketTrackingKeyRing;
+use App\Services\WhatsApp\FonnteWhatsAppGateway;
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -49,6 +53,15 @@ class AppServiceProvider extends ServiceProvider
                 'fake' => $app->make(InMemoryPublicHistoryOtpDelivery::class),
                 default => throw new \RuntimeException('Unsupported public history delivery driver.'),
             };
+        });
+
+        $this->app->bind(WhatsAppGateway::class, function () {
+            $provider = config('whatsapp.provider');
+            if ($provider !== 'fonnte') {
+                throw new \InvalidArgumentException("Unsupported WhatsApp provider '{$provider}'.");
+            }
+
+            return new FonnteWhatsAppGateway(config('whatsapp.fonnte'));
         });
     }
 
@@ -78,6 +91,15 @@ class AppServiceProvider extends ServiceProvider
             if ($unsafe) {
                 throw new \RuntimeException('Unsafe production environment configuration.');
             }
+
+            if (config('whatsapp.enabled')) {
+                if (config('whatsapp.provider') !== 'fonnte'
+                    || blank(config('whatsapp.fonnte.token'))
+                    || strlen((string) config('whatsapp.fonnte.webhook_secret')) < 32
+                    || WhatsAppNotificationService::normalizePhoneNumber(config('whatsapp.fonnte.it_support_number')) === null) {
+                    throw new \RuntimeException('WhatsApp enabled in production but mandatory Fonnte configuration is missing.');
+                }
+            }
         }
 
         Event::listen([
@@ -95,6 +117,7 @@ class AppServiceProvider extends ServiceProvider
 
         Event::subscribe(TicketNotificationSubscriber::class);
         Event::subscribe(KnowledgeBaseNotificationSubscriber::class);
+        Event::subscribe(WhatsAppNotificationSubscriber::class);
 
         RateLimiter::for('login', function (Request $request): array {
             $email = Str::lower(trim((string) $request->input('email')));

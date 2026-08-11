@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react'
-import { ApiRequestError, SESSION_EXPIRED_EVENT } from '../api/client'
+import { ApiRequestError, SESSION_EXPIRED_EVENT, type SessionExpiredDetail } from '../api/client'
 import { authService } from '../services/authService'
 import { useLoading } from './LoadingContext'
 import type { AuthenticatedUser, Role } from '../types'
@@ -45,7 +45,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    const expireSession = () => {
+    const expireSession = (event: Event) => {
+      const detail = (event as CustomEvent<SessionExpiredDetail>).detail
+      if (detail) sessionStorage.setItem('tic-hub:last-session-expired', JSON.stringify(detail))
       setUser(null)
       setStatus('unauthenticated')
     }

@@ -68,7 +68,7 @@ class TicketClosureService
             throw new InvalidArgumentException('Cannot close ticket with an active UAT run.');
         }
 
-        return DB::transaction(function () use ($ticket, $actor, $data, $confirmation) {
+        $closure = DB::transaction(function () use ($ticket, $actor, $data, $confirmation) {
             $fromStatus = $ticket->status->value;
             $ticket->status = TicketStatus::Closed;
             $ticket->closed_by = $actor->id;
@@ -85,10 +85,12 @@ class TicketClosureService
 
             $closure = $this->createClosureRecord($ticket, $actor, $confirmation, $data);
 
-            event(new TicketClosed($ticket, $actor));
+            DB::afterCommit(fn () => event(new TicketClosed($ticket, $actor)));
 
             return $closure;
         });
+
+        return $closure;
     }
 
     private function createClosureRecord(Ticket $ticket, User $actor, ?TicketRequesterConfirmation $confirmation, array $data): TicketClosure

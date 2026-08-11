@@ -1,11 +1,12 @@
 import { useState } from 'react'
+import { MessageCircle } from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import type { AuthenticatedUser, Role } from '../types'
 import { ROLE_LABELS } from '../presentation'
 import { Avatar } from './ui'
 import { NotificationBell } from './notifications/NotificationBell'
 
-const NAV_ITEMS: Record<Role, { path: string; label: string; icon: string }[]> = {
+const NAV_ITEMS: Record<Role, { path: string; label: string; icon: React.ReactNode }[]> = {
   requester: [
     { path: '/user/create-ticket', label: 'Buat Request / Tiket', icon: '➕' },
     { path: '/user/tickets', label: 'Riwayat Tiket', icon: '📋' },
@@ -96,6 +97,9 @@ export function Layout({
   const navigate = useNavigate()
   const navItems = [
     ...(NAV_ITEMS[role] || []),
+    ...(user.permissions.includes('notification.whatsapp.manage')
+      ? [{ path: '/admin/whatsapp', label: 'WhatsApp Fonnte', icon: <MessageCircle className="h-4 w-4" /> }]
+      : []),
     ...(user.permissions.includes('knowledge_base.view')
       ? [{ path: '/knowledge-base', label: 'Knowledge Base', icon: '📚' }]
       : []),

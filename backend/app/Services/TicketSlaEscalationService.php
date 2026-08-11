@@ -12,7 +12,8 @@ class TicketSlaEscalationService
     public function __construct(
         private SlaDeadlineService $deadlineService,
         private WorkingTimeCalculator $calculator,
-        private TicketNotificationService $notificationService
+        private TicketNotificationService $notificationService,
+        private WhatsAppNotificationService $whatsAppNotificationService
     ) {}
 
     public function scanAndAlert(): array
@@ -210,6 +211,28 @@ class TicketSlaEscalationService
             deduplicationRef: $dedupKey,
             deduplicationWindow: 60 // 1 hour window
         );
+
+        $ticket->loadMissing(['branch:id,name', 'currentAssignee:id,name,phone']);
+        $branch = $ticket->branch?->name ?? 'Kantor Pusat';
+        $baseUrl = rtrim(trim(explode(',', (string) config('public_tracking.frontend_url', config('app.url')))[0]), '/');
+        $path = $ticket->current_assignee_id ? "pic/tickets/{$ticket->id}" : "supervisor-it/tickets/{$ticket->id}";
+        $internalUrl = "{$baseUrl}/{$path}";
+        $waEventType = $alertLevel === 'breached' ? 'sla_breached' : 'sla_warning';
+
+        $variables = [
+            'ticket_number' => $ticket->ticket_number,
+            'branch' => $branch,
+            'sla_type' => strtoupper($slaType),
+            'status' => $alertLevel === 'breached' ? 'Terlewati' : 'Mendekati batas',
+            'minutes' => (string) abs($remainingMinutes),
+            'internal_url' => $internalUrl,
+        ];
+        if (WhatsAppNotificationService::normalizePhoneNumber($ticket->currentAssignee?->phone)) {
+            $this->whatsAppNotificationService->queueSafely($waEventType, $ticket, $ticket->currentAssignee->phone,
+                'pic', 'user', 'sla_recipient', $variables, "wa-{$dedupKey}:pic-{$ticket->current_assignee_id}");
+        } else {
+            $this->whatsAppNotificationService->notifyItSupport($waEventType, $ticket, $variables, "wa-{$dedupKey}:it-support");
+        }
 
         $stats['notifications_created']++;
     }

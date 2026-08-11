@@ -98,6 +98,38 @@ class AuthenticationAndAuthorizationTest extends TestCase
             ->assertJsonPath('data.user.permissions.1', 'executive.aggregate.view');
     }
 
+    public function test_supervisor_session_persists_across_requests_and_opens_dashboard(): void
+    {
+        $user = $this->createUser('supervisor_it');
+
+        $login = $this->spaPost('/api/v1/auth/login', [
+            'email' => $user->email,
+            'password' => 'password',
+        ])->assertOk();
+        $login->assertCookie(config('session.cookie'));
+
+        $this->app['auth']->forgetGuards();
+
+        $this->withHeaders([
+            'Origin' => 'http://localhost:5173',
+            'Referer' => 'http://localhost:5173/supervisor-it/dashboard',
+        ])->getJson('/api/v1/auth/me')
+            ->assertOk()
+            ->assertJsonPath('data.user.role.key', 'supervisor_it');
+
+        $this->withHeaders([
+            'Origin' => 'http://localhost:5173',
+            'Referer' => 'http://localhost:5173/supervisor-it/dashboard',
+        ])->getJson('/api/v1/supervisor-it/dashboard')->assertOk();
+    }
+
+    public function test_protected_dashboard_without_session_returns_json_401_even_without_accept_header(): void
+    {
+        $this->get('/api/v1/supervisor-it/dashboard')
+            ->assertUnauthorized()
+            ->assertJsonPath('error.code', 'UNAUTHENTICATED');
+    }
+
     public function test_logout_invalidates_the_session(): void
     {
         $user = $this->createUser('requester');

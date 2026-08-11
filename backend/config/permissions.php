@@ -292,6 +292,7 @@ return [
             'users.manage',
             'master_data.view',
             'master_data.manage',
+            'notification.whatsapp.manage',
             'ticket.release_checklist_template.manage',
             'sla_escalation_policy.view',
             'sla_escalation_policy.manage',

@@ -9,8 +9,12 @@ interface AuthPayload {
 export const authRepository = {
   async login(email: string, password: string): Promise<AuthenticatedUser> {
     await apiClient.csrf()
-    const response = await apiClient.post<ApiResponse<AuthPayload>>('/auth/login', { email, password })
-    return response.data.user
+    await apiClient.post<ApiResponse<AuthPayload>>('/auth/login', { email, password })
+
+    // Do not enter the protected UI until the browser proves the session cookie
+    // is available on a separate request.
+    const session = await apiClient.get<ApiResponse<AuthPayload>>('/auth/me')
+    return session.data.user
   },
 
   async me(): Promise<AuthenticatedUser> {

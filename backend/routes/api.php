@@ -55,12 +55,19 @@ use App\Http\Controllers\Api\V1\TicketController;
 use App\Http\Controllers\Api\V1\TicketDeploymentController;
 use App\Http\Controllers\Api\V1\TicketKnowledgeBaseController;
 use App\Http\Controllers\Api\V1\TicketMonitoringController;
+use App\Http\Controllers\Api\V1\WhatsAppManagementController;
+use App\Http\Controllers\Api\WhatsAppWebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class)->middleware('throttle:60,1')->name('api.health');
+Route::post('/webhooks/fonnte/message-status', [WhatsAppWebhookController::class, 'handle'])
+    ->middleware('throttle:60,1')->name('api.webhooks.fonnte.message-status');
 
 Route::prefix('v1')->group(function (): void {
     Route::get('/health', HealthController::class)->middleware('throttle:60,1')->name('api.v1.health');
+
+    Route::post('/webhooks/fonnte/message-status', [WhatsAppWebhookController::class, 'handle'])
+        ->middleware('throttle:60,1')->name('api.v1.webhooks.fonnte.message-status');
 
     Route::get('/public/ticket-form-options', [PublicTicketController::class, 'options'])
         ->middleware('throttle:60,1')->name('api.v1.public.ticket-form-options');
@@ -510,7 +517,20 @@ Route::prefix('v1')->group(function (): void {
                 Route::put('/{workflow}/transitions/{transition}', [AdminWorkflowTransitionController::class, 'update'])->name('transitions.update');
                 Route::delete('/{workflow}/transitions/{transition}', [AdminWorkflowTransitionController::class, 'destroy'])->name('transitions.destroy');
             });
+
         });
+
+        Route::prefix('admin/whatsapp')
+            ->middleware(['permission:notification.whatsapp.manage', 'throttle:admin-mutation'])
+            ->name('api.v1.admin.whatsapp.')
+            ->group(function (): void {
+                Route::get('/settings', [WhatsAppManagementController::class, 'settings'])->name('settings');
+                Route::patch('/settings', [WhatsAppManagementController::class, 'updateSettings'])->name('settings.update');
+                Route::get('/device-profile', [WhatsAppManagementController::class, 'deviceProfile'])->name('device-profile');
+                Route::get('/history', [WhatsAppManagementController::class, 'history'])->name('history');
+                Route::post('/history/{notification}/retry', [WhatsAppManagementController::class, 'retry'])->name('retry');
+                Route::post('/test-message', [WhatsAppManagementController::class, 'sendTestMessage'])->middleware('throttle:6,1')->name('test-message');
+            });
 
         // Phase 13: Reports
         Route::prefix('reports')->name('api.v1.reports.')->group(function (): void {

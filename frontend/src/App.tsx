@@ -57,6 +57,7 @@ const KnowledgeBaseTags = lazy(() => import('./pages/settings/KnowledgeBaseTags'
 const WorkflowList = lazy(() => import('./pages/admin/workflows/WorkflowList'))
 const WorkflowForm = lazy(() => import('./pages/admin/workflows/WorkflowForm'))
 const WorkflowDetail = lazy(() => import('./pages/admin/workflows/WorkflowDetail'))
+const WhatsAppSettingsPage = lazy(() => import('./pages/admin/WhatsAppSettingsPage'))
 
 const SupervisorItDashboard = lazy(() => import('./pages/supervisorIt/SupervisorDashboard'))
 const SupervisorTicketList = lazy(() => import('./pages/supervisorIt/SupervisorTicketList'))
@@ -498,6 +499,7 @@ function AppRoutes() {
         <Route path="/admin/workflows/new" element={guard(['superadmin'], <WorkflowForm />)} />
         <Route path="/admin/workflows/:id" element={guard(['superadmin'], <WorkflowDetail />)} />
         <Route path="/admin/workflows/:id/edit" element={guard(['superadmin'], <WorkflowForm />)} />
+        <Route path="/admin/whatsapp" element={permit(['notification.whatsapp.manage'], <WhatsAppSettingsPage />)} />
         <Route path="/admin/escalation" element={guard(['superadmin'], <Navigate to="/admin/sla-rules" replace />)} />
         <Route path="/admin/audit-log" element={guard(['superadmin'], <Navigate to="/admin/divisions" replace />)} />
         <Route

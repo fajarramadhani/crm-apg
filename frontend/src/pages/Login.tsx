@@ -11,6 +11,16 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  const [expiredSession] = useState(() => {
+    const stored = sessionStorage.getItem('tic-hub:last-session-expired')
+    sessionStorage.removeItem('tic-hub:last-session-expired')
+    if (!stored) return null
+    try {
+      return JSON.parse(stored) as { path?: string; requestId?: string }
+    } catch {
+      return null
+    }
+  })
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -20,7 +30,12 @@ export default function Login() {
     try {
       await login(email, password)
     } catch (caught: unknown) {
-      setError(caught instanceof ApiRequestError ? caught.message : 'Login tidak dapat diproses. Silakan coba lagi.')
+      if (caught instanceof ApiRequestError) {
+        const reference = caught.requestId ? ` Referensi: ${caught.requestId}` : ''
+        setError(`${caught.message}.${reference}`)
+      } else {
+        setError('Login tidak dapat diproses. Silakan coba lagi.')
+      }
     } finally {
       setLoading(false)
     }
@@ -67,6 +82,15 @@ export default function Login() {
           </div>
 
           <form className="space-y-5" onSubmit={handleLogin} noValidate>
+            {expiredSession && (
+              <div
+                role="alert"
+                className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+              >
+                Sesi Anda telah berakhir. Silakan masuk kembali.
+                {expiredSession.requestId ? ` Referensi: ${expiredSession.requestId}` : ''}
+              </div>
+            )}
             {error && (
               <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
                 {error}
