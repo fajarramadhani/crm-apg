@@ -70,15 +70,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        if (app()->environment('production') && filled(config('app.key'))) {
-            app(PublicTicketTrackingKeyRing::class)->validate();
-            $historySecrets = collect(['identity_key', 'otp_pepper'])->map(function (string $key) {
-                $value = config("public_history.{$key}");
-
-                return is_string($value) && Str::startsWith($value, 'base64:')
-                    ? base64_decode(Str::after($value, 'base64:'), true) : $value;
-            });
-            $historyDurations = collect(['otp_expiry_minutes', 'max_attempts', 'resend_cooldown_seconds', 'access_ttl_minutes', 'action_access_ttl_minutes']);
+        if (app()->environment('production')) {
             $unsafe = config('app.debug')
                 || blank(config('app.key'))
                 || ! config('session.secure')
