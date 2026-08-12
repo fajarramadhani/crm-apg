@@ -12,13 +12,12 @@ use App\Http\Resources\Api\V1\TicketDevelopmentUpdateResource;
 use App\Http\Resources\Api\V1\TicketResource;
 use App\Http\Resources\Api\V1\TicketWorklogResource;
 use App\Models\Ticket;
+use App\Models\TicketAttachment;
+use App\Services\TicketAttachmentService;
 use App\Services\TicketDevelopmentService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 final class PicDevelopmentController extends Controller
 {
@@ -53,7 +52,7 @@ final class PicDevelopmentController extends Controller
         return ApiResponse::success($request, 'Development progress updated', (new TicketDevelopmentUpdateResource($service->updateProgress($ticket, $request->user(), $request->validated())))->resolve($request), 201);
     }
 
-    public function evidence(UploadDevelopmentEvidenceRequest $request, Ticket $ticket, TicketDevelopmentService $service): JsonResponse
+    public function evidence(UploadDevelopmentEvidenceRequest $request, Ticket $ticket, TicketDevelopmentService $service, TicketAttachmentService $attachments): JsonResponse
     {
         $user = $request->user();
         $service->assertOwner($ticket, $user);
@@ -63,24 +62,10 @@ final class PicDevelopmentController extends Controller
         }
 
         $file = $request->file('file');
-        $disk = config('tickets.attachment_disk', 'local');
-        $stored = Str::uuid()->toString();
-        $path = $file->storeAs("tickets/{$ticket->id}", $stored, $disk);
-        try {
-            $attachment = DB::transaction(function () use ($request, $ticket, $file, $disk, $stored, $path, $user) {
-                $a = $ticket->attachments()->create([
-                    'uploaded_by' => $user->id,
-                    'original_name' => $file->getClientOriginalName(),
-                    'stored_name' => $stored,
-                    'disk' => $disk,
-                    'path' => $path,
-                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
-                    'size' => $file->getSize(),
-                    'category' => $request->string('category'),
-                    'visibility' => $request->input('visibility', 'internal'),
-                    'defect_id' => $request->input('defect_id'),
-                ]);
-
+        $attachment = $attachments->store(
+            $ticket, $file, $user->id, $request->string('category')->toString(), $request->input('visibility', 'internal'),
+            ['defect_id' => $request->input('defect_id')],
+            afterCreate: function (TicketAttachment $a) use ($ticket, $user): void {
                 $ticket->histories()->create([
                     'from_status' => $ticket->status->value,
                     'to_status' => $ticket->status->value,
@@ -93,12 +78,8 @@ final class PicDevelopmentController extends Controller
                     ],
                 ]);
 
-                return $a;
-            });
-        } catch (\Throwable $e) {
-            Storage::disk($disk)->delete($path);
-            throw $e;
-        }
+            },
+        );
 
         return ApiResponse::success($request, 'Evidence uploaded', (new TicketAttachmentResource($attachment))->resolve($request), 201);
     }

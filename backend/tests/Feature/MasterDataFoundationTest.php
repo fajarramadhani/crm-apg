@@ -38,7 +38,7 @@ class MasterDataFoundationTest extends TestCase
         foreach (array_keys(config('permissions.roles')) as $roleKey) {
             $user = $this->user($roleKey);
             $this->actingAs($user)->getJson('/api/v1/master/divisions')->assertOk()->assertJsonPath('success', true)->assertJsonStructure(['data' => [['id', 'code', 'name', 'is_active']], 'meta' => ['request_id']]);
-            if ($roleKey !== 'admin') {
+            if ($roleKey !== 'superadmin') {
                 $this->actingAs($user)->postJson('/api/v1/admin/divisions', ['code' => 'DENIED', 'name' => 'Denied'])->assertForbidden()->assertJsonPath('error.code', 'FORBIDDEN');
             }
         }
@@ -48,7 +48,7 @@ class MasterDataFoundationTest extends TestCase
 
     public function test_admin_can_create_update_and_deactivate_division_with_standard_resources(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $created = $this->actingAs($admin)->postJson('/api/v1/admin/divisions', ['code' => 'tech', 'name' => 'Technology']);
         $created->assertCreated()->assertJsonPath('data.code', 'TECH')->assertJsonPath('data.name', 'Technology')->assertJsonStructure(['meta' => ['request_id']]);
         $id = $created->json('data.id');
@@ -59,7 +59,7 @@ class MasterDataFoundationTest extends TestCase
 
     public function test_division_code_is_unique_and_parent_cannot_reference_itself(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $division = Division::firstOrFail();
         $this->actingAs($admin)->postJson('/api/v1/admin/divisions', ['code' => $division->code, 'name' => 'Duplicate'])->assertUnprocessable()->assertJsonValidationErrors('code')->assertJsonStructure(['meta' => ['request_id']]);
         $this->actingAs($admin)->putJson("/api/v1/admin/divisions/{$division->id}", ['code' => $division->code, 'name' => $division->name, 'parent_id' => $division->id])->assertUnprocessable()->assertJsonValidationErrors('parent_id');
@@ -67,7 +67,7 @@ class MasterDataFoundationTest extends TestCase
 
     public function test_admin_can_create_application_and_module_for_valid_application(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $division = Division::active()->firstOrFail();
         $application = $this->actingAs($admin)->postJson('/api/v1/admin/applications', ['code' => 'HELPDESK', 'name' => 'Helpdesk', 'owner_division_id' => $division->id])->assertCreated();
         $applicationId = $application->json('data.id');
@@ -77,7 +77,7 @@ class MasterDataFoundationTest extends TestCase
 
     public function test_admin_can_create_category_and_priority_with_domain_validation(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $this->actingAs($admin)->postJson('/api/v1/admin/ticket-categories', ['code' => 'SECURITY', 'name' => 'Security Incident', 'type' => 'incident'])->assertCreated()->assertJsonPath('data.type', 'incident');
         $this->actingAs($admin)->postJson('/api/v1/admin/ticket-categories', ['code' => 'BAD', 'name' => 'Bad', 'type' => 'unknown'])->assertUnprocessable()->assertJsonValidationErrors('type');
         $this->actingAs($admin)->postJson('/api/v1/admin/ticket-priorities', ['key' => 'informational', 'name' => 'Informational', 'level' => 10])->assertCreated()->assertJsonPath('data.level', 10);
@@ -85,7 +85,7 @@ class MasterDataFoundationTest extends TestCase
 
     public function test_sla_policy_requires_positive_duration_and_rejects_active_duplicate(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $priority = TicketPriority::where('key', 'critical')->firstOrFail();
         $calendar = WorkingCalendar::firstOrFail();
         $base = ['priority_id' => $priority->id, 'working_calendar_id' => $calendar->id, 'is_active' => true];
@@ -95,7 +95,7 @@ class MasterDataFoundationTest extends TestCase
 
     public function test_working_calendar_and_duplicate_holiday_are_validated(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $invalid = ['code' => 'INVALID_CAL', 'name' => 'Invalid', 'timezone' => 'Asia/Jakarta', 'workday_start' => '17:00', 'workday_end' => '08:00', 'working_days' => [1, 1, 8]];
         $this->actingAs($admin)->postJson('/api/v1/admin/working-calendars', $invalid)->assertUnprocessable()->assertJsonValidationErrors(['workday_end', 'working_days.1', 'working_days.2']);
         $calendar = WorkingCalendar::firstOrFail();
@@ -110,13 +110,13 @@ class MasterDataFoundationTest extends TestCase
         $category->update(['is_active' => false]);
         $requester = $this->user('requester');
         $this->actingAs($requester)->getJson('/api/v1/master/ticket-categories')->assertOk()->assertJsonMissing(['code' => 'INCIDENT']);
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $this->actingAs($admin)->getJson('/api/v1/admin/ticket-categories?is_active=0')->assertOk()->assertJsonFragment(['code' => 'INCIDENT', 'is_active' => false]);
     }
 
     public function test_deactivation_preserves_active_relation_consistency(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $priority = TicketPriority::where('key', 'critical')->firstOrFail();
         $this->actingAs($admin)->deleteJson("/api/v1/admin/ticket-priorities/{$priority->id}")
             ->assertUnprocessable()
@@ -132,7 +132,7 @@ class MasterDataFoundationTest extends TestCase
 
     public function test_admin_list_supports_search_pagination_and_bounded_page_size(): void
     {
-        $admin = $this->user('admin');
+        $admin = $this->user('superadmin');
         $this->actingAs($admin)->getJson('/api/v1/admin/divisions?search=technology&is_active=1&per_page=2')->assertOk()->assertJsonPath('meta.pagination.per_page', 2)->assertJsonPath('data.0.code', 'IT');
         $this->actingAs($admin)->getJson('/api/v1/admin/divisions?per_page=101')->assertUnprocessable()->assertJsonValidationErrors('per_page');
     }

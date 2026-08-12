@@ -24,6 +24,7 @@ enum NotificationType: string
     case MonitoringIssueDetected = 'monitoring_issue_detected';
     case RequesterConfirmationRequired = 'requester_confirmation_required';
     case RequesterRejected = 'requester_rejected';
+    case PublicRequesterActionCompleted = 'public_requester_action_completed';
     case TicketClosed = 'ticket_closed';
     case SlaApproaching = 'sla_approaching';
     case SlaBreached = 'sla_breached';

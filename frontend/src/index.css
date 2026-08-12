@@ -28,6 +28,71 @@
   font-family: 'Cascadia Mono', 'SFMono-Regular', Consolas, monospace;
 }
 
+.ticket-description-content {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.ticket-description-content p,
+.ticket-description-content blockquote {
+  margin-bottom: 0.75rem;
+}
+
+.ticket-description-content > :last-child {
+  margin-bottom: 0;
+}
+
+.ticket-description-content ul,
+.ticket-description-content ol {
+  margin-bottom: 0.75rem;
+  padding-left: 1.5rem;
+}
+
+.ticket-description-content ul {
+  list-style: disc;
+}
+
+.ticket-description-content ol {
+  list-style: decimal;
+}
+
+.ticket-description-content blockquote {
+  border-left: 3px solid #cbd5e1;
+  padding-left: 1rem;
+}
+
+.ticket-description-content h1,
+.ticket-description-content h2,
+.ticket-description-content h3,
+.ticket-description-content h4,
+.ticket-description-content h5,
+.ticket-description-content h6 {
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.ticket-description-content table {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.ticket-description-content th,
+.ticket-description-content td {
+  border: 1px solid #d1d5db;
+  padding: 8px;
+}
+
+.ticket-description-content a {
+  color: #1d4ed8;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+}
+
 @keyframes slide-in-from-bottom-4 {
   from {
     transform: translateY(1rem);
@@ -38,8 +103,25 @@
     opacity: 1;
   }
 }
+
+@keyframes global-loader-bar {
+  0% {
+    transform: translateX(-120%);
+  }
+  50% {
+    transform: translateX(110%);
+  }
+  100% {
+    transform: translateX(240%);
+  }
+}
+
 .animate-in {
   animation: slide-in-from-bottom-4 0.2s ease-out;
+}
+
+.global-loader-bar {
+  animation: global-loader-bar 1.6s ease-in-out infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {

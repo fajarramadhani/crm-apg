@@ -11,14 +11,12 @@ use App\Http\Resources\Api\V1\TicketResource;
 use App\Http\Resources\Api\V1\TicketUatFindingResource;
 use App\Models\Ticket;
 use App\Models\TicketUatFinding;
+use App\Services\TicketAttachmentService;
 use App\Services\TicketUatFindingService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 final class PicUatReworkController extends Controller
 {
@@ -62,7 +60,7 @@ final class PicUatReworkController extends Controller
         return ApiResponse::success($request, 'Ticket successfully submitted for UAT Retest', (new TicketResource($ticket->load(self::RELATIONS)))->resolve($request));
     }
 
-    public function uploadEvidence(UploadUatEvidenceRequest $request, Ticket $ticket): JsonResponse
+    public function uploadEvidence(UploadUatEvidenceRequest $request, Ticket $ticket, TicketAttachmentService $attachments): JsonResponse
     {
         Gate::authorize('develop', $ticket);
         if (! in_array($request->string('category')->toString(), ['uat_finding_evidence', 'uat_retest_evidence'], true)) {
@@ -76,28 +74,10 @@ final class PicUatReworkController extends Controller
         }
 
         $file = $request->file('file');
-        $disk = config('tickets.attachment_disk', 'local');
-        $stored = Str::uuid()->toString();
-        $path = $file->storeAs("tickets/{$ticket->id}", $stored, $disk);
-        try {
-            $attachment = DB::transaction(function () use ($request, $ticket, $file, $disk, $stored, $path) {
-                return $ticket->attachments()->create([
-                    'uploaded_by' => $request->user()->id,
-                    'original_name' => $file->getClientOriginalName(),
-                    'stored_name' => $stored,
-                    'disk' => $disk,
-                    'path' => $path,
-                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
-                    'size' => $file->getSize(),
-                    'category' => $request->string('category'),
-                    'visibility' => 'internal',
-                    'uat_finding_id' => $request->input('uat_finding_id'),
-                ]);
-            });
-        } catch (\Throwable $exception) {
-            Storage::disk($disk)->delete($path);
-            throw $exception;
-        }
+        $attachment = $attachments->store(
+            $ticket, $file, $request->user()->id, $request->string('category')->toString(), 'internal',
+            ['uat_finding_id' => $request->input('uat_finding_id')],
+        );
 
         return ApiResponse::success($request, 'PIC UAT evidence uploaded successfully', (new TicketAttachmentResource($attachment))->resolve($request), 201);
     }

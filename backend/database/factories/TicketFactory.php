@@ -16,16 +16,45 @@ class TicketFactory extends Factory
 
     public function definition(): array
     {
-        $divisionId = Division::first()?->id ?? 1;
+        $division = Division::query()->first() ?? Division::query()->create([
+            'code' => 'D'.uniqid(),
+            'name' => 'Division '.uniqid(),
+            'description' => null,
+            'parent_id' => null,
+            'is_active' => true,
+        ]);
+
+        $application = Application::query()->first() ?? Application::query()->create([
+            'code' => 'APP'.uniqid(),
+            'name' => 'Application '.uniqid(),
+            'owner_division_id' => $division->id,
+            'is_active' => true,
+        ]);
+
+        $category = TicketCategory::query()->first() ?? TicketCategory::query()->create([
+            'code' => 'CAT'.uniqid(),
+            'name' => 'Category '.uniqid(),
+            'type' => 'incident',
+            'description' => null,
+            'is_active' => true,
+        ]);
+
+        $priority = TicketPriority::query()->first() ?? TicketPriority::query()->create([
+            'key' => 'priority_'.uniqid(),
+            'name' => 'Priority '.uniqid(),
+            'level' => 1,
+            'description' => null,
+            'is_active' => true,
+        ]);
 
         return [
             'ticket_number' => 'TIC-'.date('ymd').'-'.rand(100000, 999999),
             'requester_id' => User::factory(),
-            'division_id' => $divisionId,
-            'current_division_id' => $divisionId,
-            'application_id' => Application::first()?->id ?? 1,
-            'ticket_category_id' => TicketCategory::first()?->id ?? 1,
-            'requested_priority_id' => TicketPriority::first()?->id ?? 1,
+            'division_id' => $division->id,
+            'current_division_id' => $division->id,
+            'application_id' => $application->id,
+            'ticket_category_id' => $category->id,
+            'requested_priority_id' => $priority->id,
             'title' => $this->faker->sentence(),
             'description' => $this->faker->paragraph(),
             'status' => 'pending_validation',

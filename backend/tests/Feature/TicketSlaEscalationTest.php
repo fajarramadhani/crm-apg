@@ -7,11 +7,13 @@ use App\Models\SlaPolicy;
 use App\Models\Ticket;
 use App\Models\TicketSlaAlert;
 use App\Models\User;
+use App\Models\WhatsAppNotification;
 use App\Services\TicketSlaEscalationService;
 use Carbon\CarbonImmutable;
 use Database\Seeders\MasterDataSeeder;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
 
 class TicketSlaEscalationTest extends TestCase
@@ -22,6 +24,7 @@ class TicketSlaEscalationTest extends TestCase
     {
         parent::setUp();
         $this->seed([RoleSeeder::class, MasterDataSeeder::class]);
+        Queue::fake();
     }
 
     public function test_sla_scanner_is_idempotent()
@@ -46,10 +49,17 @@ class TicketSlaEscalationTest extends TestCase
         $slaPolicy->update(['response_minutes' => 60, 'resolution_minutes' => 240]);
 
         // Ticket in pending_validation (not yet responded) submitted 35 min ago → 58% of 60 min response SLA
+        $pic = User::factory()->create(['phone' => '081234567890']);
         $ticket = Ticket::factory()->create([
             'status' => 'pending_validation',
             'sla_policy_id' => $slaPolicy->id,
             'submitted_at' => CarbonImmutable::now()->subMinutes(35),
+            'current_assignee_id' => $pic->id,
+        ]);
+        config([
+            'whatsapp.enabled' => true,
+            'whatsapp.events.sla_warning' => true,
+            'whatsapp.fonnte.it_support_number' => '6281234567890',
         ]);
 
         $service = app(TicketSlaEscalationService::class);
@@ -61,6 +71,12 @@ class TicketSlaEscalationTest extends TestCase
         // Run scanner again (same thresholds) — should be idempotent (dedup key exists)
         $stats2 = $service->scanAndAlert();
         $this->assertEquals(0, $stats2['approaching_alerts']);
+        $this->assertDatabaseHas('whatsapp_notifications', [
+            'ticket_id' => $ticket->id,
+            'recipient_role' => 'pic',
+            'recipient_last_four' => '7890',
+        ]);
+        $this->assertSame(1, WhatsAppNotification::where('ticket_id', $ticket->id)->count());
     }
 
     public function test_sla_resolution_approaching_is_detected()

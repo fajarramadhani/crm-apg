@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ticketService, type TicketRecord } from '../../services/ticketService'
 import { PageHeader, SectionCard, Button, Toast, EmptyState, StatusBadge, Textarea } from '../../components/ui'
+import { TicketDescriptionContent } from '../../components/TicketDescriptionContent'
 
 export default function Confirmations() {
   const [tickets, setTickets] = useState<TicketRecord[]>([])
@@ -109,7 +110,7 @@ export default function Confirmations() {
                 <div className="space-y-4">
                   <div>
                     <h3 className="font-semibold text-lg">{selected.title}</h3>
-                    <p className="text-sm text-gray-600 mt-1">{selected.description}</p>
+                    <TicketDescriptionContent html={selected.description} className="mt-1 text-gray-600" />
                   </div>
 
                   <div className="rounded bg-blue-50 p-4 text-sm text-blue-900 border border-blue-200">

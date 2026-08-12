@@ -149,12 +149,14 @@ class ApiFoundationTest extends TestCase
 
     public function test_cors_allows_the_configured_frontend_origin_with_credentials(): void
     {
+        $frontendOrigin = config('cors.allowed_origins.0');
+
         $this->withHeaders([
-            'Origin' => 'http://localhost:5173',
+            'Origin' => $frontendOrigin,
             'Access-Control-Request-Method' => 'GET',
         ])->options('/api/v1/health')
             ->assertNoContent()
-            ->assertHeader('Access-Control-Allow-Origin', 'http://localhost:5173')
+            ->assertHeader('Access-Control-Allow-Origin', $frontendOrigin)
             ->assertHeader('Access-Control-Allow-Credentials', 'true');
     }
 

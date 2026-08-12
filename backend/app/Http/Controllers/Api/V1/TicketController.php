@@ -13,6 +13,7 @@ use App\Http\Resources\Api\V1\TicketResource;
 use App\Http\Resources\Api\V1\TicketStatusHistoryResource;
 use App\Models\Ticket;
 use App\Models\User;
+use App\Services\TicketDescriptionSanitizer;
 use App\Services\TicketNumberGenerator;
 use App\Services\TicketTransitionService;
 use App\Support\ApiResponse;
@@ -23,7 +24,7 @@ use Illuminate\Support\Facades\Gate;
 
 class TicketController extends Controller
 {
-    private const RELATIONS = ['requester', 'division', 'currentDivision', 'branch', 'application', 'applicationModule', 'category', 'requestedPriority', 'finalPriority', 'slaPolicy', 'workingCalendar', 'currentAssignee', 'attachments', 'releaseOwner', 'approvalRequests.steps.approver'];
+    private const RELATIONS = ['requester', 'division', 'currentDivision', 'branch', 'office', 'application', 'applicationModule', 'category', 'requestedPriority', 'finalPriority', 'slaPolicy', 'workingCalendar', 'currentAssignee', 'publicHandlingAssignments.assignee.role', 'attachments', 'releaseOwner', 'approvalRequests.steps.approver'];
 
     public function index(TicketListRequest $request): JsonResponse
     {
@@ -38,14 +39,19 @@ class TicketController extends Controller
         return ApiResponse::success($request, 'Tickets retrieved', TicketResource::collection($items->items())->resolve($request), meta: ['pagination' => $this->pagination($items)]);
     }
 
-    public function store(StoreTicketRequest $request, TicketNumberGenerator $numbers): JsonResponse
+    public function store(StoreTicketRequest $request, TicketNumberGenerator $numbers, TicketDescriptionSanitizer $descriptionSanitizer): JsonResponse
     {
         /** @var User $user */ $user = $request->user();
-        if (! $user->division_id) {
-            return ApiResponse::validationError($request, ['division' => ['Your account must have a division before creating a ticket.']]);
+        if ($user->hasRole('requester')) {
+            return ApiResponse::error($request, 'Requester harus menggunakan endpoint pengajuan tiket.', 'FORBIDDEN', 403);
         }
-        $ticket = DB::transaction(function () use ($request, $numbers, $user): Ticket {
-            $ticket = Ticket::query()->create([...$request->validated(), 'ticket_number' => $numbers->next(), 'requester_id' => $user->id, 'division_id' => $user->division_id, 'branch_id' => $user->branch_id, 'current_division_id' => $user->division_id, 'status' => TicketStatus::PendingValidation, 'submitted_at' => now()]);
+        if (! $user->division_id && ! $user->office_id) {
+            return ApiResponse::validationError($request, ['organization' => ['Akun harus memiliki lokasi kantor atau divisi sebelum membuat tiket.']]);
+        }
+        $ticket = DB::transaction(function () use ($request, $numbers, $user, $descriptionSanitizer): Ticket {
+            $validated = $request->validated();
+            $validated['description'] = $descriptionSanitizer->sanitize($validated['description']);
+            $ticket = Ticket::query()->create([...$validated, 'ticket_number' => $numbers->next(), 'requester_id' => $user->id, 'division_id' => $user->division_id, 'branch_id' => $user->branch_id, 'office_id' => $user->office_id, 'current_division_id' => $user->division_id, 'status' => TicketStatus::PendingValidation, 'submitted_at' => now()]);
             $role = $user->role?->key ?? 'requester';
             $ticket->histories()->create(['from_status' => null, 'to_status' => TicketStatus::Draft->value, 'action' => 'created', 'actor_id' => $user->id, 'actor_role' => $role]);
             $ticket->histories()->create(['from_status' => TicketStatus::Draft->value, 'to_status' => TicketStatus::PendingValidation->value, 'action' => 'submitted', 'actor_id' => $user->id, 'actor_role' => $role]);
@@ -65,9 +71,13 @@ class TicketController extends Controller
         return ApiResponse::success($request, 'Ticket retrieved', (new TicketResource($ticket))->resolve($request));
     }
 
-    public function update(UpdateTicketRequest $request, Ticket $ticket): JsonResponse
+    public function update(UpdateTicketRequest $request, Ticket $ticket, TicketDescriptionSanitizer $descriptionSanitizer): JsonResponse
     {
-        $ticket->update($request->validated());
+        $validated = $request->validated();
+        if (isset($validated['description'])) {
+            $validated['description'] = $descriptionSanitizer->sanitize($validated['description']);
+        }
+        $ticket->update($validated);
         $changed = collect($ticket->getChanges())->except(['updated_at'])->keys()->values()->all();
         $ticket->histories()->create(['from_status' => $ticket->status->value, 'to_status' => $ticket->status->value, 'action' => 'updated', 'actor_id' => $request->user()->id, 'actor_role' => $request->user()->role?->key ?? 'requester', 'metadata' => ['changed_fields' => $changed]]);
 

@@ -8,6 +8,7 @@ use App\Models\Division;
 use App\Models\Role;
 use App\Models\Ticket;
 use App\Models\TicketCategory;
+use App\Models\TicketDeployment;
 use App\Models\TicketPriority;
 use App\Models\User;
 use Database\Seeders\MasterDataSeeder;
@@ -384,7 +385,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     {
         $this->actingAs($this->itLead);
         $this->ticket->update(['status' => TicketStatus::Deployed]);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['current_deployment_id' => $deployment->id]);
         $this->postJson("/api/v1/tickets/{$this->ticket->id}/monitoring/start");
 
@@ -398,7 +399,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     {
         $this->actingAs($this->itLead);
         $this->ticket->update(['status' => TicketStatus::Deployed]);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['current_deployment_id' => $deployment->id]);
         $this->postJson("/api/v1/tickets/{$this->ticket->id}/monitoring/start");
 
@@ -412,11 +413,11 @@ class TicketDeploymentWorkflowTest extends TestCase
     {
         $this->actingAs($this->itLead);
         $this->ticket->update(['status' => TicketStatus::Deployed]);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['current_deployment_id' => $deployment->id]);
         $this->postJson("/api/v1/tickets/{$this->ticket->id}/monitoring/start");
 
-        $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/monitoring/incident", ['title' => 'Server down', 'description' => 'App is crashing', 'assigned_to' => 1, 'business_impact' => 'High']);
+        $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/monitoring/incident", ['title' => 'Server down', 'description' => 'App is crashing', 'assigned_to' => $this->itLead->id, 'business_impact' => 'High']);
         $response->assertStatus(200);
         $this->ticket->refresh();
         $this->assertEquals(TicketStatus::PostReleaseIssue, $this->ticket->status);
@@ -434,7 +435,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     public function test_cannot_confirm_without_status()
     {
         $this->actingAs($this->requester);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['status' => TicketStatus::AwaitingRequesterConfirmation, 'current_deployment_id' => $deployment->id]);
         $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/confirmation", []);
         $response->assertStatus(422);
@@ -443,7 +444,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     public function test_cannot_reject_without_reason()
     {
         $this->actingAs($this->requester);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['status' => TicketStatus::AwaitingRequesterConfirmation, 'current_deployment_id' => $deployment->id]);
         $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/confirmation", [
             'status' => 'rejected',
@@ -454,7 +455,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     public function test_rejecting_confirmation_changes_status_to_dev()
     {
         $this->actingAs($this->requester);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['status' => TicketStatus::AwaitingRequesterConfirmation, 'current_deployment_id' => $deployment->id]);
         $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/confirmation", [
             'status' => 'rejected',
@@ -469,7 +470,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     public function test_cannot_confirm_twice()
     {
         $this->actingAs($this->requester);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['status' => TicketStatus::AwaitingRequesterConfirmation, 'current_deployment_id' => $deployment->id]);
         $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/confirmation", [
             'status' => 'accepted',
@@ -500,7 +501,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     public function test_cannot_close_without_summary()
     {
         $this->actingAs($this->itLead);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['status' => TicketStatus::AwaitingRequesterConfirmation, 'current_deployment_id' => $deployment->id]);
 
         $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/close", []);
@@ -510,7 +511,7 @@ class TicketDeploymentWorkflowTest extends TestCase
     public function test_cannot_close_if_confirmation_not_accepted()
     {
         $this->actingAs($this->itLead);
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['status' => TicketStatus::AwaitingRequesterConfirmation, 'current_deployment_id' => $deployment->id]);
 
         $response = $this->postJson("/api/v1/tickets/{$this->ticket->id}/close", [
@@ -523,7 +524,7 @@ class TicketDeploymentWorkflowTest extends TestCase
 
     public function test_cannot_close_already_closed_ticket()
     {
-        $deployment = $this->ticket->deployments()->create(['release_plan_id' => 1, 'rollback_plan_id' => 1, 'cycle_number' => 1, 'deployment_number' => 'DEP-01', 'status' => 'succeeded', 'environment' => 'production', 'release_version' => '1.0.0', 'deployment_owner_id' => 1, 'release_owner_id' => 1, 'approved_by' => 1, 'deployment_summary' => 'test', 'scheduled_start_at' => now()]);
+        $deployment = $this->createSucceededDeployment();
         $this->ticket->update(['status' => TicketStatus::AwaitingRequesterConfirmation, 'current_deployment_id' => $deployment->id]);
 
         $this->actingAs($this->requester);
@@ -545,5 +546,23 @@ class TicketDeploymentWorkflowTest extends TestCase
             'business_outcome' => 'Happy',
         ]);
         $this->assertFalse($response->isSuccessful());
+    }
+
+    private function createSucceededDeployment(): TicketDeployment
+    {
+        return $this->ticket->deployments()->create([
+            'release_plan_id' => $this->ticket->releasePlans()->firstOrFail()->id,
+            'rollback_plan_id' => $this->ticket->rollbackPlans()->firstOrFail()->id,
+            'cycle_number' => 1,
+            'deployment_number' => 'DEP-01',
+            'status' => 'succeeded',
+            'environment' => 'production',
+            'release_version' => '1.0.0',
+            'deployment_owner_id' => $this->itLead->id,
+            'release_owner_id' => $this->itLead->id,
+            'approved_by' => $this->itLead->id,
+            'deployment_summary' => 'test',
+            'scheduled_start_at' => now(),
+        ]);
     }
 }

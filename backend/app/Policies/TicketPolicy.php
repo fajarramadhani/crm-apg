@@ -8,12 +8,20 @@ use App\Models\User;
 
 class TicketPolicy
 {
+    public function viewAny(User $user): bool
+    {
+        return $user->hasPermission('ticket.all.view')
+            || $user->hasPermission('ticket.own.view')
+            || $user->hasPermission('ticket.division.view')
+            || $user->hasPermission('ticket.assigned.view');
+    }
+
     public function view(User $user, Ticket $ticket): bool
     {
         return $user->hasPermission('ticket.all.view')
             || ($user->hasPermission('ticket.own.view') && $ticket->requester_id === $user->id)
             || ($user->hasPermission('ticket.division.view') && $ticket->current_division_id === $user->division_id)
-            || ($user->hasPermission('ticket.assigned.view') && $ticket->current_assignee_id === $user->id)
+            || ($user->hasPermission('ticket.assigned.view') && ($ticket->current_assignee_id === $user->id || $ticket->assignments()->where('assigned_to', $user->id)->where('is_current', true)->exists()))
             || ($user->hasPermission('ticket.assigned.view') && $ticket->qa_assignee_id === $user->id)
             || ($user->hasPermission('ticket.uat_assignment.view') && $ticket->uat_assignee_id === $user->id);
     }
@@ -41,6 +49,12 @@ class TicketPolicy
     public function triage(User $user, Ticket $ticket): bool
     {
         return $user->hasPermission('ticket.triage_queue.view');
+    }
+
+    public function managePublicTracking(User $user, Ticket $ticket): bool
+    {
+        return $user->hasPermission('ticket.public_tracking.manage')
+            && $ticket->submission_source === 'public_form';
     }
 
     public function assignQa(User $user, Ticket $ticket): bool
@@ -87,7 +101,7 @@ class TicketPolicy
 
     public function businessApprove(User $user, Ticket $ticket): bool
     {
-        return $user->hasPermission('ticket.business_approval.approve') && $ticket->requester?->division_id === $user->division_id;
+        return $user->hasPermission('ticket.business_approval.approve') && $ticket->division_id === $user->division_id;
     }
 
     public function technicalApprove(User $user, Ticket $ticket): bool

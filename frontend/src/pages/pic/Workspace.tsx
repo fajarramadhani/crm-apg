@@ -14,6 +14,7 @@ import {
   Textarea,
   Toast,
 } from '../../components/ui'
+import { TicketDescriptionContent } from '../../components/TicketDescriptionContent'
 import {
   ticketService,
   type AnalysisPayload,
@@ -190,7 +191,7 @@ export default function Workspace() {
                     {selected.final_priority && <PriorityBadge priority={selected.final_priority.key} />}
                   </div>
                   <h2 className="font-bold text-lg">{selected.title}</h2>
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap mt-2">{selected.description}</p>
+                  <TicketDescriptionContent html={selected.description} className="mt-2 text-gray-600" />
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 rounded-xl p-4 mt-5">
                     <Info label="Requester" value={selected.requester.name} />
                     <Info label="Aplikasi" value={selected.application?.name || '—'} />

@@ -18,18 +18,17 @@ use App\Http\Resources\Api\V1\TicketQaTestResultResource;
 use App\Http\Resources\Api\V1\TicketQaTestRunResource;
 use App\Http\Resources\Api\V1\TicketResource;
 use App\Models\Ticket;
+use App\Models\TicketAttachment;
 use App\Models\TicketQaDefect;
 use App\Models\TicketQaTestCase;
 use App\Models\TicketQaTestRun;
+use App\Services\TicketAttachmentService;
 use App\Services\TicketQaDefectService;
 use App\Services\TicketQaExecutionService;
 use App\Support\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 final class QaController extends Controller
 {
@@ -262,7 +261,7 @@ final class QaController extends Controller
         return ApiResponse::success($request, 'QA defect reopened successfully', (new TicketQaDefectResource($defect->load('histories')))->resolve($request));
     }
 
-    public function uploadEvidence(UploadQaEvidenceRequest $request, Ticket $ticket): JsonResponse
+    public function uploadEvidence(UploadQaEvidenceRequest $request, Ticket $ticket, TicketAttachmentService $attachments): JsonResponse
     {
         Gate::authorize('executeQa', $ticket);
 
@@ -275,24 +274,10 @@ final class QaController extends Controller
         }
 
         $file = $request->file('file');
-        $disk = config('tickets.attachment_disk', 'local');
-        $stored = Str::uuid()->toString();
-        $path = $file->storeAs("tickets/{$ticket->id}", $stored, $disk);
-        try {
-            $attachment = DB::transaction(function () use ($request, $ticket, $file, $disk, $stored, $path, $user) {
-                $a = $ticket->attachments()->create([
-                    'uploaded_by' => $user->id,
-                    'original_name' => $file->getClientOriginalName(),
-                    'stored_name' => $stored,
-                    'disk' => $disk,
-                    'path' => $path,
-                    'mime_type' => $file->getMimeType() ?: 'application/octet-stream',
-                    'size' => $file->getSize(),
-                    'category' => $request->string('category'),
-                    'visibility' => 'internal',
-                    'defect_id' => $request->input('defect_id'),
-                ]);
-
+        $attachment = $attachments->store(
+            $ticket, $file, $user->id, $request->string('category')->toString(), 'internal',
+            ['defect_id' => $request->input('defect_id')],
+            afterCreate: function (TicketAttachment $a) use ($ticket, $user): void {
                 $ticket->histories()->create([
                     'from_status' => $ticket->status->value,
                     'to_status' => $ticket->status->value,
@@ -305,12 +290,8 @@ final class QaController extends Controller
                     ],
                 ]);
 
-                return $a;
-            });
-        } catch (\Throwable $e) {
-            Storage::disk($disk)->delete($path);
-            throw $e;
-        }
+            },
+        );
 
         return ApiResponse::success($request, 'QA evidence uploaded successfully', (new TicketAttachmentResource($attachment))->resolve($request), 201);
     }
