@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Editor } from '@tinymce/tinymce-react'
+import type { IAllProps } from '@tinymce/tinymce-react'
+
+type TinyMceEditor = Parameters<NonNullable<IAllProps['onEditorChange']>>[1]
 
 const tinyMceApiKey = import.meta.env.VITE_TINYMCE_API_KEY?.trim()
 
@@ -121,7 +124,7 @@ export function TicketDescriptionEditor({
               link_assume_external_targets: 'https',
               target_list: false,
               rel_list: [{ title: 'No opener', value: 'noopener noreferrer' }],
-              setup: (editor) => {
+              setup: (editor: TinyMceEditor) => {
                 editor.on('change input undo redo', () => editor.save())
               },
               mobile: {
