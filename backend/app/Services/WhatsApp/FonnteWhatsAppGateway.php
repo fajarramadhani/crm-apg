@@ -3,9 +3,11 @@
 namespace App\Services\WhatsApp;
 
 use App\Contracts\WhatsAppGateway;
+use App\Services\WhatsAppNotificationService;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
+use RuntimeException;
 use Throwable;
 
 final class FonnteWhatsAppGateway implements WhatsAppGateway
@@ -38,6 +40,13 @@ final class FonnteWhatsAppGateway implements WhatsAppGateway
     /** @return array<string, mixed> */
     private function post(string $path, array $payload = []): array
     {
+        if (app()->environment('production') && config('whatsapp.enabled')
+            && (blank($this->config['token'] ?? null)
+                || strlen((string) ($this->config['webhook_secret'] ?? '')) < 32
+                || WhatsAppNotificationService::normalizePhoneNumber($this->config['it_support_number'] ?? null) === null)) {
+            throw new RuntimeException('WhatsApp enabled in production but mandatory Fonnte configuration is missing.');
+        }
+
         if (blank($this->config['token'] ?? null)) {
             return $this->failure('INVALID_TOKEN', 'Token Fonnte belum dikonfigurasi.', false);
         }

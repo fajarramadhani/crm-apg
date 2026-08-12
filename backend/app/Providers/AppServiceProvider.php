@@ -29,7 +29,6 @@ use App\Services\PublicRequestHistoryService;
 use App\Services\PublicTicketActionService;
 use App\Services\PublicTicketTrackingKeyRing;
 use App\Services\WhatsApp\FonnteWhatsAppGateway;
-use App\Services\WhatsAppNotificationService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -71,6 +70,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if (app()->environment('production')) {
+            app(PublicTicketTrackingKeyRing::class)->validate();
+            $historySecrets = collect(['identity_key', 'otp_pepper'])->map(function (string $key) {
+                $value = config("public_history.{$key}");
+
+                return is_string($value) && Str::startsWith($value, 'base64:')
+                    ? base64_decode(Str::after($value, 'base64:'), true) : $value;
+            });
+            $historyDurations = collect(['otp_expiry_minutes', 'max_attempts', 'resend_cooldown_seconds', 'access_ttl_minutes', 'action_access_ttl_minutes']);
             $unsafe = config('app.debug')
                 || blank(config('app.key'))
                 || ! config('session.secure')
@@ -82,15 +89,6 @@ class AppServiceProvider extends ServiceProvider
 
             if ($unsafe) {
                 throw new \RuntimeException('Unsafe production environment configuration.');
-            }
-
-            if (config('whatsapp.enabled')) {
-                if (config('whatsapp.provider') !== 'fonnte'
-                    || blank(config('whatsapp.fonnte.token'))
-                    || strlen((string) config('whatsapp.fonnte.webhook_secret')) < 32
-                    || WhatsAppNotificationService::normalizePhoneNumber(config('whatsapp.fonnte.it_support_number')) === null) {
-                    throw new \RuntimeException('WhatsApp enabled in production but mandatory Fonnte configuration is missing.');
-                }
             }
         }
 
