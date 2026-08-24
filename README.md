@@ -15,7 +15,7 @@ Tic Hub adalah aplikasi internal CRM dan IT service management APG yang mengelol
 
 ## Teknologi
 
-- **Frontend**: React, TypeScript, Vite, Tailwind CSS, TanStack Query, dan React Router
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS, dan React Router
 - **Backend**: Laravel 11, Sanctum, Laravel Query Builder, dan email notifications
 - **Database**: MySQL 8, migrations, seeders, dan transaction handling
 - **Testing**: PHPUnit dengan SQLite in-memory dan frontend type checking
@@ -23,7 +23,7 @@ Tic Hub adalah aplikasi internal CRM dan IT service management APG yang mengelol
 ## Persyaratan
 
 - Node.js 20+
-- Corepack dan pnpm 11
+- npm 10+
 - PHP 8.3+
 - Composer 2
 - MySQL 8+
@@ -43,7 +43,7 @@ cd crm-apg
 ```bash
 cd frontend
 cp .env.example .env.local
-corepack pnpm install --frozen-lockfile
+npm ci
 ```
 
 ### Setup Backend
@@ -92,13 +92,14 @@ MAIL_MAILER=log
 apg-crm/
 ├── frontend/              # React, TypeScript, Vite, Tailwind CSS
 │   ├── src/
-│   │   ├── app/          # Routing dan layout
-│   │   ├── components/   # Reusable UI components
-│   │   ├── pages/        # Page components
-│   │   ├── hooks/        # Custom React hooks
-│   │   ├── services/     # API services
-│   │   ├── types/        # TypeScript types
-│   │   └── utils/        # Utility functions
+│   │   ├── api/           # HTTP client dan kontrak API
+│   │   ├── components/    # Reusable UI components
+│   │   ├── context/       # React context (auth, loading)
+│   │   ├── hooks/         # Custom React hooks
+│   │   ├── pages/         # Page components (dikelompokkan per role)
+│   │   ├── repositories/  # Lapisan akses API per domain
+│   │   ├── services/      # API services
+│   │   └── types.ts       # TypeScript types
 │   └── public/
 │
 ├── backend/              # Laravel REST API
@@ -125,7 +126,7 @@ Frontend tersedia di `http://localhost:5173`:
 
 ```bash
 cd frontend
-corepack pnpm dev
+npm run dev
 ```
 
 ### Backend
@@ -147,10 +148,10 @@ Health check API: `GET http://localhost:8000/api/v1/health`
 
 ```bash
 cd frontend
-corepack pnpm install --frozen-lockfile
-corepack pnpm typecheck
-corepack pnpm format:check
-corepack pnpm build
+npm ci
+npm run typecheck
+npm run format:check
+npm run build
 ```
 
 **Backend:**
@@ -181,12 +182,30 @@ php artisan users:provision-testing
 
 Command ini menolak production dan tidak pernah menimpa user yang sudah ada. Lihat `docs/testing-environment-setup.md` untuk detail.
 
+## Bootstrap Super Admin Production
+
+Untuk environment production yang baru dibuat (belum memiliki satu pun user), akun super admin pertama dibuat melalui:
+
+```bash
+php artisan users:bootstrap-production --name="Nama Admin" --email="admin@apg.co.id"
+```
+
+Sifat command ini:
+
+- **Hanya berjalan di production** (`APP_ENV=production`) dan **hanya sekali** — ditolak jika sudah ada user apa pun.
+- Password diambil dari environment variable `TIC_HUB_ADMIN_PASSWORD` (minimal 12 karakter). Jika tidak diset, command menghasilkan one-time password dan mencetaknya **satu kali saja**.
+- Akun dibuat dengan flag `must_change_password`; pengguna wajib mengganti password saat login pertama sebelum dapat menggunakan sistem.
+- Setiap percobaan bootstrap (berhasil maupun ditolak) tercatat pada tabel `audit_logs` (`identity.bootstrap.completed` / `identity.bootstrap.refused`).
+
+Perubahan password dilakukan melalui `POST /api/v1/auth/change-password` atau layar "Ganti Password" di aplikasi; peristiwa perubahan juga diaudit (`identity.password_changed`).
+
 ## Database
 
-Repository berisi **22 migrations** untuk seluruh fase implementasi:
+Repository berisi **49 migrations** untuk seluruh fase implementasi:
 
 - **Phase 4**: Master data (divisions, branches, applications, categories, SLA)
 - **Phase 3-15**: Ticket workflow, knowledge base, notifications
+- **Tahap lanjutan**: Dynamic workflow engine, public ticket access, WhatsApp/Fonnte notifications, production identity bootstrap
 
 Jalankan migration:
 
