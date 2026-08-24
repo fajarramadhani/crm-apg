@@ -11,6 +11,7 @@ interface AuthContextValue {
   status: AuthStatus
   login(email: string, password: string): Promise<AuthenticatedUser>
   logout(): Promise<void>
+  refreshUser(): Promise<AuthenticatedUser>
   hasRole(...roles: Role[]): boolean
   hasPermission(permission: string): boolean
 }
@@ -90,16 +91,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [begin, end])
 
+  const refreshUser = useCallback(async () => {
+    const currentUser = await authService.currentUser()
+    setUser(currentUser)
+    return currentUser
+  }, [])
+
   const value = useMemo<AuthContextValue>(
     () => ({
       user,
       status,
       login,
       logout,
+      refreshUser,
       hasRole: (...roles) => Boolean(user && roles.includes(user.role.key)),
       hasPermission: (permission) => Boolean(user?.permissions.includes(permission)),
     }),
-    [login, logout, status, user],
+    [login, logout, refreshUser, status, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

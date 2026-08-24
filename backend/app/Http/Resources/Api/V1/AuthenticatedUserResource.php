@@ -20,6 +20,7 @@ class AuthenticatedUserResource extends JsonResource
                 'name' => $this->role->name,
             ],
             'permissions' => $this->permissions(),
+            'must_change_password' => (bool) $this->must_change_password,
         ];
     }
 }

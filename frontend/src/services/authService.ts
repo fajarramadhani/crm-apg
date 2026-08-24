@@ -4,4 +4,10 @@ export const authService = {
   login: (email: string, password: string) => authRepository.login(email.trim().toLowerCase(), password),
   currentUser: () => authRepository.me(),
   logout: () => authRepository.logout(),
+  changePassword: (currentPassword: string, newPassword: string, newPasswordConfirmation: string) =>
+    authRepository.changePassword({
+      current_password: currentPassword,
+      password: newPassword,
+      password_confirmation: newPasswordConfirmation,
+    }),
 }

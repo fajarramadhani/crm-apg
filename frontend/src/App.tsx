@@ -1,6 +1,6 @@
 import { lazy, Suspense, type ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LoadingProvider } from './context/LoadingContext'
@@ -68,6 +68,7 @@ const PicUnifiedDashboard = lazy(() =>
 )
 const PicTicketList = lazy(() => import('./pages/pic/PicTicketList').then((m) => ({ default: m.PicTicketList })))
 const PicTicketDetail = lazy(() => import('./pages/pic/PicTicketDetail').then((m) => ({ default: m.PicTicketDetail })))
+const ForceChangePassword = lazy(() => import('./pages/settings/ChangePassword'))
 
 export const DEFAULT_ROUTES: Record<Role, string> = {
   requester: '/user/tickets',
@@ -187,7 +188,13 @@ function RequirePermission({ allowed, children }: { allowed: string[]; children:
 
 function AuthenticatedLayout() {
   const { user, logout } = useAuth()
+  const location = useLocation()
   if (!user) return null
+  // Users flagged for mandatory password rotation are locked out of every
+  // workspace route until they finish the rotation on the dedicated screen.
+  if (user.must_change_password && location.pathname !== '/change-password') {
+    return <Navigate to="/change-password" replace />
+  }
   return (
     <Layout role={user.role.key} user={user} onLogout={logout}>
       <Suspense fallback={<LoadingPage />}>
@@ -263,6 +270,14 @@ function AppRoutes() {
         }
       >
         <Route index element={<HomeRedirect />} />
+        <Route
+          path="/change-password"
+          element={
+            <Suspense fallback={<LoadingPage />}>
+              <ForceChangePassword />
+            </Suspense>
+          }
+        />
         <Route path="/user/dashboard" element={guard(['requester'], <Navigate to="/user/tickets" replace />)} />
         <Route path="/user/create-ticket" element={guard(['requester'], <CreateTicket />)} />
         <Route path="/user/tickets" element={guard(allRoles, <TicketHistory />)} />

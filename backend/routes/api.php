@@ -101,6 +101,9 @@ Route::prefix('v1')->group(function (): void {
 
         Route::middleware('auth:sanctum')->group(function (): void {
             Route::get('/me', [AuthController::class, 'me'])->middleware('active')->name('me');
+            Route::post('/change-password', [AuthController::class, 'changePassword'])
+                ->middleware(['active', 'throttle:mutation'])
+                ->name('change-password');
             Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
         });
     });

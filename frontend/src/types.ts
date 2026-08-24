@@ -17,6 +17,7 @@ export interface AuthenticatedUser {
   email: string
   role: { key: Role; name: string }
   permissions: string[]
+  must_change_password?: boolean
 }
 export type TicketStatus =
   | 'draft'

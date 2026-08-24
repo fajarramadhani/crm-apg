@@ -6,6 +6,12 @@ interface AuthPayload {
   user: AuthenticatedUser
 }
 
+interface ChangePasswordPayload {
+  current_password: string
+  password: string
+  password_confirmation: string
+}
+
 export const authRepository = {
   async login(email: string, password: string): Promise<AuthenticatedUser> {
     await apiClient.csrf()
@@ -24,5 +30,11 @@ export const authRepository = {
 
   async logout(): Promise<void> {
     await apiClient.post('/auth/logout')
+  },
+
+  async changePassword(payload: ChangePasswordPayload): Promise<AuthenticatedUser> {
+    await apiClient.csrf()
+    const response = await apiClient.post<ApiResponse<AuthPayload>>('/auth/change-password', payload)
+    return response.data.user
   },
 }

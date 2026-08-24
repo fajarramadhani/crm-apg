@@ -3,13 +3,16 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\ChangePasswordRequest;
 use App\Http\Requests\Api\V1\LoginRequest;
 use App\Http\Resources\Api\V1\AuthenticatedUserResource;
 use App\Models\User;
 use App\Support\ApiResponse;
+use App\Support\AuditLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -57,5 +60,38 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return ApiResponse::success($request, 'Logout successful');
+    }
+
+    public function changePassword(ChangePasswordRequest $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = $request->user();
+
+        DB::transaction(function () use ($request, $user): void {
+            /** @var User $locked */
+            $locked = User::query()->lockForUpdate()->findOrFail($user->id);
+
+            $locked->forceFill([
+                'password' => Hash::make($request->string('password')->toString()),
+                'must_change_password' => false,
+            ])->save();
+
+            AuditLogger::record(
+                'identity.password_changed',
+                actor: $locked,
+                auditable: $locked,
+                metadata: ['source' => 'auth.change-password'],
+            );
+        });
+
+        // Rotate the session identifier after a credential change. The session
+        // store only exists when the request passed through stateful middleware.
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
+
+        return ApiResponse::success($request, 'Password berhasil diubah.', [
+            'user' => (new AuthenticatedUserResource($user->fresh('role')))->resolve($request),
+        ]);
     }
 }
