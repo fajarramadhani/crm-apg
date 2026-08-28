@@ -32,6 +32,19 @@ Iterasi 3 — polish:
 14. **Feedback sukses kontekstual** pada dialog aksi — menjelaskan dampak keputusan (UAT diterima/ditolak, konfirmasi diterima/ditolak).
 15. **Aksesibilitas honeypot** — atribut `inert` + `aria-hidden` pada wrapper dan input, label redundan dihapus.
 
+Iterasi 4 — Modern Refresh (semua halaman public):
+16. **Shell**: background berpola radial brand (`cyan/blue` samar), header lebih lega + logo tile ber-ring + security label dalam pill, footer dengan gradien.
+17. **Hero seragam** (form/tracking/history): titik pulse cyan, pola grid halus, radial glow lebih kaya.
+18. **Kartu form**: stripe gradien navy→cyan di atas, header ber-ikon tile gradien.
+19. **Seksi ber-ikon**: chip angka diganti tile ikon gradien (User / Wrench / Paperclip) + status dot ✓/○ mengikuti kelengkapan seksi.
+20. **Select kustom**: chevron ikon (native select tetap) + `appearance-none`.
+21. **Urgency cards**: dot warna level (emerald/amber/rose) + state terpilih gradien.
+22. **Lampiran**: dropzone lebih tinggi dengan hover, impfile list jadi chips ber-tipe (ikon/warna per ekstensi: image, pdf, doc, xls).
+23. **CTA & secondary**: tombol utama gradien navy→blue-800 di form, receipt, tracking CTA, dan HistoryCard.
+24. **Receipt**: header ber-pola + ikon tile, nomor tiket `tabular-nums`, entri `animate-in`.
+25. **Tracking**: header tiket ber-pola, status box icon tile, meta kolom ber-tile, timeline connector gradien, kartu update ber-aksen kiri, `ActionCtaCard` dengan glow dekoratif + CTA gradien, `StepHeading` dialog gradien.
+26. **History**: verifikasi card header gradien, `HistoryCard` meta ber-tile + status box gradien + tombol primary gradien.
+
 ## 3. Keputusan Desain
 
 ### 3.1 Draft Autosave (localStorage)
@@ -108,12 +121,21 @@ Iterasi 3 — polish:
 
 - Wrapper honeypot diberi `inert` (React 19) + `aria-hidden`, input diberi `aria-hidden` + `tabIndex=-1`, label sengaja dihapus — tidak fokusable dan tidak diumumkan screen reader, tetap berfungsi sebagai bot trap di sisi server (`website` max:0).
 
+### 3.15 Modern Refresh (Iterasi 4)
+
+- Hanya perubahan visual: `className`, dekorasi JSX, ikon Lucide, dan mikro-dekorasi. **Tanpa mengubah** struktur field (id/name), validasi (`getFieldError`/`handleBlur`), FormData payload, honeypot, idempotency, `requestSubmit`, backend, maupun route.
+- Seluruh aksen visual memakai palet brand yang sudah ada (navy `#0b1f48`/`#12367a`, cyan, slate, emerald/amber/rose untuk status); tidak ada warna baru yang menyimpang.
+- Select memakai `appearance-none` + `<ChevronDown>` dekoratif; elemen `<select>` native tetap dipakai agar perilaku keyboard/touchscreen tidak berubah.
+- File list lampiran memakai `fileDetails(name)` → kombinasi ikon + warna tile per ekstensi (image=violet, pdf=rose, doc=blue, xls=emerald, lainnya=slate).
+- Animasi baru (`animate-in`, `animate-ping` pulse) dihormati oleh `prefers-reduced-motion` global.
+- Copy tidak diubah isi; hanya pemolesan tata letak agar konsisten di ketiga halaman.
+
 ## 4. File yang Berubah
 
-- `frontend/src/pages/public/PublicRequest.tsx` — draft autosave, fokus error, counter deskripsi, banner restore draft, stepper, sticky submit bar, validasi on-blur (`getFieldError`/`handleBlur`), chip panduan deskripsi, kontras helper, honeypot `inert`.
-- `frontend/src/pages/public/PublicTicketTracking.tsx` — tombol & auto-poll refresh, timestamp "Terakhir diperiksa", `ActionCtaCard` extract + posisi mobile, tombol cetak, `print:hidden`, feedback sukses kontekstual, placeholder email, kontras helper.
-- `frontend/src/pages/public/PublicRequestHistory.tsx` — retry button saat options gagal dimuat, placeholder email, kontras helper.
-- `frontend/src/components/public/PublicShell.tsx` — `print:hidden` pada header & footer.
+- `frontend/src/pages/public/PublicRequest.tsx` — draft autosave, fokus error, counter deskripsi, banner restore draft, stepper, sticky submit bar, validasi on-blur (`getFieldError`/`handleBlur`), chip panduan deskripsi, kontras helper, honeypot `inert` + **Iterasi 4**: stripe gradien, seksi ber-ikon, select chevron, urgency dot, dropzone & file chips, CTA gradien, hero/receipt refinement.
+- `frontend/src/pages/public/PublicTicketTracking.tsx` — tombol & auto-poll refresh, timestamp "Terakhir diperiksa", `ActionCtaCard` extract + posisi mobile, tombol cetak, `print:hidden`, feedback sukses kontekstual, placeholder email, kontras helper + **Iterasi 4**: hero/tiket header ber-pola, meta tile, timeline gradien, kartu update aksen, `StepHeading` gradien.
+- `frontend/src/pages/public/PublicRequestHistory.tsx` — retry button saat options gagal dimuat, placeholder email, kontras helper + **Iterasi 4**: hero seragam, verifikasi header gradien, `HistoryCard` meta tile + status box + CTA gradien.
+- `frontend/src/components/public/PublicShell.tsx` — `print:hidden` pada header & footer + **Iterasi 4**: background radial brand, header & footer refinement.
 
 Tidak ada perubahan pada backend, API contract, atau data model.
 
@@ -121,7 +143,7 @@ Tidak ada perubahan pada backend, API contract, atau data model.
 
 - `npm run typecheck` — PASS.
 - `npm run build` (tsc + vite build) — PASS.
-- `npm run format:check` — file yang diubah PASS. Catatan: satu file di working tree milik pekerjaan lain (`frontend/src/pages/qa/QADashboard.tsx`) belum ter-format dan tidak diubah pada pekerjaan ini.
+- `npm run format:check` — file yang diubah PASS (state commit terakhir sudah bersih; verifikasi ulang diformat penuh pada commit ini).
 
 ## 6. Risiko & Catatan
 
