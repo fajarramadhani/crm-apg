@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { PublicLoadingScreen } from './components/public/PublicLoadingScreen'
+import { PublicShell } from './components/public/PublicShell'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LoadingProvider } from './context/LoadingContext'
 import type { Role } from './types'
@@ -242,7 +243,13 @@ function AppRoutes() {
       <Route
         path="/request"
         element={
-          <Suspense fallback={<PublicLoadingScreen label="Menyiapkan formulir pengajuan..." />}>
+          <Suspense
+            fallback={
+              <PublicShell>
+                <PublicLoadingScreen label="Menyiapkan formulir pengajuan..." />
+              </PublicShell>
+            }
+          >
             <PublicRequest />
           </Suspense>
         }
@@ -250,7 +257,13 @@ function AppRoutes() {
       <Route
         path="/track/:token"
         element={
-          <Suspense fallback={<PublicLoadingScreen label="Menyiapkan pelacakan tiket..." />}>
+          <Suspense
+            fallback={
+              <PublicShell>
+                <PublicLoadingScreen label="Menyiapkan pelacakan tiket..." />
+              </PublicShell>
+            }
+          >
             <PublicTicketTracking />
           </Suspense>
         }
@@ -258,7 +271,13 @@ function AppRoutes() {
       <Route
         path="/request/history"
         element={
-          <Suspense fallback={<PublicLoadingScreen label="Menyiapkan riwayat pengajuan..." />}>
+          <Suspense
+            fallback={
+              <PublicShell>
+                <PublicLoadingScreen label="Menyiapkan riwayat pengajuan..." />
+              </PublicShell>
+            }
+          >
             <PublicRequestHistory />
           </Suspense>
         }

@@ -984,7 +984,10 @@ export default function PublicTicketTrackingPage() {
                     {ticket.requester_updates.length ? (
                       <ul className="mt-5 space-y-4">
                         {ticket.requester_updates.map((update, index) => (
-                          <li key={`${update.occurred_at}-${index}`} className="rounded-2xl border-l-4 border-l-blue-500 bg-blue-50 p-4">
+                          <li
+                            key={`${update.occurred_at}-${index}`}
+                            className="rounded-2xl border-l-4 border-l-blue-500 bg-blue-50 p-4"
+                          >
                             <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">
                               {update.message}
                             </p>

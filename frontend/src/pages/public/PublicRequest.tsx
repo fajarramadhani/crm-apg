@@ -685,632 +685,629 @@ export default function PublicRequest() {
             </section>
           )}
           {!loadingOptions && (
-          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
-            <section className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-300/30">
-              <div className="h-1.5 bg-gradient-to-r from-[#0b1f48] via-[#12367a] to-cyan-400" aria-hidden="true" />
-              <div className="border-b border-slate-200 px-5 py-6 sm:px-8">
-                <div className="flex items-center gap-3.5">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-lg shadow-blue-900/15">
-                    <FileText className="h-6 w-6" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
-                      Formulir pengajuan publik
-                    </p>
-                    <h2 className="mt-0.5 text-xl font-bold text-slate-950">Informasi pengajuan</h2>
-                    <p className="mt-1 text-sm text-slate-600">Kolom bertanda * wajib diisi.</p>
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
+              <section className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-300/30">
+                <div className="h-1.5 bg-gradient-to-r from-[#0b1f48] via-[#12367a] to-cyan-400" aria-hidden="true" />
+                <div className="border-b border-slate-200 px-5 py-6 sm:px-8">
+                  <div className="flex items-center gap-3.5">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-lg shadow-blue-900/15">
+                      <FileText className="h-6 w-6" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold uppercase tracking-[0.16em] text-blue-700">
+                        Formulir pengajuan publik
+                      </p>
+                      <h2 className="mt-0.5 text-xl font-bold text-slate-950">Informasi pengajuan</h2>
+                      <p className="mt-1 text-sm text-slate-600">Kolom bertanda * wajib diisi.</p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <ol
-                className="flex items-center gap-1 border-b border-slate-100 px-5 py-4 sm:gap-2 sm:px-8"
-                aria-label="Tahapan formulir"
-              >
-                {steps.map((step, index) => {
-                  const isCurrent =
-                    !step.done && (index === 0 || steps.slice(0, index).every((previous) => previous.done))
-                  return (
-                    <li key={step.num} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
-                      {index > 0 && (
+                <ol
+                  className="flex items-center gap-1 border-b border-slate-100 px-5 py-4 sm:gap-2 sm:px-8"
+                  aria-label="Tahapan formulir"
+                >
+                  {steps.map((step, index) => {
+                    const isCurrent =
+                      !step.done && (index === 0 || steps.slice(0, index).every((previous) => previous.done))
+                    return (
+                      <li key={step.num} className="flex min-w-0 flex-1 items-center gap-1 sm:gap-2">
+                        {index > 0 && (
+                          <span
+                            className={`h-px w-3 shrink-0 ${index === 1 ? (sectionDone1 ? 'bg-emerald-400' : 'bg-slate-200') : sectionDone1 && sectionDone2 ? 'bg-emerald-400' : 'bg-slate-200'}`}
+                            aria-hidden="true"
+                          />
+                        )}
                         <span
-                          className={`h-px w-3 shrink-0 ${index === 1 ? (sectionDone1 ? 'bg-emerald-400' : 'bg-slate-200') : sectionDone1 && sectionDone2 ? 'bg-emerald-400' : 'bg-slate-200'}`}
-                          aria-hidden="true"
-                        />
-                      )}
-                      <span
-                        className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold sm:px-3 ${
-                          step.done
-                            ? 'bg-emerald-50 text-emerald-800'
-                            : isCurrent
-                              ? 'bg-blue-700 text-white'
-                              : 'bg-slate-100 text-slate-500'
-                        }`}
-                      >
-                        <span
-                          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                          className={`inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-bold sm:px-3 ${
                             step.done
-                              ? 'bg-emerald-600 text-white'
+                              ? 'bg-emerald-50 text-emerald-800'
                               : isCurrent
-                                ? 'bg-white/20'
-                                : 'bg-slate-200 text-slate-500'
+                                ? 'bg-blue-700 text-white'
+                                : 'bg-slate-100 text-slate-500'
                           }`}
                         >
-                          {step.done ? <Check className="h-3.5 w-3.5" /> : step.num}
-                        </span>
-                        <span className="truncate">{step.label}</span>
-                      </span>
-                    </li>
-                  )
-                })}
-              </ol>
-
-              {formError && (
-                <div
-                  className="mx-5 mt-5 flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 sm:mx-8"
-                  role="alert"
-                >
-                  <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
-                  <p>{formError}</p>
-                </div>
-              )}
-              {optionsError && (
-                <div
-                  className="mx-5 mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:mx-8"
-                  role="alert"
-                >
-                  <p>{optionsError}</p>
-                  <button
-                    type="button"
-                    className="mt-2 font-bold underline"
-                    onClick={() => setOptionsAttempt((n) => n + 1)}
-                  >
-                    Coba muat kembali
-                  </button>
-                </div>
-              )}
-              {noOptions && (
-                <div
-                  className="mx-5 mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:mx-8"
-                  role="alert"
-                >
-                  Formulir belum dapat digunakan karena pilihan aktif belum lengkap.
-                </div>
-              )}
-              {draftRestored && (
-                <div className="mx-5 mt-5 flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 sm:mx-8 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p>Draft pengajuan dipulihkan{draftRestoredAt ? ` (disimpan ${draftRestoredAt})` : ''}.</p>
-                    {restoredFileNames.length > 0 && (
-                      <p className="mt-1">
-                        Lampiran yang dipilih sebelumnya perlu dipilih ulang:{' '}
-                        <span className="font-semibold">{restoredFileNames.join(', ')}</span>.
-                      </p>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={clearDraft}
-                    className="shrink-0 font-bold underline hover:text-blue-700"
-                  >
-                    Buang Draft
-                  </button>
-                </div>
-              )}
-
-              <form ref={formRef} onSubmit={submit} noValidate className="space-y-8 p-5 sm:p-8">
-                <fieldset disabled={submitting} className="space-y-5">
-                  <legend className="mb-4 flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-2.5 text-base font-bold text-slate-950">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
-                        <User className="h-5 w-5" />
-                      </span>
-                      Data pemohon
-                    </span>
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${sectionDone1 ? 'bg-emerald-100 text-emerald-700' : 'border border-slate-300 text-transparent'}`}
-                      title={sectionDone1 ? 'Seksi lengkap' : 'Belum lengkap'}
-                    >
-                      {sectionDone1 && <Check className="h-3.5 w-3.5" />}
-                    </span>
-                  </legend>
-                  <div>
-                    <label htmlFor="requester-name" className="text-sm font-semibold text-slate-700">
-                      Nama lengkap *
-                    </label>
-                    <input
-                      id="requester-name"
-                      value={values.requester_name}
-                      maxLength={150}
-                      onChange={(e) => update('requester_name', e.target.value)}
-                      onBlur={() => handleBlur('requester_name')}
-                      className={fieldClass(errors.requester_name)}
-                      aria-invalid={Boolean(errors.requester_name)}
-                      aria-describedby={errors.requester_name ? 'requester-name-error' : undefined}
-                      autoComplete="name"
-                      placeholder="Nama pemohon"
-                    />
-                    <ErrorText id="requester-name-error">{errors.requester_name}</ErrorText>
-                  </div>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="branch" className="text-sm font-semibold text-slate-700">
-                        Cabang *
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="branch"
-                          value={values.branch_id}
-                          onChange={(e) => update('branch_id', e.target.value)}
-                          onBlur={() => handleBlur('branch_id')}
-                          className={`${fieldClass(errors.branch_id)} appearance-none pr-10`}
-                          aria-invalid={Boolean(errors.branch_id)}
-                          aria-describedby={errors.branch_id ? 'branch-error' : undefined}
-                        >
-                          <option value="">{loadingOptions ? 'Memuat cabang...' : 'Pilih cabang'}</option>
-                          {options?.branches.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown
-                          className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <ErrorText id="branch-error">{errors.branch_id}</ErrorText>
-                    </div>
-                    <div>
-                      <label htmlFor="division" className="text-sm font-semibold text-slate-700">
-                        Divisi <span className="font-normal text-slate-500">(opsional)</span>
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="division"
-                          value={values.division_id}
-                          onChange={(e) => update('division_id', e.target.value)}
-                          className={`${fieldClass(errors.division_id)} appearance-none pr-10`}
-                        >
-                          <option value="">Pilih divisi bila relevan</option>
-                          {options?.divisions.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown
-                          className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <ErrorText id="division-error">{errors.division_id}</ErrorText>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-slate-700">Kontak yang dapat dihubungi *</p>
-                    <p id="contact-hint" className="mt-1 text-xs leading-5 text-slate-600">
-                      Isi minimal satu: nomor WhatsApp atau email kantor.
-                    </p>
-                    <div className="mt-2 grid gap-5 sm:grid-cols-2">
-                      <div>
-                        <label htmlFor="phone" className="text-xs font-semibold text-slate-600">
-                          WhatsApp
-                        </label>
-                        <input
-                          id="phone"
-                          type="tel"
-                          value={values.requester_phone}
-                          onChange={(e) => update('requester_phone', e.target.value)}
-                          onBlur={() => handleBlur('requester_phone')}
-                          className={fieldClass(errors.requester_phone)}
-                          aria-describedby={errors.requester_phone ? 'phone-error' : 'contact-hint'}
-                          autoComplete="tel"
-                          placeholder="Contoh: 0812 3456 7890"
-                        />
-                        <ErrorText id="phone-error">{errors.requester_phone}</ErrorText>
-                      </div>
-                      <div>
-                        <label htmlFor="email" className="text-xs font-semibold text-slate-600">
-                          Email kantor
-                        </label>
-                        <input
-                          id="email"
-                          type="email"
-                          value={values.requester_email}
-                          maxLength={255}
-                          onChange={(e) => update('requester_email', e.target.value)}
-                          onBlur={() => handleBlur('requester_email')}
-                          className={fieldClass(errors.requester_email)}
-                          aria-describedby={errors.requester_email ? 'email-error' : 'contact-hint'}
-                          autoComplete="email"
-                          placeholder="nama@perusahaan.co.id"
-                        />
-                        <ErrorText id="email-error">{errors.requester_email}</ErrorText>
-                      </div>
-                    </div>
-                  </div>
-                </fieldset>
-
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
-
-                <fieldset disabled={submitting} className="space-y-5">
-                  <legend className="mb-4 flex items-center justify-between gap-3">
-                    <span className="flex items-center gap-2.5 text-base font-bold text-slate-950">
-                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
-                        <Wrench className="h-5 w-5" />
-                      </span>
-                      Detail kebutuhan
-                    </span>
-                    <span
-                      className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${sectionDone2 ? 'bg-emerald-100 text-emerald-700' : 'border border-slate-300 text-transparent'}`}
-                      title={sectionDone2 ? 'Seksi lengkap' : 'Belum lengkap'}
-                    >
-                      {sectionDone2 && <Check className="h-3.5 w-3.5" />}
-                    </span>
-                  </legend>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="category" className="text-sm font-semibold text-slate-700">
-                        Kategori tiket *
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="category"
-                          value={values.ticket_category_id}
-                          onChange={(e) => update('ticket_category_id', e.target.value)}
-                          onBlur={() => handleBlur('ticket_category_id')}
-                          className={`${fieldClass(errors.ticket_category_id)} appearance-none pr-10`}
-                          aria-invalid={Boolean(errors.ticket_category_id)}
-                          aria-describedby={errors.ticket_category_id ? 'category-error' : undefined}
-                        >
-                          <option value="">{loadingOptions ? 'Memuat kategori...' : 'Pilih kategori'}</option>
-                          {options?.categories.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown
-                          className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <ErrorText id="category-error">{errors.ticket_category_id}</ErrorText>
-                    </div>
-                    <div>
-                      <label htmlFor="application" className="text-sm font-semibold text-slate-700">
-                        Sistem / aplikasi *
-                      </label>
-                      <div className="relative">
-                        <select
-                          id="application"
-                          value={values.application_id}
-                          onChange={(e) => update('application_id', e.target.value)}
-                          onBlur={() => handleBlur('application_id')}
-                          className={`${fieldClass(errors.application_id)} appearance-none pr-10`}
-                          aria-invalid={Boolean(errors.application_id)}
-                          aria-describedby={errors.application_id ? 'application-error' : undefined}
-                        >
-                          <option value="">{loadingOptions ? 'Memuat sistem...' : 'Pilih sistem / aplikasi'}</option>
-                          {options?.applications.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown
-                          className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <ErrorText id="application-error">{errors.application_id}</ErrorText>
-                    </div>
-                  </div>
-                  <div>
-                    <label htmlFor="title" className="text-sm font-semibold text-slate-700">
-                      Judul pengajuan *
-                    </label>
-                    <input
-                      id="title"
-                      value={values.title}
-                      maxLength={200}
-                      onChange={(e) => update('title', e.target.value)}
-                      onBlur={() => handleBlur('title')}
-                      className={fieldClass(errors.title)}
-                      aria-describedby={errors.title ? 'title-error' : 'title-hint'}
-                      placeholder="Ringkas kebutuhan atau kendala utama"
-                    />
-                    <div className="mt-1.5 flex justify-between gap-3 text-xs text-slate-600">
-                      <span id="title-hint">Maksimal 200 karakter.</span>
-                      <span>{values.title.length}/200</span>
-                    </div>
-                    <ErrorText id="title-error">{errors.title}</ErrorText>
-                  </div>
-                  <div>
-                    <TicketDescriptionEditor
-                      id="public-ticket-description"
-                      mode="public"
-                      value={values.description}
-                      error={errors.description}
-                      disabled={submitting}
-                      onChange={(value) => update('description', value)}
-                    />
-                    <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
-                      <p className="text-xs font-semibold text-slate-600">
-                        Panduan menulis — klik untuk menambahkan bagian ke deskripsi:
-                      </p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {DESCRIPTION_TEMPLATES.map((item) => (
-                          <button
-                            key={item.key}
-                            type="button"
-                            onClick={() => insertDescriptionPrompt(item.prompt)}
-                            disabled={submitting}
-                            className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-900 hover:bg-blue-100 disabled:opacity-50"
+                          <span
+                            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full ${
+                              step.done
+                                ? 'bg-emerald-600 text-white'
+                                : isCurrent
+                                  ? 'bg-white/20'
+                                  : 'bg-slate-200 text-slate-500'
+                            }`}
                           >
-                            <Plus className="h-3.5 w-3.5" />
-                            {item.label}
-                          </button>
+                            {step.done ? <Check className="h-3.5 w-3.5" /> : step.num}
+                          </span>
+                          <span className="truncate">{step.label}</span>
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ol>
+
+                {formError && (
+                  <div
+                    className="mx-5 mt-5 flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-800 sm:mx-8"
+                    role="alert"
+                  >
+                    <AlertCircle className="mt-0.5 h-5 w-5 shrink-0" />
+                    <p>{formError}</p>
+                  </div>
+                )}
+                {optionsError && (
+                  <div
+                    className="mx-5 mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:mx-8"
+                    role="alert"
+                  >
+                    <p>{optionsError}</p>
+                    <button
+                      type="button"
+                      className="mt-2 font-bold underline"
+                      onClick={() => setOptionsAttempt((n) => n + 1)}
+                    >
+                      Coba muat kembali
+                    </button>
+                  </div>
+                )}
+                {noOptions && (
+                  <div
+                    className="mx-5 mt-5 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 sm:mx-8"
+                    role="alert"
+                  >
+                    Formulir belum dapat digunakan karena pilihan aktif belum lengkap.
+                  </div>
+                )}
+                {draftRestored && (
+                  <div className="mx-5 mt-5 flex flex-col gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 sm:mx-8 sm:flex-row sm:items-start sm:justify-between">
+                    <div className="min-w-0">
+                      <p>Draft pengajuan dipulihkan{draftRestoredAt ? ` (disimpan ${draftRestoredAt})` : ''}.</p>
+                      {restoredFileNames.length > 0 && (
+                        <p className="mt-1">
+                          Lampiran yang dipilih sebelumnya perlu dipilih ulang:{' '}
+                          <span className="font-semibold">{restoredFileNames.join(', ')}</span>.
+                        </p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearDraft}
+                      className="shrink-0 font-bold underline hover:text-blue-700"
+                    >
+                      Buang Draft
+                    </button>
+                  </div>
+                )}
+
+                <form ref={formRef} onSubmit={submit} noValidate className="space-y-8 p-5 sm:p-8">
+                  <fieldset disabled={submitting} className="space-y-5">
+                    <legend className="mb-4 flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2.5 text-base font-bold text-slate-950">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
+                          <User className="h-5 w-5" />
+                        </span>
+                        Data pemohon
+                      </span>
+                      <span
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${sectionDone1 ? 'bg-emerald-100 text-emerald-700' : 'border border-slate-300 text-transparent'}`}
+                        title={sectionDone1 ? 'Seksi lengkap' : 'Belum lengkap'}
+                      >
+                        {sectionDone1 && <Check className="h-3.5 w-3.5" />}
+                      </span>
+                    </legend>
+                    <div>
+                      <label htmlFor="requester-name" className="text-sm font-semibold text-slate-700">
+                        Nama lengkap *
+                      </label>
+                      <input
+                        id="requester-name"
+                        value={values.requester_name}
+                        maxLength={150}
+                        onChange={(e) => update('requester_name', e.target.value)}
+                        onBlur={() => handleBlur('requester_name')}
+                        className={fieldClass(errors.requester_name)}
+                        aria-invalid={Boolean(errors.requester_name)}
+                        aria-describedby={errors.requester_name ? 'requester-name-error' : undefined}
+                        autoComplete="name"
+                        placeholder="Nama pemohon"
+                      />
+                      <ErrorText id="requester-name-error">{errors.requester_name}</ErrorText>
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="branch" className="text-sm font-semibold text-slate-700">
+                          Cabang *
+                        </label>
+                        <div className="relative">
+                          <select
+                            id="branch"
+                            value={values.branch_id}
+                            onChange={(e) => update('branch_id', e.target.value)}
+                            onBlur={() => handleBlur('branch_id')}
+                            className={`${fieldClass(errors.branch_id)} appearance-none pr-10`}
+                            aria-invalid={Boolean(errors.branch_id)}
+                            aria-describedby={errors.branch_id ? 'branch-error' : undefined}
+                          >
+                            <option value="">{loadingOptions ? 'Memuat cabang...' : 'Pilih cabang'}</option>
+                            {options?.branches.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <ErrorText id="branch-error">{errors.branch_id}</ErrorText>
+                      </div>
+                      <div>
+                        <label htmlFor="division" className="text-sm font-semibold text-slate-700">
+                          Divisi <span className="font-normal text-slate-500">(opsional)</span>
+                        </label>
+                        <div className="relative">
+                          <select
+                            id="division"
+                            value={values.division_id}
+                            onChange={(e) => update('division_id', e.target.value)}
+                            className={`${fieldClass(errors.division_id)} appearance-none pr-10`}
+                          >
+                            <option value="">Pilih divisi bila relevan</option>
+                            {options?.divisions.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <ErrorText id="division-error">{errors.division_id}</ErrorText>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-700">Kontak yang dapat dihubungi *</p>
+                      <p id="contact-hint" className="mt-1 text-xs leading-5 text-slate-600">
+                        Isi minimal satu: nomor WhatsApp atau email kantor.
+                      </p>
+                      <div className="mt-2 grid gap-5 sm:grid-cols-2">
+                        <div>
+                          <label htmlFor="phone" className="text-xs font-semibold text-slate-600">
+                            WhatsApp
+                          </label>
+                          <input
+                            id="phone"
+                            type="tel"
+                            value={values.requester_phone}
+                            onChange={(e) => update('requester_phone', e.target.value)}
+                            onBlur={() => handleBlur('requester_phone')}
+                            className={fieldClass(errors.requester_phone)}
+                            aria-describedby={errors.requester_phone ? 'phone-error' : 'contact-hint'}
+                            autoComplete="tel"
+                            placeholder="Contoh: 0812 3456 7890"
+                          />
+                          <ErrorText id="phone-error">{errors.requester_phone}</ErrorText>
+                        </div>
+                        <div>
+                          <label htmlFor="email" className="text-xs font-semibold text-slate-600">
+                            Email kantor
+                          </label>
+                          <input
+                            id="email"
+                            type="email"
+                            value={values.requester_email}
+                            maxLength={255}
+                            onChange={(e) => update('requester_email', e.target.value)}
+                            onBlur={() => handleBlur('requester_email')}
+                            className={fieldClass(errors.requester_email)}
+                            aria-describedby={errors.requester_email ? 'email-error' : 'contact-hint'}
+                            autoComplete="email"
+                            placeholder="nama@perusahaan.co.id"
+                          />
+                          <ErrorText id="email-error">{errors.requester_email}</ErrorText>
+                        </div>
+                      </div>
+                    </div>
+                  </fieldset>
+
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+
+                  <fieldset disabled={submitting} className="space-y-5">
+                    <legend className="mb-4 flex items-center justify-between gap-3">
+                      <span className="flex items-center gap-2.5 text-base font-bold text-slate-950">
+                        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
+                          <Wrench className="h-5 w-5" />
+                        </span>
+                        Detail kebutuhan
+                      </span>
+                      <span
+                        className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${sectionDone2 ? 'bg-emerald-100 text-emerald-700' : 'border border-slate-300 text-transparent'}`}
+                        title={sectionDone2 ? 'Seksi lengkap' : 'Belum lengkap'}
+                      >
+                        {sectionDone2 && <Check className="h-3.5 w-3.5" />}
+                      </span>
+                    </legend>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="category" className="text-sm font-semibold text-slate-700">
+                          Kategori tiket *
+                        </label>
+                        <div className="relative">
+                          <select
+                            id="category"
+                            value={values.ticket_category_id}
+                            onChange={(e) => update('ticket_category_id', e.target.value)}
+                            onBlur={() => handleBlur('ticket_category_id')}
+                            className={`${fieldClass(errors.ticket_category_id)} appearance-none pr-10`}
+                            aria-invalid={Boolean(errors.ticket_category_id)}
+                            aria-describedby={errors.ticket_category_id ? 'category-error' : undefined}
+                          >
+                            <option value="">{loadingOptions ? 'Memuat kategori...' : 'Pilih kategori'}</option>
+                            {options?.categories.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <ErrorText id="category-error">{errors.ticket_category_id}</ErrorText>
+                      </div>
+                      <div>
+                        <label htmlFor="application" className="text-sm font-semibold text-slate-700">
+                          Sistem / aplikasi *
+                        </label>
+                        <div className="relative">
+                          <select
+                            id="application"
+                            value={values.application_id}
+                            onChange={(e) => update('application_id', e.target.value)}
+                            onBlur={() => handleBlur('application_id')}
+                            className={`${fieldClass(errors.application_id)} appearance-none pr-10`}
+                            aria-invalid={Boolean(errors.application_id)}
+                            aria-describedby={errors.application_id ? 'application-error' : undefined}
+                          >
+                            <option value="">{loadingOptions ? 'Memuat sistem...' : 'Pilih sistem / aplikasi'}</option>
+                            {options?.applications.map((item) => (
+                              <option key={item.id} value={item.id}>
+                                {item.name}
+                              </option>
+                            ))}
+                          </select>
+                          <ChevronDown
+                            className="pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
+                            aria-hidden="true"
+                          />
+                        </div>
+                        <ErrorText id="application-error">{errors.application_id}</ErrorText>
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor="title" className="text-sm font-semibold text-slate-700">
+                        Judul pengajuan *
+                      </label>
+                      <input
+                        id="title"
+                        value={values.title}
+                        maxLength={200}
+                        onChange={(e) => update('title', e.target.value)}
+                        onBlur={() => handleBlur('title')}
+                        className={fieldClass(errors.title)}
+                        aria-describedby={errors.title ? 'title-error' : 'title-hint'}
+                        placeholder="Ringkas kebutuhan atau kendala utama"
+                      />
+                      <div className="mt-1.5 flex justify-between gap-3 text-xs text-slate-600">
+                        <span id="title-hint">Maksimal 200 karakter.</span>
+                        <span>{values.title.length}/200</span>
+                      </div>
+                      <ErrorText id="title-error">{errors.title}</ErrorText>
+                    </div>
+                    <div>
+                      <TicketDescriptionEditor
+                        id="public-ticket-description"
+                        mode="public"
+                        value={values.description}
+                        error={errors.description}
+                        disabled={submitting}
+                        onChange={(value) => update('description', value)}
+                      />
+                      <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-3">
+                        <p className="text-xs font-semibold text-slate-600">
+                          Panduan menulis — klik untuk menambahkan bagian ke deskripsi:
+                        </p>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          {DESCRIPTION_TEMPLATES.map((item) => (
+                            <button
+                              key={item.key}
+                              type="button"
+                              onClick={() => insertDescriptionPrompt(item.prompt)}
+                              disabled={submitting}
+                              className="inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-white px-3 py-1.5 text-xs font-bold text-blue-900 hover:bg-blue-100 disabled:opacity-50"
+                            >
+                              <Plus className="h-3.5 w-3.5" />
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="mt-3 flex items-start justify-between gap-3">
+                        <p className="text-xs leading-5 text-slate-600">
+                          Lengkapi kejadian, langkah yang sudah dicoba, hasil yang diharapkan, dan dampaknya.
+                        </p>
+                        <span
+                          className={`shrink-0 text-xs font-medium ${values.description.length > 10000 ? 'text-red-600' : 'text-slate-500'}`}
+                        >
+                          {ticketDescriptionText(values.description).length}/10.000
+                        </span>
+                      </div>
+                    </div>
+                    <div className="grid gap-5 sm:grid-cols-2">
+                      <div>
+                        <label htmlFor="affected-url" className="text-sm font-semibold text-slate-700">
+                          URL terdampak <span className="font-normal text-slate-500">(opsional)</span>
+                        </label>
+                        <input
+                          id="affected-url"
+                          type="url"
+                          value={values.affected_url}
+                          maxLength={2048}
+                          onChange={(e) => update('affected_url', e.target.value)}
+                          onBlur={() => handleBlur('affected_url')}
+                          className={fieldClass(errors.affected_url)}
+                          aria-describedby={errors.affected_url ? 'affected-url-error' : undefined}
+                          placeholder="https://..."
+                        />
+                        <ErrorText id="affected-url-error">{errors.affected_url}</ErrorText>
+                      </div>
+                      <div>
+                        <label htmlFor="reference" className="text-sm font-semibold text-slate-700">
+                          Nomor referensi <span className="font-normal text-slate-500">(opsional)</span>
+                        </label>
+                        <input
+                          id="reference"
+                          value={values.reference}
+                          maxLength={255}
+                          onChange={(e) => update('reference', e.target.value)}
+                          onBlur={() => handleBlur('reference')}
+                          className={fieldClass(errors.reference)}
+                          aria-describedby={errors.reference ? 'reference-error' : undefined}
+                          placeholder="Nomor polis, transaksi, atau dokumen"
+                        />
+                        <ErrorText id="reference-error">{errors.reference}</ErrorText>
+                      </div>
+                    </div>
+                    <fieldset id="urgency" aria-describedby={errors.urgency ? 'urgency-error' : undefined}>
+                      <legend className="text-sm font-semibold text-slate-700">Tingkat urgensi *</legend>
+                      <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                        {[
+                          ['low', 'Rendah', 'Tidak menghambat pekerjaan utama'],
+                          ['medium', 'Sedang', 'Mengganggu sebagian pekerjaan'],
+                          ['high', 'Tinggi', 'Menghambat pekerjaan utama'],
+                        ].map(([value, label, detail]) => (
+                          <label
+                            key={value}
+                            className={`cursor-pointer rounded-2xl border p-3 transition focus-within:ring-2 focus-within:ring-blue-700 focus-within:ring-offset-2 ${
+                              values.urgency === value
+                                ? 'border-blue-700 bg-gradient-to-br from-blue-50 to-white ring-2 ring-blue-100'
+                                : 'border-slate-300 hover:border-blue-400'
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="urgency"
+                              value={value}
+                              checked={values.urgency === value}
+                              onChange={() => update('urgency', value)}
+                              className="sr-only"
+                            />
+                            <span className="flex items-center gap-1.5">
+                              <span
+                                className={`h-2 w-2 shrink-0 rounded-full ${value === 'low' ? 'bg-emerald-500' : value === 'medium' ? 'bg-amber-500' : 'bg-rose-500'}`}
+                                aria-hidden="true"
+                              />
+                              <span className="text-sm font-bold text-slate-900">{label}</span>
+                            </span>
+                            <span className="mt-1 block text-xs leading-5 text-slate-600">{detail}</span>
+                          </label>
                         ))}
                       </div>
-                    </div>
-                    <div className="mt-3 flex items-start justify-between gap-3">
-                      <p className="text-xs leading-5 text-slate-600">
-                        Lengkapi kejadian, langkah yang sudah dicoba, hasil yang diharapkan, dan dampaknya.
-                      </p>
-                      <span
-                        className={`shrink-0 text-xs font-medium ${values.description.length > 10000 ? 'text-red-600' : 'text-slate-500'}`}
-                      >
-                        {ticketDescriptionText(values.description).length}/10.000
-                      </span>
-                    </div>
-                  </div>
-                  <div className="grid gap-5 sm:grid-cols-2">
-                    <div>
-                      <label htmlFor="affected-url" className="text-sm font-semibold text-slate-700">
-                        URL terdampak <span className="font-normal text-slate-500">(opsional)</span>
-                      </label>
-                      <input
-                        id="affected-url"
-                        type="url"
-                        value={values.affected_url}
-                        maxLength={2048}
-                        onChange={(e) => update('affected_url', e.target.value)}
-                        onBlur={() => handleBlur('affected_url')}
-                        className={fieldClass(errors.affected_url)}
-                        aria-describedby={errors.affected_url ? 'affected-url-error' : undefined}
-                        placeholder="https://..."
-                      />
-                      <ErrorText id="affected-url-error">{errors.affected_url}</ErrorText>
-                    </div>
-                    <div>
-                      <label htmlFor="reference" className="text-sm font-semibold text-slate-700">
-                        Nomor referensi <span className="font-normal text-slate-500">(opsional)</span>
-                      </label>
-                      <input
-                        id="reference"
-                        value={values.reference}
-                        maxLength={255}
-                        onChange={(e) => update('reference', e.target.value)}
-                        onBlur={() => handleBlur('reference')}
-                        className={fieldClass(errors.reference)}
-                        aria-describedby={errors.reference ? 'reference-error' : undefined}
-                        placeholder="Nomor polis, transaksi, atau dokumen"
-                      />
-                      <ErrorText id="reference-error">{errors.reference}</ErrorText>
-                    </div>
-                  </div>
-                  <fieldset id="urgency" aria-describedby={errors.urgency ? 'urgency-error' : undefined}>
-                    <legend className="text-sm font-semibold text-slate-700">Tingkat urgensi *</legend>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-3">
-                      {[
-                        ['low', 'Rendah', 'Tidak menghambat pekerjaan utama'],
-                        ['medium', 'Sedang', 'Mengganggu sebagian pekerjaan'],
-                        ['high', 'Tinggi', 'Menghambat pekerjaan utama'],
-                      ].map(([value, label, detail]) => (
-                        <label
-                          key={value}
-                          className={`cursor-pointer rounded-2xl border p-3 transition focus-within:ring-2 focus-within:ring-blue-700 focus-within:ring-offset-2 ${
-                            values.urgency === value
-                              ? 'border-blue-700 bg-gradient-to-br from-blue-50 to-white ring-2 ring-blue-100'
-                              : 'border-slate-300 hover:border-blue-400'
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            name="urgency"
-                            value={value}
-                            checked={values.urgency === value}
-                            onChange={() => update('urgency', value)}
-                            className="sr-only"
-                          />
-                          <span className="flex items-center gap-1.5">
-                            <span
-                              className={`h-2 w-2 shrink-0 rounded-full ${value === 'low' ? 'bg-emerald-500' : value === 'medium' ? 'bg-amber-500' : 'bg-rose-500'}`}
-                              aria-hidden="true"
-                            />
-                            <span className="text-sm font-bold text-slate-900">{label}</span>
-                          </span>
-                          <span className="mt-1 block text-xs leading-5 text-slate-600">{detail}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <ErrorText id="urgency-error">{errors.urgency}</ErrorText>
+                      <ErrorText id="urgency-error">{errors.urgency}</ErrorText>
+                    </fieldset>
                   </fieldset>
-                </fieldset>
 
-                <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
+                  <div className="h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent" />
 
-                <fieldset disabled={submitting}>
-                  <legend className="flex items-center gap-2.5 text-base font-bold text-slate-950">
-                    <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
-                      <Paperclip className="h-5 w-5" />
-                    </span>
-                    Lampiran <span className="text-sm font-normal text-slate-500">(opsional)</span>
-                  </legend>
-                  <div
-                    className={`mt-4 rounded-2xl border-2 border-dashed p-6 transition ${
-                      errors.attachments
-                        ? 'border-red-300 bg-red-50/40'
-                        : 'border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50/40'
-                    }`}
-                  >
-                    <div className="flex flex-col items-center justify-center text-center">
-                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-700 shadow-sm">
-                        <Upload className="h-6 w-6" />
-                      </div>
-                      <p className="mt-3 text-sm font-semibold text-slate-800">Pilih dokumen atau tangkapan layar</p>
-                      <p className="mt-1 text-xs leading-5 text-slate-600">
-                        JPG, PNG, WEBP, PDF, DOC, DOCX, XLS, atau XLSX. Maksimal 10 file, 10 MB per file.
-                      </p>
-                      <input
-                        id="attachments"
-                        type="file"
-                        multiple
-                        accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx"
-                        onChange={selectFiles}
-                        aria-describedby={errors.attachments ? 'attachments-error' : undefined}
-                        className="mt-4 block w-full max-w-xs min-w-0 text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-700 file:px-4 file:py-2.5 file:font-semibold file:text-white hover:file:bg-blue-800"
-                      />
-                    </div>
-                  </div>
-                  <ErrorText id="attachments-error">{errors.attachments}</ErrorText>
-                  {files.length > 0 && (
-                    <ul className="mt-3 space-y-2">
-                      {files.map((file, index) => {
-                        const detail = fileDetails(file.name)
-                        return (
-                          <li
-                            key={`${file.name}-${file.lastModified}`}
-                            className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
-                          >
-                            <div
-                              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${detail.tile}`}
-                            >
-                              <detail.Icon className="h-5 w-5" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-sm font-medium text-slate-800">{file.name}</p>
-                              <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))
-                              }
-                              className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
-                              aria-label={`Hapus ${file.name}`}
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </button>
-                          </li>
-                        )
-                      })}
-                    </ul>
-                  )}
-                </fieldset>
-
-                <div className="flex items-center justify-end gap-3 text-xs text-slate-500">
-                  {draftStatus === 'saving' && (
-                    <span className="inline-flex items-center gap-1.5">
-                      <Loader2 className="h-3.5 w-3.5 animate-spin" /> Menyimpan draft&hellip;
-                    </span>
-                  )}
-                  {draftStatus === 'saved' && draftSavedAt && (
-                    <span className="inline-flex items-center gap-1.5 text-emerald-700">
-                      <Check className="h-3.5 w-3.5" /> Draft tersimpan &middot; {draftSavedAt}
-                    </span>
-                  )}
-                  {draftStatus === 'none' && null}
-                </div>
-
-                <div className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" inert aria-hidden="true">
-                  <input
-                    id="website"
-                    name="website"
-                    type="text"
-                    value={values.website}
-                    onChange={(e) => update('website', e.target.value)}
-                    tabIndex={-1}
-                    autoComplete="off"
-                    aria-hidden="true"
-                  />
-                </div>
-
-                <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-cyan-50 p-4 text-xs leading-5 text-blue-950">
-                  Dengan mengirim formulir ini, Anda memastikan informasi yang diberikan benar dan dapat digunakan untuk
-                  verifikasi pengajuan.
-                </div>
-                <button
-                  ref={submitButtonRef}
-                  type="submit"
-                  disabled={submitting || loadingOptions || Boolean(optionsError) || noOptions}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#12367a] to-blue-800 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition hover:from-[#0d2a63] hover:to-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-                  {submitting ? 'Mengirim pengajuan...' : 'Kirim pengajuan'}
-                </button>
-              </form>
-            </section>
-
-            {showStickySubmit && !submitting && (
-              <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-xl shadow-slate-900/10 backdrop-blur print:hidden lg:hidden">
-                <div className="mx-auto flex max-w-6xl items-center gap-3">
-                  <p className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-500">
-                    Formulir pengajuan publik
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => formRef.current?.requestSubmit()}
-                    disabled={submitting || loadingOptions || Boolean(optionsError) || noOptions}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#12367a] to-blue-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20 hover:from-[#0d2a63] hover:to-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    <Send className="h-4 w-4" />
-                    Kirim pengajuan
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <aside className="space-y-4 lg:sticky lg:top-6">
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-                  <Building2 className="h-5 w-5" />
-                </div>
-                <h2 className="mt-3 font-bold text-slate-950">Sebelum mengirim</h2>
-                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
-                  {[
-                    'Pilih cabang dan sistem yang sesuai.',
-                    'Jelaskan kendala beserta dampaknya.',
-                    'Pastikan kontak dapat dihubungi.',
-                  ].map((text) => (
-                    <li key={text} className="flex items-start gap-2">
-                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                        <Check className="h-3 w-3" />
+                  <fieldset disabled={submitting}>
+                    <legend className="flex items-center gap-2.5 text-base font-bold text-slate-950">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
+                        <Paperclip className="h-5 w-5" />
                       </span>
-                      {text}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="relative overflow-hidden rounded-2xl bg-[#102d64] p-5 text-white shadow-lg">
-                <div
-                  className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-cyan-400/10"
-                  aria-hidden="true"
-                />
-                <div className="relative">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-cyan-300 ring-1 ring-white/10">
-                    <LockKeyhole className="h-5 w-5" />
+                      Lampiran <span className="text-sm font-normal text-slate-500">(opsional)</span>
+                    </legend>
+                    <div
+                      className={`mt-4 rounded-2xl border-2 border-dashed p-6 transition ${
+                        errors.attachments
+                          ? 'border-red-300 bg-red-50/40'
+                          : 'border-slate-300 bg-slate-50 hover:border-blue-400 hover:bg-blue-50/40'
+                      }`}
+                    >
+                      <div className="flex flex-col items-center justify-center text-center">
+                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-cyan-100 text-blue-700 shadow-sm">
+                          <Upload className="h-6 w-6" />
+                        </div>
+                        <p className="mt-3 text-sm font-semibold text-slate-800">Pilih dokumen atau tangkapan layar</p>
+                        <p className="mt-1 text-xs leading-5 text-slate-600">
+                          JPG, PNG, WEBP, PDF, DOC, DOCX, XLS, atau XLSX. Maksimal 10 file, 10 MB per file.
+                        </p>
+                        <input
+                          id="attachments"
+                          type="file"
+                          multiple
+                          accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx,.xls,.xlsx"
+                          onChange={selectFiles}
+                          aria-describedby={errors.attachments ? 'attachments-error' : undefined}
+                          className="mt-4 block w-full max-w-xs min-w-0 text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-700 file:px-4 file:py-2.5 file:font-semibold file:text-white hover:file:bg-blue-800"
+                        />
+                      </div>
+                    </div>
+                    <ErrorText id="attachments-error">{errors.attachments}</ErrorText>
+                    {files.length > 0 && (
+                      <ul className="mt-3 space-y-2">
+                        {files.map((file, index) => {
+                          const detail = fileDetails(file.name)
+                          return (
+                            <li
+                              key={`${file.name}-${file.lastModified}`}
+                              className="flex min-w-0 items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm"
+                            >
+                              <div
+                                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${detail.tile}`}
+                              >
+                                <detail.Icon className="h-5 w-5" />
+                              </div>
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate text-sm font-medium text-slate-800">{file.name}</p>
+                                <p className="text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setFiles((current) => current.filter((_, itemIndex) => itemIndex !== index))
+                                }
+                                className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600"
+                                aria-label={`Hapus ${file.name}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    )}
+                  </fieldset>
+
+                  <div className="flex items-center justify-end gap-3 text-xs text-slate-500">
+                    {draftStatus === 'saving' && (
+                      <span className="inline-flex items-center gap-1.5">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" /> Menyimpan draft&hellip;
+                      </span>
+                    )}
+                    {draftStatus === 'saved' && draftSavedAt && (
+                      <span className="inline-flex items-center gap-1.5 text-emerald-700">
+                        <Check className="h-3.5 w-3.5" /> Draft tersimpan &middot; {draftSavedAt}
+                      </span>
+                    )}
+                    {draftStatus === 'none' && null}
                   </div>
-                  <h2 className="mt-3 font-bold">Data pengajuan terlindungi</h2>
-                  <p className="mt-2 text-xs leading-5 text-blue-100">
-                    Lampiran dan rincian tiket hanya digunakan oleh tim berwenang untuk proses penanganan.
-                  </p>
+
+                  <div className="absolute left-[-10000px] top-auto h-px w-px overflow-hidden" inert aria-hidden="true">
+                    <input
+                      id="website"
+                      name="website"
+                      type="text"
+                      value={values.website}
+                      onChange={(e) => update('website', e.target.value)}
+                      tabIndex={-1}
+                      autoComplete="off"
+                      aria-hidden="true"
+                    />
+                  </div>
+
+                  <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-cyan-50 p-4 text-xs leading-5 text-blue-950">
+                    Dengan mengirim formulir ini, Anda memastikan informasi yang diberikan benar dan dapat digunakan
+                    untuk verifikasi pengajuan.
+                  </div>
+                  <button
+                    ref={submitButtonRef}
+                    type="submit"
+                    disabled={submitting || loadingOptions || Boolean(optionsError) || noOptions}
+                    className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#12367a] to-blue-800 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition hover:from-[#0d2a63] hover:to-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
+                    {submitting ? 'Mengirim pengajuan...' : 'Kirim pengajuan'}
+                  </button>
+                </form>
+              </section>
+
+              {showStickySubmit && !submitting && (
+                <div className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200 bg-white/95 px-4 py-3 shadow-xl shadow-slate-900/10 backdrop-blur print:hidden lg:hidden">
+                  <div className="mx-auto flex max-w-6xl items-center gap-3">
+                    <p className="min-w-0 flex-1 truncate text-xs font-semibold text-slate-500">
+                      Formulir pengajuan publik
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => formRef.current?.requestSubmit()}
+                      disabled={submitting || loadingOptions || Boolean(optionsError) || noOptions}
+                      className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#12367a] to-blue-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20 hover:from-[#0d2a63] hover:to-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <Send className="h-4 w-4" />
+                      Kirim pengajuan
+                    </button>
+                  </div>
                 </div>
-              </div>
-            </aside>
-          </div>
+              )}
+
+              <aside className="space-y-4 lg:sticky lg:top-6">
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                    <Building2 className="h-5 w-5" />
+                  </div>
+                  <h2 className="mt-3 font-bold text-slate-950">Sebelum mengirim</h2>
+                  <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                    {[
+                      'Pilih cabang dan sistem yang sesuai.',
+                      'Jelaskan kendala beserta dampaknya.',
+                      'Pastikan kontak dapat dihubungi.',
+                    ].map((text) => (
+                      <li key={text} className="flex items-start gap-2">
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                          <Check className="h-3 w-3" />
+                        </span>
+                        {text}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="relative overflow-hidden rounded-2xl bg-[#102d64] p-5 text-white shadow-lg">
+                  <div className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-cyan-400/10" aria-hidden="true" />
+                  <div className="relative">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-cyan-300 ring-1 ring-white/10">
+                      <LockKeyhole className="h-5 w-5" />
+                    </div>
+                    <h2 className="mt-3 font-bold">Data pengajuan terlindungi</h2>
+                    <p className="mt-2 text-xs leading-5 text-blue-100">
+                      Lampiran dan rincian tiket hanya digunakan oleh tim berwenang untuk proses penanganan.
+                    </p>
+                  </div>
+                </div>
+              </aside>
+            </div>
           )}
         </div>
       </main>
