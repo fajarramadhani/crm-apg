@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ApiRequestError } from '../../api/client'
+import { CheckCircle, Check } from 'lucide-react'
 import {
   Button,
   Input,
@@ -135,8 +136,8 @@ export default function ValidationQueue() {
           Memuat antrean...
         </div>
       ) : tickets.length === 0 ? (
-        <div className="py-20 text-center">
-          <div className="text-4xl mb-3">✓</div>
+        <div className="py-20 text-center flex flex-col items-center justify-center">
+          <CheckCircle className="w-12 h-12 text-emerald-500 mb-3" aria-hidden="true" />
           <h3 className="font-semibold text-gray-700">Tidak ada tiket menunggu</h3>
           <p className="text-sm text-gray-500 mt-1">Semua tiket dalam scope divisi Anda telah diproses.</p>
         </div>
@@ -214,7 +215,7 @@ export default function ValidationQueue() {
                   <p className="text-sm font-semibold text-gray-700 mb-3">Tindakan Validasi</p>
                   <div className="flex flex-wrap gap-2">
                     <Button variant="success" onClick={() => setAction('validate')}>
-                      ✓ Validasi
+                      <Check className="w-4 h-4 shrink-0" /> Validasi
                     </Button>
                     <Button variant="warning" onClick={() => setAction('request-revision')}>
                       Minta Revisi

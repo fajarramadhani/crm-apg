@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { UserPlus, X } from 'lucide-react'
 import type { TicketRecord } from '../../services/ticketService'
 import type { EligibleAssignee } from '../../types'
 
@@ -118,7 +119,8 @@ export const TicketAssignmentPanel: React.FC<TicketAssignmentPanelProps> = ({
             onClick={handleAssignSelf}
             className="inline-flex items-center gap-2 rounded-lg bg-indigo-50 border border-indigo-200 px-3.5 py-1.5 text-xs font-bold text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
           >
-            <span>👤 Tangani Sendiri</span>
+            <UserPlus className="w-4 h-4" />
+            <span>Tangani Sendiri</span>
           </button>
         )}
       </div>
@@ -172,10 +174,10 @@ export const TicketAssignmentPanel: React.FC<TicketAssignmentPanelProps> = ({
                     <button
                       type="button"
                       onClick={() => handleRemoveSecondarySubmit(sec.assigned_to)}
-                      className="ml-1 text-red-600 hover:text-red-800 font-bold"
+                      className="ml-1 text-red-600 hover:text-red-800 font-bold flex items-center justify-center p-0.5"
                       title="Hapus Secondary PIC"
                     >
-                      ×
+                      <X className="w-3.5 h-3.5" />
                     </button>
                   </span>
                 ))

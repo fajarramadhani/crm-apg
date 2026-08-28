@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { workflowService, type Workflow } from '../../../services/workflowService'
 import { Button, PageHeader, SectionCard, Toast } from '../../../components/ui'
 import { ApiRequestError } from '../../../api/client'
+import { Plus } from 'lucide-react'
 
 export default function WorkflowList() {
   const [workflows, setWorkflows] = useState<Workflow[]>([])
@@ -72,7 +73,9 @@ export default function WorkflowList() {
           subtitle="Kelola lifecycle, stages, dan transitions dynamic workflow engine"
         />
         <Link to="/admin/workflows/new">
-          <Button variant="primary">➕ Buat Workflow Baru</Button>
+          <Button variant="primary">
+            <Plus className="w-4 h-4" /> Buat Workflow Baru
+          </Button>
         </Link>
       </div>
 

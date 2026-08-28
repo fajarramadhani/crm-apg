@@ -48,14 +48,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const expireSession = (event: Event) => {
       const detail = (event as CustomEvent<SessionExpiredDetail>).detail
-      if (detail) sessionStorage.setItem('tic-hub:last-session-expired', JSON.stringify(detail))
+      if (detail && user) sessionStorage.setItem('tic-hub:last-session-expired', JSON.stringify(detail))
       setUser(null)
       setStatus('unauthenticated')
     }
 
     window.addEventListener(SESSION_EXPIRED_EVENT, expireSession)
     return () => window.removeEventListener(SESSION_EXPIRED_EVENT, expireSession)
-  }, [])
+  }, [user])
 
   const { begin, end } = useLoading()
 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ticketService, type TicketRecord, type TicketDeploymentStepRecord } from '../../services/ticketService'
 import { PageHeader, SectionCard, Button, Toast, EmptyState, StatusBadge, Input } from '../../components/ui'
+import { Play, Zap, Loader2, CheckCircle, XCircle, Power, Calendar } from 'lucide-react'
 
 export default function DeploymentQueue() {
   const [tickets, setTickets] = useState<TicketRecord[]>([])
@@ -109,7 +110,10 @@ export default function DeploymentQueue() {
                 <div className="space-y-5">
                   {/* Fitur Atur Tanggal & Waktu Deployment */}
                   <div className="space-y-3 p-4 bg-gray-50 rounded-xl border border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-800">📅 Atur Tanggal & Waktu Deployment</h4>
+                    <h4 className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+                      <Calendar className="w-4 h-4 text-slate-500" />
+                      <span>Atur Tanggal & Waktu Deployment</span>
+                    </h4>
                     <div className="flex flex-wrap items-end gap-3">
                       <div className="flex-1 min-w-[200px]">
                         <Input
@@ -127,7 +131,9 @@ export default function DeploymentQueue() {
 
                   {/* Status & Action Control Buttons */}
                   <div className="pt-2">
-                    <h4 className="text-sm font-semibold text-gray-800 mb-3">⚡ Eksekusi Deployment</h4>
+                    <h4 className="text-sm font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                      <Zap className="w-4 h-4 text-amber-500" /> Eksekusi Deployment
+                    </h4>
 
                     {['release_ready', 'deployment_scheduled'].includes(selected.status) && (
                       <div className="space-y-3">
@@ -136,15 +142,16 @@ export default function DeploymentQueue() {
                           produksi.
                         </p>
                         <Button variant="success" size="lg" loading={busy} onClick={handleStart}>
-                          ▶ Mulai Deployment Sekarang
+                          <Play className="w-5 h-5 shrink-0" /> Mulai Deployment Sekarang
                         </Button>
                       </div>
                     )}
 
                     {selected.status === 'deployment_in_progress' && (
                       <div className="space-y-4">
-                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 font-medium">
-                          ⚙️ Deployment sedang berjalan (Deployment In Progress)
+                        <div className="rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 font-medium flex items-center gap-2.5">
+                          <Loader2 className="w-5 h-5 animate-spin text-blue-600 shrink-0" />
+                          Deployment sedang berjalan (Deployment In Progress)
                         </div>
 
                         {selected.current_deployment?.steps && selected.current_deployment.steps.length > 0 && (
@@ -177,10 +184,10 @@ export default function DeploymentQueue() {
 
                         <div className="flex flex-wrap gap-3 pt-3 border-t">
                           <Button variant="success" size="lg" loading={busy} onClick={handleComplete}>
-                            ✓ Selesaikan Deployment
+                            <CheckCircle className="w-5 h-5 shrink-0" /> Selesaikan Deployment
                           </Button>
                           <Button variant="danger" loading={busy} onClick={handleFail}>
-                            ✕ Gagalkan Deployment
+                            <XCircle className="w-5 h-5 shrink-0" /> Gagalkan Deployment
                           </Button>
                         </div>
                       </div>
@@ -188,8 +195,9 @@ export default function DeploymentQueue() {
 
                     {selected.status === 'deployed' && (
                       <div className="space-y-3">
-                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 font-medium">
-                          ✅ Deployment telah berhasil dilakukan!
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900 font-medium flex items-center gap-2">
+                          <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                          Deployment telah berhasil dilakukan!
                         </div>
                         <Button variant="primary" size="lg" loading={busy} onClick={handleStartMonitoring}>
                           Mulai Masa Monitoring
@@ -201,11 +209,12 @@ export default function DeploymentQueue() {
                       selected.status,
                     ) && (
                       <div className="space-y-4">
-                        <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900 font-medium">
-                          🔍 Status: {selected.status.replace(/_/g, ' ').toUpperCase()}
+                        <div className="rounded-xl border border-purple-200 bg-purple-50 p-4 text-sm text-purple-900 font-medium flex items-center gap-2">
+                          <Zap className="w-5 h-5 text-purple-600 shrink-0" />
+                          Status: {selected.status.replace(/_/g, ' ').toUpperCase()}
                         </div>
                         <Button variant="success" size="lg" loading={busy} onClick={handleClose}>
-                          ✓ Close Ticket (Selesai Penanganan)
+                          <Power className="w-5 h-5 shrink-0" /> Close Ticket (Selesai Penanganan)
                         </Button>
                       </div>
                     )}

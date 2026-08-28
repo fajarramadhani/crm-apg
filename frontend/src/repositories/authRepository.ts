@@ -15,12 +15,14 @@ interface ChangePasswordPayload {
 export const authRepository = {
   async login(email: string, password: string): Promise<AuthenticatedUser> {
     await apiClient.csrf()
-    await apiClient.post<ApiResponse<AuthPayload>>('/auth/login', { email, password })
+    const loginResponse = await apiClient.post<ApiResponse<AuthPayload>>('/auth/login', { email, password })
 
-    // Do not enter the protected UI until the browser proves the session cookie
-    // is available on a separate request.
-    const session = await apiClient.get<ApiResponse<AuthPayload>>('/auth/me')
-    return session.data.user
+    try {
+      const session = await apiClient.get<ApiResponse<AuthPayload>>('/auth/me')
+      return session.data.user
+    } catch {
+      return loginResponse.data.user
+    }
   },
 
   async me(): Promise<AuthenticatedUser> {

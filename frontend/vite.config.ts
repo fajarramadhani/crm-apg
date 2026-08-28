@@ -11,18 +11,35 @@ export default defineConfig(({ mode }) => {
     .filter(Boolean)
   const backendProxyTarget = env.VITE_BACKEND_PROXY_TARGET || 'http://127.0.0.1:8000'
 
+  // Strip backend CORS headers — requests arrive same-origin through the
+  // proxy, so forwarding `access-control-*` headers can confuse Chrome's
+  // cookie / credentialed-request logic.
+  const stripCorsHeaders = (proxyRes: { headers: Record<string, unknown> }) => {
+    delete proxyRes.headers['access-control-allow-origin']
+    delete proxyRes.headers['access-control-allow-credentials']
+    delete proxyRes.headers['access-control-expose-headers']
+  }
+
+  const proxyOpts = {
+    target: backendProxyTarget,
+    changeOrigin: true,
+    cookieDomainRewrite: { '*': '' },
+    onProxyRes: stripCorsHeaders,
+  }
+
   return {
     plugins: [react(), tailwindcss()],
     server: {
+      port: 5173,
       allowedHosts,
       proxy: {
-        '/api': backendProxyTarget,
-        '/sanctum': backendProxyTarget,
+        '/api': proxyOpts,
+        '/sanctum': proxyOpts,
       },
     },
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, './src'),
+        '@': path.resolve(import.meta.dirname, './src'),
       },
     },
   }

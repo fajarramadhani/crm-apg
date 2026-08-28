@@ -11,6 +11,7 @@ export default function Login() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
+  const [dismissExpired, setDismissExpired] = useState(false)
   const [expiredSession] = useState(() => {
     const stored = sessionStorage.getItem('tic-hub:last-session-expired')
     sessionStorage.removeItem('tic-hub:last-session-expired')
@@ -47,8 +48,8 @@ export default function Login() {
         <div className="hidden lg:flex p-12 flex-col justify-between text-white bg-gradient-to-br from-[#0F2554] via-[#1E3A8A] to-[#1d4ed8]">
           <div>
             <div className="flex items-center gap-3 mb-12">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                <span className="text-[#0F2554] font-black text-lg">A</span>
+              <div className="w-12 h-12 bg-white rounded-2xl p-1.5 flex items-center justify-center shadow-lg overflow-hidden">
+                <img src="/logo/apg-logo.png" alt="APG Logo" className="w-full h-full object-contain" />
               </div>
               <div>
                 <p className="font-bold text-lg tracking-wide">Tic Hub</p>
@@ -69,11 +70,14 @@ export default function Login() {
         </div>
 
         <div className="p-8 sm:p-10 lg:p-12 bg-white">
-          <div className="flex items-center gap-2 mb-6 lg:hidden">
-            <div className="w-8 h-8 bg-[#0F2554] rounded-lg flex items-center justify-center">
-              <span className="text-white font-black text-sm">A</span>
+          <div className="flex items-center gap-3 mb-6 lg:hidden">
+            <div className="w-10 h-10 bg-white border border-gray-200 rounded-xl p-1 flex items-center justify-center shadow-sm overflow-hidden">
+              <img src="/logo/apg-logo.png" alt="APG Logo" className="w-full h-full object-contain" />
             </div>
-            <span className="font-bold text-gray-900">Tic Hub</span>
+            <div>
+              <span className="font-bold text-gray-900 block leading-tight">Tic Hub</span>
+              <span className="text-[11px] text-gray-500 font-medium leading-tight">APG Service Portal</span>
+            </div>
           </div>
 
           <div className="mb-8">
@@ -82,13 +86,23 @@ export default function Login() {
           </div>
 
           <form className="space-y-5" onSubmit={handleLogin} noValidate>
-            {expiredSession && (
+            {expiredSession && !dismissExpired && (
               <div
                 role="alert"
-                className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
+                className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
               >
-                Sesi Anda telah berakhir. Silakan masuk kembali.
-                {expiredSession.requestId ? ` Referensi: ${expiredSession.requestId}` : ''}
+                <span>
+                  Sesi Anda telah berakhir. Silakan masuk kembali.
+                  {expiredSession.requestId ? ` Referensi: ${expiredSession.requestId}` : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDismissExpired(true)}
+                  className="ml-2 text-amber-800/60 hover:text-amber-900 font-bold"
+                  aria-label="Tutup notifikasi"
+                >
+                  ×
+                </button>
               </div>
             )}
             {error && (

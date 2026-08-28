@@ -11,6 +11,7 @@ import {
   MapPin,
   MessageSquareText,
   Paperclip,
+  Printer,
   RefreshCw,
   ShieldCheck,
   Tag,
@@ -376,7 +377,7 @@ function ActionDialog({
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
                 disabled={submitting}
-                placeholder="nama@perusahaan.com"
+                placeholder="nama@perusahaan.co.id"
                 className="mt-2 block w-full rounded-xl border border-slate-300 px-4 py-3 font-normal outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
               />
             </label>
@@ -404,7 +405,7 @@ function ActionDialog({
                 className="mt-2 block w-full rounded-xl border border-slate-300 px-4 py-3 text-center font-mono text-2xl tracking-[0.35em] outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
               />
             </label>
-            <div className="flex justify-between gap-3 text-xs font-medium text-slate-500">
+            <div className="flex justify-between gap-3 text-xs font-medium text-slate-600">
               <span>Kedaluwarsa {formatCountdown(challengeSeconds)}</span>
               <span>Kirim ulang {formatCountdown(resendSeconds)}</span>
             </div>
@@ -507,7 +508,7 @@ function ActionDialog({
                     className="sr-only"
                   />
                 </div>
-                <p className="mt-2 text-xs leading-5 text-slate-500">
+                <p className="mt-2 text-xs leading-5 text-slate-600">
                   Maksimal {maxFiles} file, {maxSizeMb} MB per file. Format: {allowedExtensions.join(', ')}.
                 </p>
                 {!!attachments.length && (
@@ -586,6 +587,15 @@ function ActionDialog({
             <CheckCircle2 className="mx-auto h-14 w-14 text-emerald-600" />
             <h3 className="mt-5 text-2xl font-black text-slate-950">Jawaban berhasil dikirim</h3>
             <p className="mt-3 text-sm leading-6 text-slate-600">Status dan riwayat tiket telah diperbarui.</p>
+            <p className="mx-auto mt-4 max-w-md rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+              {isUat
+                ? result === 'accepted'
+                  ? 'Hasil pengujian diterima dan catatan Anda telah dikirim. Proses tiket akan dilanjutkan ke tahap berikutnya.'
+                  : 'Penolakan tercatat dan tiket akan dikembalikan ke tim PIC untuk perbaikan.'
+                : result === 'accepted'
+                  ? 'Konfirmasi diterima dan tiket akan segera ditutup. Terima kasih atas konfirmasinya.'
+                  : 'Penolakan tercatat dan tiket akan dibuka kembali untuk tindak lanjut.'}
+            </p>
             <button
               type="button"
               onClick={onClose}
@@ -706,6 +716,31 @@ function Summary({ label, value }: { label: string; value: string }) {
   )
 }
 
+function ActionCtaCard({ action, onOpen }: { action: PublicTicketActionDescriptor; onOpen: () => void }) {
+  return (
+    <section className="overflow-hidden rounded-3xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-6 shadow-sm">
+      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#12367a] text-white shadow-lg shadow-blue-900/20">
+        <FileCheck2 className="h-6 w-6" />
+      </div>
+      <h2 className="mt-4 text-lg font-black text-slate-950">
+        {action.action === 'uat' ? 'Pengujian Anda diperlukan' : 'Konfirmasi Anda diperlukan'}
+      </h2>
+      <p className="mt-2 text-sm leading-6 text-slate-600">
+        {action.action === 'uat'
+          ? 'Uji hasil penanganan lalu sampaikan apakah solusi sudah sesuai.'
+          : 'Tinjau penyelesaian tiket dan sampaikan keputusan Anda.'}
+      </p>
+      <button
+        type="button"
+        onClick={onOpen}
+        className="mt-5 w-full rounded-xl bg-[#12367a] px-5 py-3 text-sm font-bold text-white hover:bg-[#0d2a63]"
+      >
+        {action.action === 'uat' ? 'Lakukan Pengujian' : 'Konfirmasi Penyelesaian'}
+      </button>
+    </section>
+  )
+}
+
 export default function PublicTicketTrackingPage() {
   const { token = '' } = useParams()
   const [ticket, setTicket] = useState<PublicTicketTracking | null>(null)
@@ -714,6 +749,8 @@ export default function PublicTicketTrackingPage() {
   const [loading, setLoading] = useState(true)
   const [failed, setFailed] = useState(false)
   const [attempt, setAttempt] = useState(0)
+  const [refreshing, setRefreshing] = useState(false)
+  const [lastChecked, setLastChecked] = useState<Date | null>(null)
 
   useEffect(() => {
     const existing = document.head.querySelector<HTMLMetaElement>('meta[name="referrer"]')
@@ -749,6 +786,7 @@ export default function PublicTicketTrackingPage() {
         if (active) {
           setTicket(result)
           setAction(availableAction ?? result.action ?? null)
+          setLastChecked(new Date())
         }
       })
       .catch(() => {
@@ -764,13 +802,28 @@ export default function PublicTicketTrackingPage() {
   }, [attempt, token])
 
   const refreshTracking = async () => {
-    const [tracking, availableAction] = await Promise.all([
-      publicTicketService.track(token),
-      publicTicketService.action(token).catch(() => null),
-    ])
-    setTicket(tracking)
-    setAction(availableAction ?? tracking.action ?? null)
+    setRefreshing(true)
+    try {
+      const [tracking, availableAction] = await Promise.all([
+        publicTicketService.track(token),
+        publicTicketService.action(token).catch(() => null),
+      ])
+      setTicket(tracking)
+      setAction(availableAction ?? tracking.action ?? null)
+      setLastChecked(new Date())
+    } finally {
+      setRefreshing(false)
+    }
   }
+
+  useEffect(() => {
+    const interval = window.setInterval(() => {
+      if (document.visibilityState !== 'visible' || !document.hasFocus()) return
+      if (loading || refreshing || !ticket) return
+      void refreshTracking()
+    }, 60000)
+    return () => window.clearInterval(interval)
+  }, [loading, refreshing, ticket, token])
 
   return (
     <PublicShell
@@ -778,7 +831,7 @@ export default function PublicTicketTrackingPage() {
       footerText="Tic Hub APG · Informasi status ditampilkan khusus melalui link pelacakan Anda."
     >
       <main className="min-h-[calc(100vh-145px)]">
-        <section className="relative overflow-hidden bg-[#0b1f48] px-4 pb-32 pt-12 text-white sm:px-6 sm:pt-16">
+        <section className="relative overflow-hidden bg-[#0b1f48] px-4 pb-32 pt-12 text-white sm:px-6 sm:pt-16 print:hidden">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_10%_90%,rgba(59,130,246,0.22),transparent_35%)]" />
           <div className="relative mx-auto max-w-6xl">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">Status Pengajuan</p>
@@ -789,7 +842,7 @@ export default function PublicTicketTrackingPage() {
           </div>
         </section>
 
-        <div className="relative mx-auto -mt-20 max-w-6xl px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="relative mx-auto -mt-20 max-w-6xl px-4 pb-14 sm:px-6 lg:px-8 print:mt-0">
           {loading && <TrackingSkeleton />}
 
           {!loading && failed && (
@@ -853,10 +906,16 @@ export default function PublicTicketTrackingPage() {
                 </dl>
               </section>
 
+              {(action?.action === 'uat' || action?.action === 'confirmation') && (
+                <div className="print:hidden lg:hidden">
+                  <ActionCtaCard action={action} onOpen={() => setActionOpen(true)} />
+                </div>
+              )}
+
               <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
                 <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
                   <h2 className="text-xl font-bold text-slate-950">Riwayat status</h2>
-                  <p className="mt-1 text-sm text-slate-500">Tahapan penanganan yang dapat dilihat oleh pemohon.</p>
+                  <p className="mt-1 text-sm text-slate-600">Tahapan penanganan yang dapat dilihat oleh pemohon.</p>
                   {ticket.timeline.length ? (
                     <ol className="mt-7 space-y-0">
                       {ticket.timeline.map((item, index) => (
@@ -894,28 +953,11 @@ export default function PublicTicketTrackingPage() {
                   )}
                 </section>
 
-                <aside className="space-y-6">
+                <aside className="space-y-6 print:hidden">
                   {(action?.action === 'uat' || action?.action === 'confirmation') && (
-                    <section className="overflow-hidden rounded-3xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-6 shadow-sm">
-                      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#12367a] text-white shadow-lg shadow-blue-900/20">
-                        <FileCheck2 className="h-6 w-6" />
-                      </div>
-                      <h2 className="mt-4 text-lg font-black text-slate-950">
-                        {action.action === 'uat' ? 'Pengujian Anda diperlukan' : 'Konfirmasi Anda diperlukan'}
-                      </h2>
-                      <p className="mt-2 text-sm leading-6 text-slate-600">
-                        {action.action === 'uat'
-                          ? 'Uji hasil penanganan lalu sampaikan apakah solusi sudah sesuai.'
-                          : 'Tinjau penyelesaian tiket dan sampaikan keputusan Anda.'}
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setActionOpen(true)}
-                        className="mt-5 w-full rounded-xl bg-[#12367a] px-5 py-3 text-sm font-bold text-white hover:bg-[#0d2a63]"
-                      >
-                        {action.action === 'uat' ? 'Lakukan Pengujian' : 'Konfirmasi Penyelesaian'}
-                      </button>
-                    </section>
+                    <div className="hidden lg:block">
+                      <ActionCtaCard action={action} onOpen={() => setActionOpen(true)} />
+                    </div>
                   )}
                   <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-3">
@@ -937,12 +979,37 @@ export default function PublicTicketTrackingPage() {
                       <p className="mt-5 text-sm leading-6 text-slate-600">Belum ada pembaruan tambahan untuk Anda.</p>
                     )}
                   </section>
-                  <div className="flex gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                    <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
-                    <p>
-                      Terakhir diperbarui
-                      <strong className="mt-1 block text-slate-900">{formatDate(ticket.last_updated_at)}</strong>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
+                    <div className="flex gap-3">
+                      <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-slate-500" />
+                      <p>
+                        Terakhir diperbarui
+                        <strong className="mt-1 block text-slate-900">{formatDate(ticket.last_updated_at)}</strong>
+                      </p>
+                    </div>
+                    <p className="mt-3 text-xs text-slate-600">
+                      Terakhir diperiksa{' '}
+                      {lastChecked
+                        ? new Date(lastChecked).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })
+                        : '\u2014'}
                     </p>
+                    <button
+                      type="button"
+                      onClick={() => void refreshTracking()}
+                      disabled={refreshing}
+                      className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                    >
+                      <RefreshCw className={`h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
+                      Perbarui Status
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-100"
+                    >
+                      <Printer className="h-4 w-4" />
+                      Cetak / Simpan Bukti
+                    </button>
                   </div>
                 </aside>
               </div>

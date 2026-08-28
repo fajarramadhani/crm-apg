@@ -52,8 +52,8 @@ function GlobalLoadingOverlay({ message }: { message: string }) {
         <div className="relative flex flex-col items-center gap-5">
           <div className="relative flex h-20 w-20 items-center justify-center">
             <span className="absolute h-20 w-20 animate-ping rounded-full bg-cyan-300/10" />
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white text-[#0F2554] shadow-lg">
-              <span className="text-xl font-black">A</span>
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white p-1.5 text-[#0F2554] shadow-lg overflow-hidden">
+              <img src="/logo/apg-logo.png" alt="APG Logo" className="w-full h-full object-contain" />
             </div>
           </div>
           <Loader2 className="h-5 w-5 animate-spin text-cyan-300" />

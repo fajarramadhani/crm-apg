@@ -70,21 +70,48 @@ class TicketVolumeReportService extends BaseReportService
         $query = Ticket::query()->whereNull('closed_at')->whereNotNull('submitted_at');
         $query = $this->applyFilters($query, $filters, 'submitted_at');
 
-        $tickets = $query->get(['id', 'submitted_at']);
-        $ages = [];
-        $oldest = null;
+        $driver = $query->getQuery()->getConnection()->getDriverName();
+        $reference = $this->quoteReference(Carbon::now()->toDateTimeString());
+        $ageExpression = $this->dateDiffExpression($driver, 'submitted_at', $reference);
 
-        foreach ($tickets as $ticket) {
-            $age = $ticket->submitted_at->diffInDays(now());
-            $ages[] = $age;
-            if ($oldest === null || $age > $oldest) {
-                $oldest = $age;
-            }
+        $row = $query->selectRaw("MAX({$ageExpression}) as max_age_seconds")
+            ->selectRaw("AVG({$ageExpression}) as avg_age_seconds")
+            ->selectRaw('COUNT(*) as row_count')
+            ->first();
+
+        if (! $row || (int) $row->row_count === 0) {
+            return [
+                'average_age_days' => null,
+                'oldest_ticket_days' => null,
+            ];
         }
 
+        $avgDays = round(((float) $row->avg_age_seconds) / 86400, 1);
+        $oldestDays = (int) ceil((float) $row->max_age_seconds / 86400);
+
         return [
-            'average_age_days' => count($ages) > 0 ? round(array_sum($ages) / count($ages), 1) : null,
-            'oldest_ticket_days' => $oldest,
+            'average_age_days' => $avgDays,
+            'oldest_ticket_days' => $oldestDays,
         ];
+    }
+
+    /**
+     * Return a portable SQL expression computing the number of seconds between $from and $reference.
+     * SQLite uses unixepoch()/strftime, while MySQL uses TIMESTAMPDIFF.
+     */
+    private function dateDiffExpression(string $driver, string $fromColumn, string $reference): string
+    {
+        $col = 'tickets.'.$fromColumn;
+
+        if ($driver === 'sqlite') {
+            return "(CAST(strftime('%s', {$reference}) AS REAL) - CAST(strftime('%s', {$col}) AS REAL))";
+        }
+
+        return "TIMESTAMPDIFF(SECOND, {$col}, {$reference})";
+    }
+
+    private function quoteReference(string $value): string
+    {
+        return "'{$value}'";
     }
 }

@@ -1,4 +1,5 @@
 import React from 'react'
+import { RefreshCw, User, MessageSquare, Bookmark } from 'lucide-react'
 import type { AuditTimelineItem } from '../../types'
 
 interface TicketAuditTimelineProps {
@@ -15,15 +16,16 @@ export const TicketAuditTimeline: React.FC<TicketAuditTimelineProps> = ({ items 
   }
 
   const getIcon = (type: string) => {
+    const cls = 'w-2.5 h-2.5'
     switch (type) {
       case 'status_change':
-        return '🔄'
+        return <RefreshCw className={cls} />
       case 'assignment':
-        return '👤'
+        return <User className={cls} />
       case 'comment':
-        return '💬'
+        return <MessageSquare className={cls} />
       default:
-        return '📌'
+        return <Bookmark className={cls} />
     }
   }
 

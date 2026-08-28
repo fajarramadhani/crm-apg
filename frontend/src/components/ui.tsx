@@ -1,6 +1,18 @@
 import React from 'react'
 import { getStatusColor, getPriorityColor, STATUS_LABELS, PRIORITY_LABELS, getSlaLabel } from '../presentation'
 import type { TicketStatus, Priority } from '../types'
+import {
+  ClipboardList,
+  AlertTriangle,
+  Info,
+  CheckCircle,
+  XCircle,
+  RefreshCw,
+  MessageSquare,
+  User,
+  Paperclip,
+  Siren,
+} from 'lucide-react'
 
 // ── Badge ─────────────────────────────────────────────────────────────────────
 export function StatusBadge({ status }: { status: TicketStatus | string }) {
@@ -14,12 +26,18 @@ export function StatusBadge({ status }: { status: TicketStatus | string }) {
 }
 
 export function PriorityBadge({ priority }: { priority: Priority | string }) {
-  const icons: Record<string, string> = { critical: '🔴', high: '🟠', medium: '🟡', low: '🟢' }
+  const colors: Record<string, string> = {
+    critical: 'bg-red-500',
+    high: 'bg-orange-500',
+    medium: 'bg-yellow-500',
+    low: 'bg-emerald-500',
+  }
   return (
     <span
-      className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${getPriorityColor(priority)}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${getPriorityColor(priority)}`}
     >
-      {icons[priority]} {PRIORITY_LABELS[priority] || priority}
+      <span className={`w-2 h-2 rounded-full ${colors[priority] || 'bg-gray-400'}`} />
+      {PRIORITY_LABELS[priority] || priority}
     </span>
   )
 }
@@ -385,21 +403,27 @@ export function Toast({
     warning: 'bg-amber-500 text-white',
     info: 'bg-[#1E3A8A] text-white',
   }
-  const icons = { success: '✓', error: '✕', warning: '⚠', info: 'ℹ' }
+  const Icons = {
+    success: CheckCircle,
+    error: XCircle,
+    warning: AlertTriangle,
+    info: Info,
+  }
+  const Icon = Icons[type]
   return (
     <div
       className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl shadow-xl ${styles[type]} animate-in slide-in-from-bottom-4`}
       role={type === 'error' ? 'alert' : 'status'}
       aria-live={type === 'error' ? 'assertive' : 'polite'}
     >
-      <span className="font-bold">{icons[type]}</span>
+      <Icon className="w-5 h-5 shrink-0" aria-hidden="true" />
       <span className="text-sm font-medium">{message}</span>
       <button
         onClick={onClose}
         aria-label="Tutup notifikasi"
         className="ml-2 min-h-11 min-w-11 opacity-70 hover:opacity-100"
       >
-        ✕
+        <XCircle className="w-4 h-4" aria-hidden="true" />
       </button>
     </div>
   )
@@ -483,12 +507,22 @@ export function ActivityTimeline({ logs }: { logs: import('../types').ActivityLo
     executive: 'bg-slate-100 text-slate-700',
     admin: 'bg-gray-100 text-gray-700',
   }
-  const typeIcons: Record<string, string> = {
-    status_change: '🔄',
-    comment: '💬',
-    assignment: '👤',
-    attachment: '📎',
-    escalation: '🚨',
+  const TimelineIcon = ({ type }: { type: string }) => {
+    const cls = 'w-3.5 h-3.5'
+    switch (type) {
+      case 'status_change':
+        return <RefreshCw className={cls} aria-hidden="true" />
+      case 'comment':
+        return <MessageSquare className={cls} aria-hidden="true" />
+      case 'assignment':
+        return <User className={cls} aria-hidden="true" />
+      case 'attachment':
+        return <Paperclip className={cls} aria-hidden="true" />
+      case 'escalation':
+        return <Siren className={cls} aria-hidden="true" />
+      default:
+        return <Info className={cls} aria-hidden="true" />
+    }
   }
   return (
     <div className="relative">
@@ -496,8 +530,8 @@ export function ActivityTimeline({ logs }: { logs: import('../types').ActivityLo
       <div className="space-y-6">
         {logs.map((log) => (
           <div key={log.id} className="relative flex gap-4 pl-1">
-            <div className="relative z-10 w-8 h-8 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-base shrink-0 shadow-sm">
-              {typeIcons[log.type]}
+            <div className="relative z-10 w-8 h-8 rounded-full bg-white border-2 border-gray-200 flex items-center justify-center text-base shrink-0 shadow-sm text-gray-500">
+              <TimelineIcon type={log.type} />
             </div>
             <div className="flex-1 min-w-0 pb-2">
               <div className="flex items-center gap-2 flex-wrap">
@@ -561,10 +595,10 @@ export function FilterBar({ children }: { children: React.ReactNode }) {
 }
 
 // ── Empty State ───────────────────────────────────────────────────────────────
-export function EmptyState({ title, message, icon = '📋' }: { title: string; message: string; icon?: string }) {
+export function EmptyState({ title, message, icon }: { title: string; message: string; icon?: React.ReactNode }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="text-5xl mb-4">{icon}</div>
+      <div className="text-gray-300 mb-4">{icon ?? <ClipboardList className="w-12 h-12" />}</div>
       <h3 className="text-base font-semibold text-gray-700">{title}</h3>
       <p className="text-sm text-gray-500 mt-1 max-w-xs">{message}</p>
     </div>
@@ -575,7 +609,7 @@ export function EmptyState({ title, message, icon = '📋' }: { title: string; m
 export function OverSLABanner({ ticketId }: { ticketId: string }) {
   return (
     <div className="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
-      <span className="text-red-500 text-xl">🚨</span>
+      <Siren className="w-5 h-5 text-red-500 shrink-0" aria-hidden="true" />
       <div>
         <p className="text-sm font-semibold text-red-700">Tiket Over SLA</p>
         <p className="text-xs text-red-600">

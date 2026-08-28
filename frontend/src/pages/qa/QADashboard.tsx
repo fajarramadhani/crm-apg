@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { ApiRequestError } from '../../api/client'
 import { ticketService, type TicketRecord } from '../../services/ticketService'
+import { FlaskConical, Wrench, CheckCircle, Microscope } from 'lucide-react'
 import {
   KPICard,
   SectionCard,
@@ -88,11 +89,29 @@ export default function QADashboard() {
           value={testingQueue.length}
           subtitle="Perlu pengujian"
           color="indigo"
-          icon="🧪"
+          icon={<FlaskConical className="w-6 h-6" />}
         />
-        <KPICard title="QA Rework" value={failedQa.length} subtitle="PIC sedang rework" color="red" icon="🛠️" />
-        <KPICard title="Lulus QA" value={completedQa.length} subtitle="Siap UAT / Selesai" color="green" icon="✅" />
-        <KPICard title="Total Ditugaskan" value={qaTickets.length} subtitle="Tiket QA Anda" color="blue" icon="🔬" />
+        <KPICard
+          title="QA Rework"
+          value={failedQa.length}
+          subtitle="PIC sedang rework"
+          color="red"
+          icon={<Wrench className="w-6 h-6" />}
+        />
+        <KPICard
+          title="Lulus QA"
+          value={completedQa.length}
+          subtitle="Siap UAT / Selesai"
+          color="green"
+          icon={<CheckCircle className="w-6 h-6" />}
+        />
+        <KPICard
+          title="Total Ditugaskan"
+          value={qaTickets.length}
+          subtitle="Tiket QA Anda"
+          color="blue"
+          icon={<Microscope className="w-6 h-6" />}
+        />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -102,7 +121,7 @@ export default function QADashboard() {
               <p className="py-12 text-center text-sm text-gray-500">Memuat data...</p>
             ) : testingQueue.length === 0 ? (
               <div className="text-center py-10">
-                <div className="text-4xl mb-3">🧪</div>
+                <FlaskConical className="w-12 h-12 mx-auto text-gray-300 mb-3" />
                 <p className="text-sm text-gray-600 font-medium">Tidak ada tiket menunggu testing</p>
               </div>
             ) : (

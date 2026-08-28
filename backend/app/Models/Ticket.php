@@ -41,6 +41,17 @@ class Ticket extends Model
                 'qaDefects as defect_open_count' => fn (Builder $query) => $query->whereIn('status', ['open', 'in_progress', 'reopened']),
                 'uatFindings as uat_finding_count',
                 'uatFindings as uat_finding_open_count' => fn (Builder $query) => $query->whereIn('status', ['open', 'in_progress', 'reopened']),
+            ])
+            ->withExists([
+                'qaDefects as has_open_defects' => fn (Builder $query) => $query->whereIn('status', ['open', 'in_progress', 'reopened']),
+                'uatFindings as has_open_uat_finding' => fn (Builder $query) => $query->whereIn('status', ['open', 'in_progress', 'reopened']),
+                'qaDefects as has_any_defect',
+                'uatFindings as has_any_uat_finding',
+                'histories as has_qa_failed_history' => fn (Builder $query) => $query->where('to_status', 'qa_failed'),
+                'histories as has_uat_failed_history' => fn (Builder $query) => $query->where('to_status', 'uat_failed'),
+                'worklogs as has_rework_worklog' => fn (Builder $query) => $query->where('activity_type', 'rework'),
+                'internalTestRuns as has_passed_internal_test' => fn (Builder $query) => $query->where('status', 'passed'),
+                'internalTestRuns as has_active_internal_test' => fn (Builder $query) => $query->where('status', 'in_progress'),
             ]);
     }
 

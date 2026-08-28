@@ -30,7 +30,7 @@ class TicketSlaReportService extends BaseReportService
                 if ($ticket->response_due_at && $ticket->triage_started_at->lte($ticket->response_due_at)) {
                     $responseMet++;
                 }
-                $responseTimes[] = $ticket->triage_started_at->diffInMinutes($ticket->submitted_at);
+                $responseTimes[] = abs($ticket->triage_started_at->diffInMinutes($ticket->submitted_at));
             } elseif ($ticket->response_due_at && now()->gt($ticket->response_due_at)) {
                 $responseEligible++; // Breached, not met
             }
@@ -41,7 +41,7 @@ class TicketSlaReportService extends BaseReportService
                 if ($ticket->resolution_due_at && $ticket->closed_at->lte($ticket->resolution_due_at)) {
                     $resolutionMet++;
                 }
-                $resolutionTimes[] = $ticket->closed_at->diffInMinutes($ticket->submitted_at);
+                $resolutionTimes[] = abs($ticket->closed_at->diffInMinutes($ticket->submitted_at));
             } elseif ($ticket->resolution_due_at && now()->gt($ticket->resolution_due_at)) {
                 $resolutionEligible++; // Breached, not met
             }

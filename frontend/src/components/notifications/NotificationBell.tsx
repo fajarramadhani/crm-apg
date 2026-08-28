@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
+import { AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { getUnreadCount, getNotifications, markAsRead } from '../../api/notifications'
 import { Notification } from '../../types/notifications'
 
@@ -139,10 +140,10 @@ export const NotificationBell: React.FC = () => {
                   >
                     <div className="flex gap-3">
                       <div className="shrink-0 mt-0.5">
-                        {notif.severity === 'critical' && <span className="text-red-500 text-lg">⚠️</span>}
-                        {notif.severity === 'warning' && <span className="text-yellow-500 text-lg">⚠️</span>}
-                        {notif.severity === 'success' && <span className="text-green-500 text-lg">✅</span>}
-                        {notif.severity === 'info' && <span className="text-blue-500 text-lg">ℹ️</span>}
+                        {notif.severity === 'critical' && <AlertTriangle className="w-5 h-5 text-red-500" />}
+                        {notif.severity === 'warning' && <AlertTriangle className="w-5 h-5 text-yellow-500" />}
+                        {notif.severity === 'success' && <CheckCircle className="w-5 h-5 text-green-500" />}
+                        {notif.severity === 'info' && <Info className="w-5 h-5 text-blue-500" />}
                       </div>
                       <div className="min-w-0 flex-1">
                         <p className={`text-sm ${!notif.is_read ? 'font-semibold text-gray-900' : 'text-gray-800'}`}>

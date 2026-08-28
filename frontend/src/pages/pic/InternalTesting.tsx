@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { ApiRequestError } from '../../api/client'
+import { Wrench, Check, Send } from 'lucide-react'
 import {
   Button,
   EmptyState,
@@ -286,7 +287,7 @@ export default function InternalTestingPIC() {
                                   )
                                 }
                               >
-                                🛠️ Mulai Perbaikan
+                                <Wrench className="w-4 h-4 shrink-0" /> Mulai Perbaikan
                               </Button>
                             </div>
                           )}
@@ -320,7 +321,7 @@ export default function InternalTestingPIC() {
                                     })
                                   }
                                 >
-                                  ✓ Selesaikan Perbaikan
+                                  <Check className="w-4 h-4 shrink-0" /> Selesaikan Perbaikan
                                 </Button>
                               </div>
                             </div>
@@ -357,7 +358,7 @@ export default function InternalTestingPIC() {
                             )
                           }
                         >
-                          🚀 Kirim ke QA
+                          <Send className="w-4 h-4 shrink-0" /> Kirim ke QA
                         </Button>
                       </div>
                     </div>

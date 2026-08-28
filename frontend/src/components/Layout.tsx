@@ -1,5 +1,29 @@
 import { useState } from 'react'
-import { MessageCircle } from 'lucide-react'
+import {
+  MessageCircle,
+  PlusCircle,
+  ClipboardList,
+  FlaskConical,
+  Bell,
+  LayoutDashboard,
+  CheckCircle2,
+  Laptop,
+  Target,
+  Check,
+  Cog,
+  ShieldAlert,
+  Rocket,
+  AlertTriangle,
+  BarChart3,
+  Home,
+  Users,
+  Building,
+  Building2,
+  Clock,
+  BookOpen,
+  FileEdit,
+  Tag,
+} from 'lucide-react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import type { AuthenticatedUser, Role } from '../types'
 import { ROLE_LABELS } from '../presentation'
@@ -8,77 +32,93 @@ import { NotificationBell } from './notifications/NotificationBell'
 
 const NAV_ITEMS: Record<Role, { path: string; label: string; icon: React.ReactNode }[]> = {
   requester: [
-    { path: '/user/create-ticket', label: 'Buat Request / Tiket', icon: '➕' },
-    { path: '/user/tickets', label: 'Riwayat Tiket', icon: '📋' },
-    { path: '/user/uat', label: 'UAT', icon: '🧪' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/user/create-ticket', label: 'Buat Request / Tiket', icon: <PlusCircle className="h-4 w-4" /> },
+    { path: '/user/tickets', label: 'Riwayat Tiket', icon: <ClipboardList className="h-4 w-4" /> },
+    { path: '/user/uat', label: 'UAT', icon: <FlaskConical className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   supervisor: [
-    { path: '/supervisor-it/dashboard', label: 'Supervisor Control Center', icon: '🎛️' },
-    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: '📋' },
-    { path: '/supervisor/validation-queue', label: 'Antrean Validasi (Legacy)', icon: '✅' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    {
+      path: '/supervisor-it/dashboard',
+      label: 'Supervisor Control Center',
+      icon: <LayoutDashboard className="h-4 w-4" />,
+    },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: <ClipboardList className="h-4 w-4" /> },
+    {
+      path: '/supervisor/validation-queue',
+      label: 'Antrean Validasi (Legacy)',
+      icon: <CheckCircle2 className="h-4 w-4" />,
+    },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   supervisor_it: [
-    { path: '/supervisor-it/dashboard', label: 'Dashboard Control Center', icon: '🎛️' },
-    { path: '/supervisor-it/tickets', label: 'Daftar Tiket Supervisor', icon: '📋' },
-    { path: '/pic/dashboard', label: 'PIC Workspace', icon: '💻' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    {
+      path: '/supervisor-it/dashboard',
+      label: 'Dashboard Control Center',
+      icon: <LayoutDashboard className="h-4 w-4" />,
+    },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket Supervisor', icon: <ClipboardList className="h-4 w-4" /> },
+    { path: '/pic/dashboard', label: 'PIC Workspace', icon: <Laptop className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   it_lead: [
-    { path: '/supervisor-it/dashboard', label: 'Supervisor Control Center', icon: '🎛️' },
-    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: '📋' },
-    { path: '/pic/dashboard', label: 'PIC Workspace', icon: '💻' },
-    { path: '/itlead/triage', label: 'Antrean Triage', icon: '🎯' },
-    { path: '/itlead/plan-review', label: 'Plan Review', icon: '✓' },
-    { path: '/itlead/development', label: 'Development', icon: '⚙' },
-    { path: '/itlead/uat-assignment', label: 'Penugasan UAT', icon: '🧪' },
-    { path: '/itlead/release-preparation', label: 'Approval & Release', icon: '🚦' },
-    { path: '/itlead/deployment', label: 'Deployment & Rilis', icon: '🚀' },
-    { path: '/itlead/alerts', label: 'Operational Alerts', icon: '🚨' },
-    { path: '/itlead/reports', label: 'Laporan Operasional', icon: '📊' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    {
+      path: '/supervisor-it/dashboard',
+      label: 'Supervisor Control Center',
+      icon: <LayoutDashboard className="h-4 w-4" />,
+    },
+    { path: '/supervisor-it/tickets', label: 'Daftar Tiket', icon: <ClipboardList className="h-4 w-4" /> },
+    { path: '/pic/dashboard', label: 'PIC Workspace', icon: <Laptop className="h-4 w-4" /> },
+    { path: '/itlead/triage', label: 'Antrean Triage', icon: <Target className="h-4 w-4" /> },
+    { path: '/itlead/plan-review', label: 'Plan Review', icon: <Check className="h-4 w-4" /> },
+    { path: '/itlead/development', label: 'Development', icon: <Cog className="h-4 w-4" /> },
+    { path: '/itlead/uat-assignment', label: 'Penugasan UAT', icon: <FlaskConical className="h-4 w-4" /> },
+    { path: '/itlead/release-preparation', label: 'Approval & Release', icon: <ShieldAlert className="h-4 w-4" /> },
+    { path: '/itlead/deployment', label: 'Deployment & Rilis', icon: <Rocket className="h-4 w-4" /> },
+    { path: '/itlead/alerts', label: 'Operational Alerts', icon: <AlertTriangle className="h-4 w-4" /> },
+    { path: '/itlead/reports', label: 'Laporan Operasional', icon: <BarChart3 className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   pic: [
-    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
-    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
-    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: <ClipboardList className="h-4 w-4" /> },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: <Laptop className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   pic_it_support: [
-    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
-    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
-    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: <ClipboardList className="h-4 w-4" /> },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: <Laptop className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   pic_it_develop: [
-    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: '📊' },
-    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: '📋' },
-    { path: '/pic/workspace', label: 'Workspace Legacy', icon: '💻' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/pic/dashboard', label: 'PIC Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
+    { path: '/pic/tickets', label: 'Daftar Tiket PIC', icon: <ClipboardList className="h-4 w-4" /> },
+    { path: '/pic/workspace', label: 'Workspace Legacy', icon: <Laptop className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   qa: [
-    { path: '/qa/dashboard', label: 'Dashboard', icon: '🏠' },
-    { path: '/qa/testing', label: 'Pengujian', icon: '🧪' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/qa/dashboard', label: 'Dashboard', icon: <Home className="h-4 w-4" /> },
+    { path: '/qa/testing', label: 'Pengujian', icon: <FlaskConical className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   manager: [
-    { path: '/manager/approvals', label: 'Business Approval', icon: '✅' },
-    { path: '/manager/alerts', label: 'Critical Alerts', icon: '🚨' },
-    { path: '/manager/reports', label: 'Laporan', icon: '📊' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/manager/approvals', label: 'Business Approval', icon: <CheckCircle2 className="h-4 w-4" /> },
+    { path: '/manager/alerts', label: 'Critical Alerts', icon: <AlertTriangle className="h-4 w-4" /> },
+    { path: '/manager/reports', label: 'Laporan', icon: <BarChart3 className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   executive: [
-    { path: '/executive/reports', label: 'Executive Dashboard', icon: '📊' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/executive/reports', label: 'Executive Dashboard', icon: <BarChart3 className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
   superadmin: [
-    { path: '/admin/users', label: 'Akun & Role', icon: '👥' },
-    { path: '/admin/offices', label: 'Management Cabang', icon: '🏬' },
-    { path: '/admin/divisions', label: 'Divisi & Aplikasi', icon: '🏢' },
-    { path: '/admin/sla-rules', label: 'Aturan SLA', icon: '📏' },
-    { path: '/admin/workflows', label: 'Workflow', icon: '⚙' },
-    { path: '/notifications', label: 'Notifikasi', icon: '🔔' },
+    { path: '/admin/users', label: 'Akun & Role', icon: <Users className="h-4 w-4" /> },
+    { path: '/admin/offices', label: 'Management Cabang', icon: <Building2 className="h-4 w-4" /> },
+    { path: '/admin/divisions', label: 'Divisi & Aplikasi', icon: <Building className="h-4 w-4" /> },
+    { path: '/admin/sla-rules', label: 'Aturan SLA', icon: <Clock className="h-4 w-4" /> },
+    { path: '/admin/workflows', label: 'Workflow', icon: <Cog className="h-4 w-4" /> },
+    { path: '/notifications', label: 'Notifikasi', icon: <Bell className="h-4 w-4" /> },
   ],
 }
 
@@ -101,13 +141,13 @@ export function Layout({
       ? [{ path: '/admin/whatsapp', label: 'WhatsApp Fonnte', icon: <MessageCircle className="h-4 w-4" /> }]
       : []),
     ...(user.permissions.includes('knowledge_base.view')
-      ? [{ path: '/knowledge-base', label: 'Knowledge Base', icon: '📚' }]
+      ? [{ path: '/knowledge-base', label: 'Knowledge Base', icon: <BookOpen className="h-4 w-4" /> }]
       : []),
     ...(user.permissions.includes('knowledge_base.create') || user.permissions.includes('knowledge_base.review')
-      ? [{ path: '/knowledge-base/manage', label: 'Kelola Knowledge', icon: '📝' }]
+      ? [{ path: '/knowledge-base/manage', label: 'Kelola Knowledge', icon: <FileEdit className="h-4 w-4" /> }]
       : []),
     ...(user.permissions.includes('knowledge_base.manage_tags')
-      ? [{ path: '/settings/knowledge-base/tags', label: 'Tag Knowledge', icon: '🏷️' }]
+      ? [{ path: '/settings/knowledge-base/tags', label: 'Tag Knowledge', icon: <Tag className="h-4 w-4" /> }]
       : []),
   ]
   const initials = user.name
@@ -147,8 +187,8 @@ export function Layout({
       >
         {/* Logo */}
         <div className="h-16 flex items-center gap-3 px-4 border-b border-white/10 shrink-0">
-          <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center shrink-0">
-            <span className="text-[#0F2554] font-black text-sm">A</span>
+          <div className="w-9 h-9 bg-white rounded-xl p-1 flex items-center justify-center shrink-0 shadow-sm overflow-hidden">
+            <img src="/logo/apg-logo.png" alt="APG Logo" className="w-full h-full object-contain" />
           </div>
           {sidebarOpen && (
             <div className="min-w-0">

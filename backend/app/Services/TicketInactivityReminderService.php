@@ -19,12 +19,28 @@ class TicketInactivityReminderService
             'failures' => 0,
         ];
 
+        $policiesByPriority = SlaEscalationPolicy::query()
+            ->where('is_active', true)
+            ->whereNotNull('inactivity_threshold_minutes')
+            ->get()
+            ->groupBy(fn (SlaEscalationPolicy $policy): string => $policy->priority ?? 'default');
+
         Ticket::whereNotIn('status', ['closed', 'cancelled', 'rejected', 'waiting_user', 'waiting_external_party'])
-            ->chunkById(100, function ($tickets) use (&$stats) {
+            ->with(['finalPriority', 'requestedPriority'])
+            ->chunkById(100, function ($tickets) use (&$stats, $policiesByPriority) {
+                $ticketIds = $tickets->pluck('id')->all();
+
+                $latestHistories = TicketStatusHistory::query()
+                    ->whereIn('ticket_id', $ticketIds)
+                    ->orderBy('created_at', 'desc')
+                    ->get()
+                    ->groupBy('ticket_id')
+                    ->mapWithKeys(fn ($group, $ticketId) => [$ticketId => $group->first()]);
+
                 foreach ($tickets as $ticket) {
                     try {
                         $stats['tickets_scanned']++;
-                        $this->checkInactivity($ticket, $stats);
+                        $this->checkInactivity($ticket, $stats, $policiesByPriority, $latestHistories[$ticket->id] ?? null);
                     } catch (\Throwable $e) {
                         \Log::error('Inactivity scan failed for ticket '.$ticket->id, ['error' => $e->getMessage()]);
                         $stats['failures']++;
@@ -35,29 +51,23 @@ class TicketInactivityReminderService
         return $stats;
     }
 
-    private function checkInactivity(Ticket $ticket, array &$stats): void
+    private function checkInactivity(Ticket $ticket, array &$stats, $policiesByPriority, ?TicketStatusHistory $latestHistory): void
     {
         // For simplicity, we just use the default resolution policy's inactivity threshold,
         // or a global setting. Let's get the default response/resolution policy
-        $policy = SlaEscalationPolicy::where('is_active', true)
-            ->whereNotNull('inactivity_threshold_minutes')
-            ->where('priority', $ticket->finalPriority?->key ?? $ticket->requestedPriority?->key)
-            ->first();
+        $priority = $ticket->finalPriority?->key ?? $ticket->requestedPriority?->key;
+        $policy = $policiesByPriority->get($priority)?->first();
 
         if (! $policy) {
-            $policy = SlaEscalationPolicy::where('is_active', true)
-                ->whereNotNull('inactivity_threshold_minutes')
-                ->whereNull('priority')
-                ->first();
+            $policy = $policiesByPriority->get('default')?->first();
         }
 
         if (! $policy || ! $policy->inactivity_threshold_minutes) {
             return;
         }
 
-        // Query the latest activity timestamp from TicketHistory
-        $latestActivity = TicketStatusHistory::where('ticket_id', $ticket->id)->latest('created_at')->first();
-        $lastActivity = $latestActivity ? $latestActivity->created_at : $ticket->updated_at;
+        // Use the preloaded latest status history for this ticket, falling back to updated_at.
+        $lastActivity = $latestHistory ? $latestHistory->created_at : $ticket->updated_at;
 
         $lastActivityCarbon = Carbon::parse($lastActivity);
         $inactiveMinutes = (int) abs($lastActivityCarbon->diffInMinutes(Carbon::now()));

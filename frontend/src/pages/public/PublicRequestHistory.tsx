@@ -57,6 +57,8 @@ export default function PublicRequestHistory() {
   const [phase, setPhase] = useState<Phase>('identity')
   const [branches, setBranches] = useState<PublicFormOption[]>([])
   const [optionsLoading, setOptionsLoading] = useState(true)
+  const [optionsLoadFailed, setOptionsLoadFailed] = useState(false)
+  const [optionsAttempt, setOptionsAttempt] = useState(0)
   const [branchId, setBranchId] = useState('')
   const [email, setEmail] = useState('')
   const [challenge, setChallenge] = useState<PublicTicketHistoryChallenge | null>(null)
@@ -75,13 +77,19 @@ export default function PublicRequestHistory() {
 
   useEffect(() => {
     let active = true
+    setOptionsLoading(true)
+    setOptionsLoadFailed(false)
+    setError('')
     publicTicketService
       .options()
       .then((options) => {
         if (active) setBranches(options.branches)
       })
       .catch(() => {
-        if (active) setError('Daftar cabang tidak dapat dimuat. Silakan muat ulang halaman.')
+        if (active) {
+          setError('Daftar cabang tidak dapat dimuat. Silakan coba kembali.')
+          setOptionsLoadFailed(true)
+        }
       })
       .finally(() => {
         if (active) setOptionsLoading(false)
@@ -89,7 +97,7 @@ export default function PublicRequestHistory() {
     return () => {
       active = false
     }
-  }, [])
+  }, [optionsAttempt])
 
   useEffect(() => {
     if (phase !== 'otp') return
@@ -315,7 +323,7 @@ export default function PublicRequestHistory() {
                       onChange={(event) => setEmail(event.target.value)}
                       disabled={submitting}
                       required
-                      placeholder="nama@perusahaan.com"
+                      placeholder="nama@perusahaan.co.id"
                       className="mt-2 block w-full rounded-xl border border-slate-300 px-3 py-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-700 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                     />
                   </div>
@@ -324,6 +332,15 @@ export default function PublicRequestHistory() {
                     link tracking yang diterima saat pengajuan dibuat.
                   </div>
                   {error && <ErrorMessage message={error} />}
+                  {optionsLoadFailed && (
+                    <button
+                      type="button"
+                      onClick={() => setOptionsAttempt((current) => current + 1)}
+                      className="text-sm font-bold text-red-800 underline hover:text-red-700"
+                    >
+                      Coba muat kembali
+                    </button>
+                  )}
                   <button
                     type="submit"
                     disabled={submitting || optionsLoading || !branches.length}
@@ -357,7 +374,7 @@ export default function PublicRequestHistory() {
                       disabled={submitting}
                       className="mt-2 block w-full rounded-xl border border-slate-300 px-4 py-3 text-center font-mono text-2xl font-bold tracking-[0.35em] text-slate-950 outline-none focus:border-blue-700 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                     />
-                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-slate-500">
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-xs font-medium text-slate-600">
                       <span>Kode berakhir dalam {formatCountdown(expirySeconds)}</span>
                       <span>{now ? `Kirim ulang dalam ${formatCountdown(resendSeconds)}` : ''}</span>
                     </div>
@@ -406,7 +423,7 @@ export default function PublicRequestHistory() {
             >
               <Loader2 className="mx-auto h-9 w-9 animate-spin text-blue-700" />
               <h2 className="mt-4 text-lg font-bold text-slate-950">Memuat riwayat pengajuan</h2>
-              <p className="mt-2 text-sm text-slate-500">Mohon tunggu sebentar.</p>
+              <p className="mt-2 text-sm text-slate-600">Mohon tunggu sebentar.</p>
             </section>
           )}
 
@@ -433,7 +450,7 @@ export default function PublicRequestHistory() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-700">Hasil Verifikasi</p>
                   <h2 className="mt-2 text-2xl font-black text-slate-950">Riwayat pengajuan Anda</h2>
-                  {pagination && <p className="mt-1 text-sm text-slate-500">{pagination.total} pengajuan ditemukan</p>}
+                  {pagination && <p className="mt-1 text-sm text-slate-600">{pagination.total} pengajuan ditemukan</p>}
                 </div>
                 <button
                   type="button"

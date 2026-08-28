@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Check, Undo2, HelpCircle, X, Ban, RotateCcw, Lock } from 'lucide-react'
 import type { TicketRecord } from '../../services/ticketService'
 
 interface TicketApprovalPanelProps {
@@ -102,7 +103,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
               onClick={() => handleOpenModal('approve')}
               className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition-colors shadow-sm"
             >
-              ✓ Setujui & Selesaikan
+              <Check className="w-3.5 h-3.5" /> Setujui & Selesaikan
             </button>
 
             <button
@@ -111,7 +112,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
               onClick={() => handleOpenModal('revision')}
               className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-4 py-2 text-xs font-bold text-white hover:bg-amber-600 transition-colors shadow-sm"
             >
-              ↩ Kirim untuk Perbaikan (Revisi)
+              <Undo2 className="w-3.5 h-3.5" /> Kirim untuk Perbaikan (Revisi)
             </button>
 
             <button
@@ -120,7 +121,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
               onClick={() => handleOpenModal('info')}
               className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-xs font-bold text-white hover:bg-blue-700 transition-colors shadow-sm"
             >
-              ❓ Minta Informasi Requester
+              <HelpCircle className="w-3.5 h-3.5" /> Minta Informasi Requester
             </button>
 
             <button
@@ -129,7 +130,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
               onClick={() => handleOpenModal('reject')}
               className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-xs font-bold text-red-700 hover:bg-red-100 transition-colors"
             >
-              ✕ Tolak Tiket
+              <X className="w-3.5 h-3.5" /> Tolak Tiket
             </button>
 
             <button
@@ -138,7 +139,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
               onClick={() => handleOpenModal('cancel')}
               className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-50 px-3.5 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 transition-colors"
             >
-              🚫 Batalkan Tiket
+              <Ban className="w-3.5 h-3.5" /> Batalkan Tiket
             </button>
           </>
         )}
@@ -151,7 +152,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
               onClick={() => handleOpenModal('reopen')}
               className="inline-flex items-center gap-1.5 rounded-lg bg-purple-600 px-4 py-2 text-xs font-bold text-white hover:bg-purple-700 transition-colors shadow-sm"
             >
-              🔄 Buka Kembali Tiket (Reopen)
+              <RotateCcw className="w-3.5 h-3.5" /> Buka Kembali Tiket (Reopen)
             </button>
 
             {ticket.status !== 'closed' && (
@@ -161,7 +162,7 @@ export const TicketApprovalPanel: React.FC<TicketApprovalPanelProps> = ({
                 onClick={() => handleOpenModal('close')}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-gray-300 bg-gray-100 px-4 py-2 text-xs font-bold text-gray-800 hover:bg-gray-200 transition-colors"
               >
-                🔒 Tutup Tiket Eksplisit
+                <Lock className="w-3.5 h-3.5" /> Tutup Tiket Eksplisit
               </button>
             )}
           </>

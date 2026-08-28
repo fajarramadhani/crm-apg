@@ -28,9 +28,14 @@ class TicketSlaEscalationService
             'failures' => 0,
         ];
 
+        $escalationPolicies = SlaEscalationPolicy::query()
+            ->where('is_active', true)
+            ->get()
+            ->groupBy(fn (SlaEscalationPolicy $policy): string => $this->policyKey($policy->sla_type, $policy->priority));
+
         Ticket::whereNotIn('status', ['closed', 'cancelled', 'rejected'])
-            ->with(['slaPolicy.workingCalendar'])
-            ->chunkById(100, function ($tickets) use (&$stats) {
+            ->with(['slaPolicy.workingCalendar', 'workingCalendar', 'finalPriority', 'requestedPriority', 'currentAssignee', 'branch'])
+            ->chunkById(100, function ($tickets) use (&$stats, $escalationPolicies) {
                 foreach ($tickets as $ticket) {
                     try {
                         if (! $ticket->slaPolicy) {
@@ -38,7 +43,7 @@ class TicketSlaEscalationService
                         }
 
                         $stats['tickets_scanned']++;
-                        $this->processTicketSla($ticket, $stats);
+                        $this->processTicketSla($ticket, $stats, $escalationPolicies);
                     } catch (\Throwable $e) {
                         \Log::error('SLA scan failed for ticket '.$ticket->id, ['error' => $e->getMessage()]);
                         $stats['failures']++;
@@ -49,16 +54,17 @@ class TicketSlaEscalationService
         return $stats;
     }
 
-    private function processTicketSla(Ticket $ticket, array &$stats): void
+    private function processTicketSla(Ticket $ticket, array &$stats, $escalationPolicies): void
     {
         $policy = $ticket->slaPolicy;
         $calendar = $ticket->workingCalendar ?? $policy->workingCalendar;
+        $priority = $ticket->finalPriority?->key ?? $ticket->requestedPriority?->key;
 
         // Check Response SLA if not responded (triage or assignment starts the clock, but simple implementation: submitted_at)
         // Usually response SLA is met when response_due_at is cleared, or just check if ticket is beyond pending_validation
         $isResponded = ! in_array($ticket->status->value, ['draft', 'pending_validation', 'validated', 'triage', 'assigned']);
         if (! $isResponded && $policy->response_minutes > 0 && $ticket->submitted_at) {
-            $escalationPolicy = $this->getEscalationPolicy($ticket->finalPriority?->key ?? $ticket->requestedPriority?->key, 'response');
+            $escalationPolicy = $this->getEscalationPolicy($escalationPolicies, $priority, 'response');
             if ($escalationPolicy) {
                 $this->checkThresholds(
                     $ticket,
@@ -75,7 +81,7 @@ class TicketSlaEscalationService
         // Check Resolution SLA if not resolved
         $isResolved = in_array($ticket->status->value, ['ready_for_uat', 'uat_assignment', 'uat_in_progress', 'uat_approved', 'approval_pending', 'release_preparation', 'release_ready', 'deployment_scheduled', 'deployment_in_progress', 'deployed', 'monitoring', 'closed']);
         if (! $isResolved && $policy->resolution_minutes > 0 && $ticket->submitted_at) {
-            $escalationPolicy = $this->getEscalationPolicy($ticket->finalPriority?->key ?? $ticket->requestedPriority?->key, 'resolution');
+            $escalationPolicy = $this->getEscalationPolicy($escalationPolicies, $priority, 'resolution');
             if ($escalationPolicy) {
                 $this->checkThresholds(
                     $ticket,
@@ -90,24 +96,21 @@ class TicketSlaEscalationService
         }
     }
 
-    private function getEscalationPolicy(?string $priority, string $slaType): ?SlaEscalationPolicy
+    private function getEscalationPolicy($policies, ?string $priority, string $slaType): ?SlaEscalationPolicy
     {
-        // Try to get priority specific first
         if ($priority) {
-            $policy = SlaEscalationPolicy::where('is_active', true)
-                ->where('sla_type', $slaType)
-                ->where('priority', $priority)
-                ->first();
-            if ($policy) {
-                return $policy;
+            $priorityPolicy = $policies->get($this->policyKey($slaType, $priority))?->first();
+            if ($priorityPolicy) {
+                return $priorityPolicy;
             }
         }
 
-        // Fallback to default (priority is null)
-        return SlaEscalationPolicy::where('is_active', true)
-            ->where('sla_type', $slaType)
-            ->whereNull('priority')
-            ->first();
+        return $policies->get($this->policyKey($slaType))?->first();
+    }
+
+    private function policyKey(string $slaType, ?string $priority = null): string
+    {
+        return "{$slaType}:".($priority ?? 'default');
     }
 
     private function checkThresholds(

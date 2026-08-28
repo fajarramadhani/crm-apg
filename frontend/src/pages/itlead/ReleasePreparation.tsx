@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ApiRequestError } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { Button, EmptyState, Input, PageHeader, SectionCard, StatusBadge, Textarea, Toast } from '../../components/ui'
+import { Check } from 'lucide-react'
 import {
   ticketService,
   type ApprovalRequestRecord,
@@ -283,7 +284,7 @@ export default function ReleasePreparation() {
               </div>
               <div className="flex justify-end p-2 bg-blue-50 border border-blue-200 rounded-xl">
                 <Button variant="success" size="lg" loading={busy} onClick={confirmReady}>
-                  ✓ Konfirmasi Rilis Siap (Confirm Release Ready)
+                  <Check className="w-5 h-5 shrink-0" /> Konfirmasi Rilis Siap (Confirm Release Ready)
                 </Button>
               </div>
             </>

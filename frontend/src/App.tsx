@@ -107,8 +107,8 @@ function GlobalLoader({ label, fullscreen = false }: { label: string; fullscreen
             <span className="absolute h-20 w-20 rounded-full border border-cyan-200/30" />
             <span className="absolute h-32 w-32 rounded-full border border-white/10 animate-pulse" />
             <span className="absolute h-40 w-40 rounded-full bg-cyan-300/10 blur-3xl" />
-            <div className="relative flex h-16 w-16 items-center justify-center rounded-3xl bg-white text-[#0F2554] shadow-2xl shadow-black/30">
-              <span className="text-2xl font-black">A</span>
+            <div className="relative flex h-20 w-20 items-center justify-center rounded-3xl bg-white p-2 text-[#0F2554] shadow-2xl shadow-black/30 overflow-hidden">
+              <img src="/logo/apg-logo.png" alt="APG Logo" className="w-full h-full object-contain" />
             </div>
           </div>
 
@@ -138,8 +138,8 @@ function GlobalLoader({ label, fullscreen = false }: { label: string; fullscreen
             <span className="absolute h-18 w-18 rounded-full border border-blue-300/25" />
             <span className="absolute h-14 w-14 rounded-full border border-cyan-300/30" />
             <span className="absolute h-24 w-24 animate-ping rounded-full bg-blue-400/10" />
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#0F2554] shadow-lg shadow-blue-950/30">
-              <span className="text-lg font-black">A</span>
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white p-1.5 shadow-lg shadow-blue-950/30 overflow-hidden">
+              <img src="/logo/apg-logo.png" alt="APG Logo" className="w-full h-full object-contain" />
             </div>
           </div>
 

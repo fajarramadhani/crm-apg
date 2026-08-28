@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { getNotifications, markAsRead, markAllAsRead, archiveNotification } from '../../api/notifications'
 import { Notification } from '../../types/notifications'
+import { AlertTriangle, CheckCircle, Info, Inbox } from 'lucide-react'
 
 const safeActionUrl = (url: string | null): string =>
   url && url.startsWith('/') && !url.startsWith('//') && !url.includes('\\') ? url : '/notifications'
@@ -119,8 +120,8 @@ export const NotificationCenter: React.FC = () => {
 
       <div className="bg-white shadow rounded-xl overflow-hidden border border-gray-200">
         {notifications.length === 0 && !isLoading ? (
-          <div className="p-12 text-center text-gray-500">
-            <span className="text-4xl mb-4 block">📭</span>
+          <div className="p-12 text-center text-gray-500 flex flex-col items-center justify-center">
+            <Inbox className="w-12 h-12 text-gray-300 mb-3" aria-hidden="true" />
             Tidak ada notifikasi ditemukan.
           </div>
         ) : (
@@ -132,10 +133,10 @@ export const NotificationCenter: React.FC = () => {
               >
                 <div className="flex gap-4">
                   <div className="shrink-0 mt-1">
-                    {notif.severity === 'critical' && <span className="text-red-500 text-2xl">⚠️</span>}
-                    {notif.severity === 'warning' && <span className="text-yellow-500 text-2xl">⚠️</span>}
-                    {notif.severity === 'success' && <span className="text-green-500 text-2xl">✅</span>}
-                    {notif.severity === 'info' && <span className="text-blue-500 text-2xl">ℹ️</span>}
+                    {notif.severity === 'critical' && <AlertTriangle className="w-6 h-6 text-red-500" />}
+                    {notif.severity === 'warning' && <AlertTriangle className="w-6 h-6 text-yellow-500" />}
+                    {notif.severity === 'success' && <CheckCircle className="w-6 h-6 text-green-500" />}
+                    {notif.severity === 'info' && <Info className="w-6 h-6 text-blue-500" />}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between gap-4">

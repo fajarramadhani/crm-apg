@@ -265,23 +265,55 @@ class TicketResource extends JsonResource
             return ['start_development'];
         }
         if ($request->user()?->hasPermission('ticket.development.update') && $this->status === TicketStatus::DevelopmentInProgress && $this->current_assignee_id === $request->user()?->id) {
-            $hasDefects = $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->exists();
-            $hasUatFindings = $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->exists();
+            $hasDefects = isset($this->has_open_defects)
+                ? (bool) $this->has_open_defects
+                : (isset($this->defect_open_count)
+                    ? $this->defect_open_count > 0
+                    : ($this->relationLoaded('qaDefects')
+                        ? $this->qaDefects->whereIn('status', ['open', 'in_progress', 'reopened'])->count() > 0
+                        : $this->qaDefects()->whereIn('status', ['open', 'in_progress', 'reopened'])->exists()));
+
+            $hasUatFindings = isset($this->has_open_uat_finding)
+                ? (bool) $this->has_open_uat_finding
+                : (isset($this->uat_finding_open_count)
+                    ? $this->uat_finding_open_count > 0
+                    : ($this->relationLoaded('uatFindings')
+                        ? $this->uatFindings->whereIn('status', ['open', 'in_progress', 'reopened'])->count() > 0
+                        : $this->uatFindings()->whereIn('status', ['open', 'in_progress', 'reopened'])->exists()));
 
             $actions = ['add_worklog', 'update_progress', 'upload_evidence', 'manage_test_cases', ...($this->progress_percentage === 100 ? ['start_internal_testing'] : [])];
+
+            // List-path fast path: when summary-existence flags are present, avoid
+            // per-ticket histories()/worklogs()/internalTestRuns() queries. This is
+            // intentionally looser than the detail path (it does not correlate the
+            // rework worklog / passed internal test with the failure timestamp), but
+            // the list payload only needs to surface candidate actions, and the exact
+            // eligible set is recomputed on the detail endpoint where those relations
+            // are loaded. Detail endpoints fall through to the precise queries below.
+            $usesSummaryFlags = isset($this->has_qa_failed_history) || isset($this->has_uat_failed_history);
 
             if ($hasDefects) {
                 $actions = ['start_rework_defect', 'resolve_defect'];
 
-                // Retest conditions checking
-                $lastFailure = $this->histories()->where('to_status', 'qa_failed')->latest()->first();
-                if ($lastFailure) {
-                    $hasReworkWorklog = $this->worklogs()->where('created_at', '>=', $lastFailure->created_at)->where('activity_type', 'rework')->exists();
-                    $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>=', $lastFailure->created_at)->exists();
-                    $hasNoActiveInternal = ! $this->internalTestRuns()->where('status', 'in_progress')->exists();
-
-                    if ($hasReworkWorklog && $hasPassedInternal && $hasNoActiveInternal && $this->progress_percentage === 100) {
+                if ($usesSummaryFlags) {
+                    if ((bool) ($this->has_qa_failed_history ?? false)
+                        && (bool) ($this->has_rework_worklog ?? false)
+                        && (bool) ($this->has_passed_internal_test ?? false)
+                        && ! (bool) ($this->has_active_internal_test ?? false)
+                        && $this->progress_percentage === 100) {
                         $actions[] = 'submit_qa_retest';
+                    }
+                } else {
+                    // Retest conditions checking (detail path: timestamp-correlated, precise)
+                    $lastFailure = $this->histories()->where('to_status', 'qa_failed')->latest()->first();
+                    if ($lastFailure) {
+                        $hasReworkWorklog = $this->worklogs()->where('created_at', '>=', $lastFailure->created_at)->where('activity_type', 'rework')->exists();
+                        $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>=', $lastFailure->created_at)->exists();
+                        $hasNoActiveInternal = ! $this->internalTestRuns()->where('status', 'in_progress')->exists();
+
+                        if ($hasReworkWorklog && $hasPassedInternal && $hasNoActiveInternal && $this->progress_percentage === 100) {
+                            $actions[] = 'submit_qa_retest';
+                        }
                     }
                 }
             }
@@ -289,15 +321,25 @@ class TicketResource extends JsonResource
             if ($hasUatFindings) {
                 $actions = ['start_uat_rework', 'resolve_uat_finding'];
 
-                // UAT Retest conditions checking
-                $lastUatFailure = $this->histories()->where('to_status', 'uat_failed')->latest()->first();
-                if ($lastUatFailure) {
-                    $hasReworkWorklog = $this->worklogs()->where('created_at', '>=', $lastUatFailure->created_at)->where('activity_type', 'rework')->exists();
-                    $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>=', $lastUatFailure->created_at)->exists();
-                    $hasNoActiveInternal = ! $this->internalTestRuns()->where('status', 'in_progress')->exists();
-
-                    if ($hasReworkWorklog && $hasPassedInternal && $hasNoActiveInternal && $this->progress_percentage === 100) {
+                if ($usesSummaryFlags) {
+                    if ((bool) ($this->has_uat_failed_history ?? false)
+                        && (bool) ($this->has_rework_worklog ?? false)
+                        && (bool) ($this->has_passed_internal_test ?? false)
+                        && ! (bool) ($this->has_active_internal_test ?? false)
+                        && $this->progress_percentage === 100) {
                         $actions[] = 'submit_uat_retest';
+                    }
+                } else {
+                    // UAT Retest conditions checking (detail path: timestamp-correlated, precise)
+                    $lastUatFailure = $this->histories()->where('to_status', 'uat_failed')->latest()->first();
+                    if ($lastUatFailure) {
+                        $hasReworkWorklog = $this->worklogs()->where('created_at', '>=', $lastUatFailure->created_at)->where('activity_type', 'rework')->exists();
+                        $hasPassedInternal = $this->internalTestRuns()->where('status', 'passed')->where('completed_at', '>=', $lastUatFailure->created_at)->exists();
+                        $hasNoActiveInternal = ! $this->internalTestRuns()->where('status', 'in_progress')->exists();
+
+                        if ($hasReworkWorklog && $hasPassedInternal && $hasNoActiveInternal && $this->progress_percentage === 100) {
+                            $actions[] = 'submit_uat_retest';
+                        }
                     }
                 }
             }

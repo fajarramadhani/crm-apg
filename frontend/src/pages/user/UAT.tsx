@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { Check, X, AlertTriangle } from 'lucide-react'
 import {
   PageHeader,
   Button,
@@ -493,21 +494,21 @@ export default function UAT() {
                                 variant={currentStatus === 'accepted' ? 'success' : 'ghost'}
                                 onClick={() => handleRecordResult(sc.id, 'accepted')}
                               >
-                                ✓ Terima (Accept)
+                                <Check className="w-4 h-4 shrink-0" /> Terima (Accept)
                               </Button>
                               <Button
                                 size="sm"
                                 variant={currentStatus === 'rejected' ? 'danger' : 'ghost'}
                                 onClick={() => handleRecordResult(sc.id, 'rejected')}
                               >
-                                ✕ Tolak (Reject)
+                                <X className="w-4 h-4 shrink-0" /> Tolak (Reject)
                               </Button>
                               <Button
                                 size="sm"
                                 variant={currentStatus === 'blocked' ? 'warning' : 'ghost'}
                                 onClick={() => handleRecordResult(sc.id, 'blocked')}
                               >
-                                ⚡ Blokir (Block)
+                                <AlertTriangle className="w-4 h-4 shrink-0" /> Blokir (Block)
                               </Button>
                             </div>
                           </div>

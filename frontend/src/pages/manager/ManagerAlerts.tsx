@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { NavLink } from 'react-router-dom'
 import { getManagerAlerts } from '../../api/alerts'
 import { TicketSlaAlert } from '../../types/notifications'
+import { AlertTriangle, AlertOctagon, CheckCircle } from 'lucide-react'
 
 export const ManagerAlerts: React.FC = () => {
   const [alerts, setAlerts] = useState<TicketSlaAlert[]>([])
@@ -33,8 +34,8 @@ export const ManagerAlerts: React.FC = () => {
         {isLoading ? (
           <div className="p-8 text-center text-gray-400">Memuat peringatan...</div>
         ) : alerts.length === 0 ? (
-          <div className="p-12 text-center">
-            <span className="text-5xl block mb-4">👍</span>
+          <div className="p-12 text-center flex flex-col items-center justify-center">
+            <CheckCircle className="w-12 h-12 text-emerald-500 mb-3" aria-hidden="true" />
             <p className="text-gray-500 font-medium">Tidak ada peringatan kritikal saat ini.</p>
           </div>
         ) : (
@@ -43,12 +44,12 @@ export const ManagerAlerts: React.FC = () => {
               <div key={alert.id} className="p-5 flex items-start gap-4 hover:bg-gray-50 transition-colors">
                 <div className="mt-1">
                   {alert.alert_level === 'breached' ? (
-                    <span className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl">
-                      ⚠️
+                    <span className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                      <AlertOctagon className="w-5 h-5 text-red-600" />
                     </span>
                   ) : (
-                    <span className="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center text-xl">
-                      ⚠️
+                    <span className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
                     </span>
                   )}
                 </div>

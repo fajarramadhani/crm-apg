@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('otp_hash');
             $table->timestamp('expires_at');
             $table->unsignedSmallInteger('attempts_remaining');
-            $table->timestamp('resend_available_at');
+            $table->timestamp('resend_available_at')->nullable();
             $table->timestamp('sent_at')->nullable();
             $table->timestamp('consumed_at')->nullable();
             $table->timestamp('superseded_at')->nullable();

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import { Play, ClipboardList, Check, X } from 'lucide-react'
 import {
   ticketService,
   type TicketRecord,
@@ -260,14 +261,14 @@ export default function TestingForm() {
             actions={
               !activeRun && activeCases.length > 0 ? (
                 <Button size="sm" variant="primary" onClick={handleStartRun}>
-                  🚀 Mulai Test Run Baru
+                  <Play className="w-4 h-4 shrink-0" /> Mulai Test Run Baru
                 </Button>
               ) : undefined
             }
           >
             {!activeRun ? (
-              <div className="text-center py-10">
-                <div className="text-4xl mb-3">📋</div>
+              <div className="text-center py-10 flex flex-col items-center justify-center">
+                <ClipboardList className="w-12 h-12 text-gray-300 mb-3" aria-hidden="true" />
                 <p className="text-sm text-gray-600 font-medium">Belum ada Test Run yang aktif.</p>
                 {activeCases.length === 0 ? (
                   <p className="text-xs text-gray-400 mt-1">
@@ -326,7 +327,7 @@ export default function TestingForm() {
                               <button
                                 key={s}
                                 onClick={() => handleRecordResult(tc.id, s)}
-                                className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all ${
+                                className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-all inline-flex items-center gap-1 ${
                                   rec.status === s
                                     ? s === 'passed'
                                       ? 'bg-emerald-500 text-white border-emerald-500'
@@ -336,7 +337,17 @@ export default function TestingForm() {
                                     : 'bg-white text-gray-500 border-gray-300 hover:border-gray-400'
                                 }`}
                               >
-                                {s === 'passed' ? '✓ Pass' : s === 'failed' ? '✕ Fail' : '— Blocked'}
+                                {s === 'passed' ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5" /> Pass
+                                  </>
+                                ) : s === 'failed' ? (
+                                  <>
+                                    <X className="w-3.5 h-3.5" /> Fail
+                                  </>
+                                ) : (
+                                  'Blocked'
+                                )}
                               </button>
                             ))}
                           </div>
