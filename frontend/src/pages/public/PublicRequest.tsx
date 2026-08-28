@@ -13,6 +13,7 @@ import {
   Image as ImageIcon,
   Loader2,
   LockKeyhole,
+  Paperclip,
   Plus,
   Send,
   Trash2,
@@ -1226,7 +1227,7 @@ export default function PublicRequest() {
                   />
                 </div>
 
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 text-xs leading-5 text-blue-950">
+                <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-blue-50 to-cyan-50 p-4 text-xs leading-5 text-blue-950">
                   Dengan mengirim formulir ini, Anda memastikan informasi yang diberikan benar dan dapat digunakan untuk
                   verifikasi pengajuan.
                 </div>
@@ -1234,7 +1235,7 @@ export default function PublicRequest() {
                   ref={submitButtonRef}
                   type="submit"
                   disabled={submitting || loadingOptions || Boolean(optionsError) || noOptions}
-                  className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#12367a] px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition hover:bg-[#0d2a63] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#12367a] to-blue-800 px-5 py-3.5 text-sm font-bold text-white shadow-lg shadow-blue-900/20 transition hover:from-[#0d2a63] hover:to-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                   {submitting ? 'Mengirim pengajuan...' : 'Kirim pengajuan'}
@@ -1252,7 +1253,7 @@ export default function PublicRequest() {
                     type="button"
                     onClick={() => formRef.current?.requestSubmit()}
                     disabled={submitting || loadingOptions || Boolean(optionsError) || noOptions}
-                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#12367a] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20 hover:bg-[#0d2a63] disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#12367a] to-blue-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/20 hover:from-[#0d2a63] hover:to-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     <Send className="h-4 w-4" />
                     Kirim pengajuan
@@ -1263,29 +1264,39 @@ export default function PublicRequest() {
 
             <aside className="space-y-4 lg:sticky lg:top-6">
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                <Building2 className="h-6 w-6 text-blue-700" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
+                  <Building2 className="h-5 w-5" />
+                </div>
                 <h2 className="mt-3 font-bold text-slate-950">Sebelum mengirim</h2>
-                <ul className="mt-3 space-y-3 text-sm leading-6 text-slate-600">
-                  <li className="flex gap-2">
-                    <Check className="mt-1 h-4 w-4 shrink-0 text-emerald-600" />
-                    Pilih cabang dan sistem yang sesuai.
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 h-4 w-4 shrink-0 text-emerald-600" />
-                    Jelaskan kendala beserta dampaknya.
-                  </li>
-                  <li className="flex gap-2">
-                    <Check className="mt-1 h-4 w-4 shrink-0 text-emerald-600" />
-                    Pastikan kontak dapat dihubungi.
-                  </li>
+                <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-600">
+                  {[
+                    'Pilih cabang dan sistem yang sesuai.',
+                    'Jelaskan kendala beserta dampaknya.',
+                    'Pastikan kontak dapat dihubungi.',
+                  ].map((text) => (
+                    <li key={text} className="flex items-start gap-2">
+                      <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                        <Check className="h-3 w-3" />
+                      </span>
+                      {text}
+                    </li>
+                  ))}
                 </ul>
               </div>
-              <div className="rounded-2xl bg-[#102d64] p-5 text-white shadow-lg">
-                <LockKeyhole className="h-6 w-6 text-cyan-300" />
-                <h2 className="mt-3 font-bold">Data pengajuan terlindungi</h2>
-                <p className="mt-2 text-xs leading-5 text-blue-100">
-                  Lampiran dan rincian tiket hanya digunakan oleh tim berwenang untuk proses penanganan.
-                </p>
+              <div className="relative overflow-hidden rounded-2xl bg-[#102d64] p-5 text-white shadow-lg">
+                <div
+                  className="absolute -right-6 -top-6 h-24 w-24 rounded-full bg-cyan-400/10"
+                  aria-hidden="true"
+                />
+                <div className="relative">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 text-cyan-300 ring-1 ring-white/10">
+                    <LockKeyhole className="h-5 w-5" />
+                  </div>
+                  <h2 className="mt-3 font-bold">Data pengajuan terlindungi</h2>
+                  <p className="mt-2 text-xs leading-5 text-blue-100">
+                    Lampiran dan rincian tiket hanya digunakan oleh tim berwenang untuk proses penanganan.
+                  </p>
+                </div>
               </div>
             </aside>
           </div>
