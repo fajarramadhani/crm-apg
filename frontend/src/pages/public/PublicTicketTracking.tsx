@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { useParams } from 'react-router-dom'
 import { ApiRequestError } from '../../api/client'
+import { PublicLoadingScreen } from '../../components/public/PublicLoadingScreen'
 import { PublicShell } from '../../components/public/PublicShell'
 import {
   publicTicketService,
@@ -53,18 +54,6 @@ function formatDate(value: string) {
   return Number.isNaN(date.getTime())
     ? 'Waktu tidak tersedia'
     : date.toLocaleString('id-ID', { dateStyle: 'long', timeStyle: 'short' })
-}
-
-function TrackingSkeleton() {
-  return (
-    <div className="animate-pulse space-y-6" role="status" aria-label="Memuat status tiket">
-      <div className="h-40 rounded-3xl bg-slate-200" />
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="h-96 rounded-3xl bg-slate-200" />
-        <div className="h-72 rounded-3xl bg-slate-200" />
-      </div>
-    </div>
-  )
 }
 
 function ActionDialog({
@@ -633,7 +622,7 @@ function ActionDialog({
 function StepHeading({ icon, step, title }: { icon: ReactNode; step: string; title: string }) {
   return (
     <div className="flex items-center gap-3">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-800">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
         {icon}
       </div>
       <div>
@@ -718,25 +707,28 @@ function Summary({ label, value }: { label: string; value: string }) {
 
 function ActionCtaCard({ action, onOpen }: { action: PublicTicketActionDescriptor; onOpen: () => void }) {
   return (
-    <section className="overflow-hidden rounded-3xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-6 shadow-sm">
-      <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#12367a] text-white shadow-lg shadow-blue-900/20">
-        <FileCheck2 className="h-6 w-6" />
+    <section className="relative overflow-hidden rounded-3xl border border-cyan-200 bg-gradient-to-br from-blue-50 to-cyan-50 p-6 shadow-sm">
+      <div className="absolute -right-5 -top-5 h-20 w-20 rounded-full bg-cyan-300/10" aria-hidden="true" />
+      <div className="relative">
+        <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-lg shadow-blue-900/20">
+          <FileCheck2 className="h-6 w-6" />
+        </div>
+        <h2 className="mt-4 text-lg font-black text-slate-950">
+          {action.action === 'uat' ? 'Pengujian Anda diperlukan' : 'Konfirmasi Anda diperlukan'}
+        </h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          {action.action === 'uat'
+            ? 'Uji hasil penanganan lalu sampaikan apakah solusi sudah sesuai.'
+            : 'Tinjau penyelesaian tiket dan sampaikan keputusan Anda.'}
+        </p>
+        <button
+          type="button"
+          onClick={onOpen}
+          className="mt-5 w-full rounded-xl bg-gradient-to-r from-[#12367a] to-blue-800 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/15 hover:from-[#0d2a63] hover:to-blue-900"
+        >
+          {action.action === 'uat' ? 'Lakukan Pengujian' : 'Konfirmasi Penyelesaian'}
+        </button>
       </div>
-      <h2 className="mt-4 text-lg font-black text-slate-950">
-        {action.action === 'uat' ? 'Pengujian Anda diperlukan' : 'Konfirmasi Anda diperlukan'}
-      </h2>
-      <p className="mt-2 text-sm leading-6 text-slate-600">
-        {action.action === 'uat'
-          ? 'Uji hasil penanganan lalu sampaikan apakah solusi sudah sesuai.'
-          : 'Tinjau penyelesaian tiket dan sampaikan keputusan Anda.'}
-      </p>
-      <button
-        type="button"
-        onClick={onOpen}
-        className="mt-5 w-full rounded-xl bg-[#12367a] px-5 py-3 text-sm font-bold text-white hover:bg-[#0d2a63]"
-      >
-        {action.action === 'uat' ? 'Lakukan Pengujian' : 'Konfirmasi Penyelesaian'}
-      </button>
     </section>
   )
 }
@@ -832,9 +824,19 @@ export default function PublicTicketTrackingPage() {
     >
       <main className="min-h-[calc(100vh-145px)]">
         <section className="relative overflow-hidden bg-[#0b1f48] px-4 pb-32 pt-12 text-white sm:px-6 sm:pt-16 print:hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_10%_90%,rgba(59,130,246,0.22),transparent_35%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_15%,rgba(34,211,238,0.2),transparent_32%),radial-gradient(circle_at_10%_90%,rgba(59,130,246,0.24),transparent_38%)]" />
+          <div
+            className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.55)_1px,transparent_1px)] [background-size:28px_28px]"
+            aria-hidden="true"
+          />
           <div className="relative mx-auto max-w-6xl">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">Status Pengajuan</p>
+            <div className="flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
+              </span>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">Status Pengajuan</p>
+            </div>
             <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-5xl">Pantau perkembangan tiket Anda</h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-blue-100 sm:text-base">
               Informasi berikut diperbarui oleh tim Tic Hub selama proses penanganan.
@@ -843,7 +845,12 @@ export default function PublicTicketTrackingPage() {
         </section>
 
         <div className="relative mx-auto -mt-20 max-w-6xl px-4 pb-14 sm:px-6 lg:px-8 print:mt-0">
-          {loading && <TrackingSkeleton />}
+          {loading && (
+            <PublicLoadingScreen
+              label="Memuat status tiket..."
+              hint="Kami sedang mengambil perkembangan terbaru dari tim penanganan."
+            />
+          )}
 
           {!loading && failed && (
             <section
@@ -871,15 +878,21 @@ export default function PublicTicketTrackingPage() {
           {!loading && ticket && (
             <div className="space-y-6">
               <section className="overflow-hidden rounded-3xl border border-blue-200 bg-white shadow-xl shadow-slate-300/30">
-                <div className="grid gap-6 bg-gradient-to-br from-[#12367a] to-[#0b1f48] p-6 text-white sm:p-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
-                  <div className="min-w-0">
+                <div className="relative grid gap-6 bg-gradient-to-br from-[#12367a] to-[#0b1f48] p-6 text-white sm:p-8 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-center">
+                  <div
+                    className="absolute inset-0 opacity-[0.07] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:26px_26px]"
+                    aria-hidden="true"
+                  />
+                  <div className="relative min-w-0">
                     <p className="text-xs font-bold uppercase tracking-[0.2em] text-blue-200">{ticket.ticket_number}</p>
                     <h2 className="mt-3 break-words text-2xl font-black sm:text-3xl">{ticket.title}</h2>
                   </div>
-                  <div className="rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
+                  <div className="relative rounded-2xl border border-white/15 bg-white/10 p-5 backdrop-blur-sm">
                     <p className="text-xs font-semibold uppercase tracking-wide text-blue-200">Status saat ini</p>
                     <div className="mt-2 flex items-start gap-3">
-                      <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-cyan-300" />
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-cyan-400/15 text-cyan-300 ring-1 ring-cyan-300/30">
+                        <CheckCircle2 className="h-6 w-6" />
+                      </div>
                       <div>
                         <p className="text-lg font-bold">{ticket.status.label || 'Status sedang diproses'}</p>
                         {ticket.status.description && (
@@ -895,8 +908,10 @@ export default function PublicTicketTrackingPage() {
                     { Icon: Tag, label: 'Kategori', value: ticket.category },
                     { Icon: CalendarDays, label: 'Diajukan', value: formatDate(ticket.submitted_at) },
                   ].map(({ Icon, label, value }) => (
-                    <div key={label} className="flex min-w-0 gap-3">
-                      <Icon className="mt-0.5 h-5 w-5 shrink-0 text-blue-700" />
+                    <div key={label} className="flex min-w-0 items-start gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                        <Icon className="h-5 w-5" />
+                      </div>
                       <div className="min-w-0">
                         <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
                         <dd className="mt-1 break-words text-sm font-semibold text-slate-900">{value}</dd>
@@ -924,7 +939,7 @@ export default function PublicTicketTrackingPage() {
                           className="relative flex gap-4 pb-7 last:pb-0"
                         >
                           {index < ticket.timeline.length - 1 && (
-                            <span className="absolute left-[11px] top-6 h-[calc(100%-8px)] w-px bg-slate-200" />
+                            <span className="absolute left-[11px] top-6 h-[calc(100%-8px)] w-px bg-gradient-to-b from-blue-200 to-slate-200" />
                           )}
                           <span
                             className={`relative mt-1 h-6 w-6 shrink-0 rounded-full border-4 ${item.is_current ? 'border-blue-200 bg-blue-700' : 'border-slate-100 bg-slate-400'}`}
@@ -961,13 +976,15 @@ export default function PublicTicketTrackingPage() {
                   )}
                   <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
                     <div className="flex items-center gap-3">
-                      <MessageSquareText className="h-6 w-6 text-blue-700" />
+                      <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-700 ring-1 ring-blue-100">
+                        <MessageSquareText className="h-5 w-5" />
+                      </div>
                       <h2 className="text-lg font-bold text-slate-950">Pembaruan untuk pemohon</h2>
                     </div>
                     {ticket.requester_updates.length ? (
                       <ul className="mt-5 space-y-4">
                         {ticket.requester_updates.map((update, index) => (
-                          <li key={`${update.occurred_at}-${index}`} className="rounded-2xl bg-blue-50 p-4">
+                          <li key={`${update.occurred_at}-${index}`} className="rounded-2xl border-l-4 border-l-blue-500 bg-blue-50 p-4">
                             <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">
                               {update.message}
                             </p>

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react'
 import { ApiRequestError } from '../../api/client'
 import { TicketDescriptionEditor, ticketDescriptionText } from '../../components/TicketDescriptionEditor'
+import { PublicLoadingScreen } from '../../components/public/PublicLoadingScreen'
 import { PublicShell } from '../../components/public/PublicShell'
 import {
   publicTicketService,
@@ -674,6 +675,16 @@ export default function PublicRequest() {
         </section>
 
         <div className="relative mx-auto -mt-20 max-w-6xl px-4 pb-14 sm:px-6 lg:px-8">
+          {loadingOptions && (
+            <section className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-300/30">
+              <div className="h-1.5 bg-gradient-to-r from-[#0b1f48] via-[#12367a] to-cyan-400" aria-hidden="true" />
+              <PublicLoadingScreen
+                label="Menyiapkan formulir pengajuan..."
+                hint="Mohon tunggu, kami sedang memuat pilihan cabang, kategori, dan sistem yang tersedia."
+              />
+            </section>
+          )}
+          {!loadingOptions && (
           <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_280px]">
             <section className="min-w-0 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-300/30">
               <div className="h-1.5 bg-gradient-to-r from-[#0b1f48] via-[#12367a] to-cyan-400" aria-hidden="true" />
@@ -1300,6 +1311,7 @@ export default function PublicRequest() {
               </div>
             </aside>
           </div>
+          )}
         </div>
       </main>
     </PublicShell>

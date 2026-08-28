@@ -2,6 +2,7 @@ import { lazy, Suspense, type ReactNode } from 'react'
 import { Loader2 } from 'lucide-react'
 import { BrowserRouter, Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 import { Layout } from './components/Layout'
+import { PublicLoadingScreen } from './components/public/PublicLoadingScreen'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { LoadingProvider } from './context/LoadingContext'
 import type { Role } from './types'
@@ -241,7 +242,7 @@ function AppRoutes() {
       <Route
         path="/request"
         element={
-          <Suspense fallback={<LoadingPage />}>
+          <Suspense fallback={<PublicLoadingScreen label="Menyiapkan formulir pengajuan..." />}>
             <PublicRequest />
           </Suspense>
         }
@@ -249,7 +250,7 @@ function AppRoutes() {
       <Route
         path="/track/:token"
         element={
-          <Suspense fallback={<LoadingPage />}>
+          <Suspense fallback={<PublicLoadingScreen label="Menyiapkan pelacakan tiket..." />}>
             <PublicTicketTracking />
           </Suspense>
         }
@@ -257,7 +258,7 @@ function AppRoutes() {
       <Route
         path="/request/history"
         element={
-          <Suspense fallback={<LoadingPage />}>
+          <Suspense fallback={<PublicLoadingScreen label="Menyiapkan riwayat pengajuan..." />}>
             <PublicRequestHistory />
           </Suspense>
         }

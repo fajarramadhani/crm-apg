@@ -15,6 +15,7 @@ import {
   Tag,
 } from 'lucide-react'
 import { ApiRequestError } from '../../api/client'
+import { PublicLoadingScreen } from '../../components/public/PublicLoadingScreen'
 import { PublicShell } from '../../components/public/PublicShell'
 import {
   publicTicketService,
@@ -253,7 +254,11 @@ export default function PublicRequestHistory() {
     >
       <main className="min-h-[calc(100vh-145px)]">
         <section className="relative overflow-hidden bg-[#0b1f48] px-4 pb-28 pt-10 text-white sm:px-6 sm:pb-32 sm:pt-14">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_15%_90%,rgba(59,130,246,0.2),transparent_35%)]" />
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_10%,rgba(34,211,238,0.2),transparent_32%),radial-gradient(circle_at_15%_90%,rgba(59,130,246,0.22),transparent_38%)]" />
+          <div
+            className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.55)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.55)_1px,transparent_1px)] [background-size:28px_28px]"
+            aria-hidden="true"
+          />
           <div className="relative mx-auto max-w-5xl">
             <a
               href="/request"
@@ -261,7 +266,13 @@ export default function PublicRequestHistory() {
             >
               <ArrowLeft className="h-4 w-4" /> Kembali ke formulir pengajuan
             </a>
-            <p className="mt-8 text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">Riwayat Publik</p>
+            <div className="mt-8 flex items-center gap-2">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-cyan-300 opacity-75" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-cyan-300" />
+              </span>
+              <p className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-300">Riwayat Publik</p>
+            </div>
             <h1 className="mt-3 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">Temukan pengajuan Anda</h1>
             <p className="mt-4 max-w-2xl text-sm leading-7 text-blue-100 sm:text-base">
               Verifikasi cabang dan email untuk melihat daftar pengajuan tanpa masuk ke akun Tic Hub.
@@ -274,7 +285,7 @@ export default function PublicRequestHistory() {
             <section className="mx-auto max-w-2xl overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-300/30">
               <div className="border-b border-slate-100 px-6 py-6 sm:px-9">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100 text-blue-800">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-[#12367a] to-blue-700 text-white shadow-sm">
                     {phase === 'identity' ? <Mail className="h-6 w-6" /> : <ShieldCheck className="h-6 w-6" />}
                   </div>
                   <div>
@@ -417,14 +428,10 @@ export default function PublicRequestHistory() {
           )}
 
           {phase === 'loading' && (
-            <section
-              className="rounded-3xl border border-slate-200 bg-white p-10 text-center shadow-xl shadow-slate-300/30"
-              role="status"
-            >
-              <Loader2 className="mx-auto h-9 w-9 animate-spin text-blue-700" />
-              <h2 className="mt-4 text-lg font-bold text-slate-950">Memuat riwayat pengajuan</h2>
-              <p className="mt-2 text-sm text-slate-600">Mohon tunggu sebentar.</p>
-            </section>
+            <PublicLoadingScreen
+              label="Memuat riwayat pengajuan..."
+              hint="Mohon tunggu, kami sedang mengambil daftar pengajuan untuk identitas terverifikasi ini."
+            />
           )}
 
           {phase === 'expired' && (
@@ -556,22 +563,28 @@ function HistoryCard({
           <p className="font-mono text-xs font-bold uppercase tracking-wide text-blue-700">{ticket.ticket_number}</p>
           <h3 className="mt-2 break-words text-xl font-black text-slate-950 sm:text-2xl">{ticket.title}</h3>
           <dl className="mt-5 grid gap-4 text-sm sm:grid-cols-3">
-            <div className="flex min-w-0 gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+            <div className="flex min-w-0 items-start gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                <MapPin className="h-4 w-4" />
+              </div>
               <div>
                 <dt className="text-xs text-slate-500">Cabang</dt>
                 <dd className="break-words font-semibold text-slate-800">{ticket.branch}</dd>
               </div>
             </div>
-            <div className="flex min-w-0 gap-2">
-              <Tag className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+            <div className="flex min-w-0 items-start gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                <Tag className="h-4 w-4" />
+              </div>
               <div>
                 <dt className="text-xs text-slate-500">Kategori</dt>
                 <dd className="break-words font-semibold text-slate-800">{ticket.category}</dd>
               </div>
             </div>
-            <div className="flex min-w-0 gap-2">
-              <CalendarDays className="mt-0.5 h-4 w-4 shrink-0 text-slate-400" />
+            <div className="flex min-w-0 items-start gap-2">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
+                <CalendarDays className="h-4 w-4" />
+              </div>
               <div>
                 <dt className="text-xs text-slate-500">Diajukan</dt>
                 <dd className="font-semibold text-slate-800">{formatDate(ticket.submitted_at)}</dd>
@@ -579,7 +592,7 @@ function HistoryCard({
             </div>
           </dl>
         </div>
-        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-5">
+        <div className="rounded-2xl border border-blue-100 bg-gradient-to-br from-blue-50 to-white p-5 ring-1 ring-blue-50">
           <p className="text-xs font-bold uppercase tracking-wide text-blue-700">Status saat ini</p>
           <p className="mt-2 font-bold text-slate-950">{ticket.status.label}</p>
           {ticket.status.description && (
@@ -592,7 +605,7 @@ function HistoryCard({
             type="button"
             onClick={onOpen}
             disabled={disabled}
-            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-[#12367a] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0d2a63] disabled:cursor-not-allowed disabled:opacity-60"
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#12367a] to-blue-800 px-4 py-2.5 text-sm font-bold text-white hover:from-[#0d2a63] hover:to-blue-900 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading && <Loader2 className="h-4 w-4 animate-spin" />} Lihat Detail
           </button>
